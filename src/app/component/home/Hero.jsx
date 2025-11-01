@@ -40,7 +40,6 @@ const slides = [
 export default function Hero() {
   const [current, setCurrent] = useState(0);
 
-  // Auto slide mỗi 5 giây
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
@@ -48,7 +47,6 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, []);
 
-  // Next / Prev handlers
   const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
   const prevSlide = () =>
     setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
@@ -90,7 +88,6 @@ export default function Hero() {
         ))}
       </div>
 
-      {/* Nút điều hướng trái/phải */}
       <button
         onClick={prevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-colors cursor-pointer z-10"
@@ -105,7 +102,6 @@ export default function Hero() {
         <i className="ti ti-chevron-right text-2xl"></i>
       </button>
 
-      {/* Dấu chấm điều hướng */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
         {slides.map((_, index) => (
           <button
@@ -118,7 +114,6 @@ export default function Hero() {
         ))}
       </div>
 
-      {/* Thanh tìm kiếm */}
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-10">
         <div className="bg-white rounded-full p-2 flex items-center gap-2 shadow-2xl">
           <i className="ti ti-search text-gray-400 text-xl ml-4"></i>
