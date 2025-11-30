@@ -1,4 +1,7 @@
+import React from "react";
+
 import { Outfit } from "next/font/google";
+import { Box } from "@mui/material";
 import "./globals.css";
 import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 import Header from "./component/layout/client/Header";
@@ -19,11 +22,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={outfit.className}>
-        <div>
+        <Box sx={{minHeight: '100vh'}}>
           <Header />
           {children}
-          {/* <Footer /> */}
-        </div>
+          <Footer />
+        </Box>
       </body>
     </html>
   );
