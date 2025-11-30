@@ -14,9 +14,18 @@ import {
   Chip,
   Divider,
 } from "@mui/material";
+import { Combo } from "@/types";
 
-export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
-  const [combos, setCombos] = useState(selectedCombos);
+interface ComboSelectionProps {
+  onComboSelect: (combos: Combo[]) => void;
+  selectedCombos?: Combo[];
+}
+
+export default function ComboSelection({
+  onComboSelect,
+  selectedCombos = [],
+}: ComboSelectionProps) {
+  const [combos, setCombos] = useState<Combo[]>(selectedCombos);
 
   // Sample combo data - replace with API call
   const availableCombos = [
@@ -76,12 +85,13 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
     },
   ];
 
-  const updateQuantity = (comboId, change) => {
+  const updateQuantity = (comboId: number, change: number) => {
     const updatedCombos = [...combos];
     const existingIndex = updatedCombos.findIndex((c) => c.id === comboId);
 
     if (existingIndex >= 0) {
-      const newQuantity = updatedCombos[existingIndex].quantity + change;
+      const currentQuantity = updatedCombos[existingIndex].quantity || 0;
+      const newQuantity = currentQuantity + change;
       if (newQuantity <= 0) {
         updatedCombos.splice(existingIndex, 1);
       } else {
@@ -100,16 +110,19 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
     }
   };
 
-  const getQuantity = (comboId) => {
+  const getQuantity = (comboId: number): number => {
     const combo = combos.find((c) => c.id === comboId);
-    return combo ? combo.quantity : 0;
+    return combo ? combo.quantity || 0 : 0;
   };
 
-  const calculateTotal = () => {
-    return combos.reduce((total, combo) => total + combo.price * combo.quantity, 0);
+  const calculateTotal = (): number => {
+    return combos.reduce(
+      (total, combo) => total + combo.price * (combo.quantity || 0),
+      0
+    );
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
@@ -151,7 +164,11 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
                         {combo.name}
                       </Typography>
                       {!combo.available && (
-                        <Chip label="Hết hàng" size="small" className="bg-red-500 text-white" />
+                        <Chip
+                          label="Hết hàng"
+                          size="small"
+                          className="bg-red-500 text-white"
+                        />
                       )}
                     </div>
                     <Typography variant="body2" className="text-gray-600 mb-2">
@@ -168,7 +185,10 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
                         />
                       ))}
                     </div>
-                    <Typography variant="h6" className="font-bold text-teal-600 mb-3">
+                    <Typography
+                      variant="h6"
+                      className="font-bold text-teal-600 mb-3"
+                    >
                       {formatPrice(combo.price)}
                     </Typography>
                   </CardContent>
@@ -182,7 +202,10 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
                         >
                           <i className="ti ti-minus"></i>
                         </IconButton>
-                        <Typography variant="h6" className="flex-1 text-center font-semibold">
+                        <Typography
+                          variant="h6"
+                          className="flex-1 text-center font-semibold"
+                        >
                           {getQuantity(combo.id)}
                         </Typography>
                         <IconButton
@@ -213,7 +236,10 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
               </Typography>
 
               {combos.length === 0 ? (
-                <Typography variant="body2" className="text-gray-500 text-center py-8">
+                <Typography
+                  variant="body2"
+                  className="text-gray-500 text-center py-8"
+                >
                   Chưa có sản phẩm nào
                 </Typography>
               ) : (
@@ -224,15 +250,21 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
                       className="flex items-center justify-between p-2 bg-gray-50 rounded"
                     >
                       <div className="flex-1">
-                        <Typography variant="subtitle2" className="font-semibold">
+                        <Typography
+                          variant="subtitle2"
+                          className="font-semibold"
+                        >
                           {combo.name}
                         </Typography>
                         <Typography variant="caption" className="text-gray-600">
                           SL: {combo.quantity} x {formatPrice(combo.price)}
                         </Typography>
                       </div>
-                      <Typography variant="subtitle2" className="font-semibold text-teal-600">
-                        {formatPrice(combo.price * combo.quantity)}
+                      <Typography
+                        variant="subtitle2"
+                        className="font-semibold text-teal-600"
+                      >
+                        {formatPrice(combo.price * (combo.quantity || 0))}
                       </Typography>
                     </div>
                   ))}
@@ -244,11 +276,15 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tạm tính:</span>
-                  <span className="font-semibold">{formatPrice(calculateTotal())}</span>
+                  <span className="font-semibold">
+                    {formatPrice(calculateTotal())}
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg font-bold">
                   <span>Tổng tiền:</span>
-                  <span className="text-teal-600">{formatPrice(calculateTotal())}</span>
+                  <span className="text-teal-600">
+                    {formatPrice(calculateTotal())}
+                  </span>
                 </div>
               </div>
 
@@ -267,4 +303,3 @@ export default function ComboSelection({ onComboSelect, selectedCombos = [] }) {
     </Box>
   );
 }
-

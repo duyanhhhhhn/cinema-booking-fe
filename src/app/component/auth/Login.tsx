@@ -20,18 +20,18 @@ export default function Login() {
     email: "",
     password: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -102,8 +102,13 @@ export default function Login() {
                 ),
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                      <i className={showPassword ? "ti ti-eye-off" : "ti ti-eye"}></i>
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      <i
+                        className={showPassword ? "ti ti-eye-off" : "ti ti-eye"}
+                      ></i>
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -117,7 +122,10 @@ export default function Login() {
                   Ghi nhớ đăng nhập
                 </label>
               </div>
-              <Link href="/forgot-password" className="text-sm text-teal-600 hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-teal-600 hover:underline"
+              >
                 Quên mật khẩu?
               </Link>
             </div>
@@ -169,7 +177,10 @@ export default function Login() {
           <div className="mt-6 text-center">
             <Typography variant="body2" className="text-gray-600">
               Chưa có tài khoản?{" "}
-              <Link href="/register" className="text-teal-600 font-semibold hover:underline">
+              <Link
+                href="/register"
+                className="text-teal-600 font-semibold hover:underline"
+              >
                 Đăng ký ngay
               </Link>
             </Typography>
@@ -179,4 +190,3 @@ export default function Login() {
     </Box>
   );
 }
-

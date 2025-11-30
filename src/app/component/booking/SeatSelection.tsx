@@ -11,16 +11,21 @@ import {
   CardContent,
   Divider,
 } from "@mui/material";
+import { Seat } from "@/types";
 
-export default function SeatSelection({ onSeatSelect }) {
-  const [selectedSeats, setSelectedSeats] = useState([]);
+interface SeatSelectionProps {
+  onSeatSelect: (seats: Seat[]) => void;
+}
+
+export default function SeatSelection({ onSeatSelect }: SeatSelectionProps) {
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
   // Seat layout - sample data
   const rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
   const columns = Array.from({ length: 12 }, (_, i) => i + 1);
 
   // Sample seat data - replace with API call
-  const getSeatStatus = (row, col) => {
+  const getSeatStatus = (row: string, col: number) => {
     // VIP seats (rows A-D)
     if (["A", "B", "C", "D"].includes(row)) {
       return { type: "vip", price: 150000, available: Math.random() > 0.2 };
@@ -33,7 +38,7 @@ export default function SeatSelection({ onSeatSelect }) {
     return { type: "standard", price: 80000, available: Math.random() > 0.15 };
   };
 
-  const handleSeatClick = (row, col) => {
+  const handleSeatClick = (row: string, col: number) => {
     const seatId = `${row}${col}`;
     const seatData = getSeatStatus(row, col);
 
@@ -49,11 +54,25 @@ export default function SeatSelection({ onSeatSelect }) {
       const seats = selectedSeats.includes(seatId)
         ? selectedSeats.filter((id) => id !== seatId)
         : [...selectedSeats, seatId];
-      onSeatSelect(seats.map((id) => ({ id, ...getSeatStatus(id[0], parseInt(id.slice(1))) })));
+      
+      const seatObjects: Seat[] = seats.map((id) => {
+        const r = id[0];
+        const c = parseInt(id.slice(1));
+        const status = getSeatStatus(r, c);
+        return {
+          id,
+          row: r,
+          col: c,
+          price: status.price,
+          status: status.available ? 'selected' : 'occupied',
+          type: status.type as 'standard' | 'vip' | 'couple'
+        };
+      });
+      onSeatSelect(seatObjects);
     }
   };
 
-  const getSeatColor = (row, col, status) => {
+  const getSeatColor = (row: string, col: number, status: any) => {
     if (!status.available) return "bg-gray-400 cursor-not-allowed";
     if (selectedSeats.includes(`${row}${col}`)) return "bg-teal-500 hover:bg-teal-600";
     if (status.type === "vip") return "bg-purple-500 hover:bg-purple-600";
@@ -61,14 +80,14 @@ export default function SeatSelection({ onSeatSelect }) {
     return "bg-gray-300 hover:bg-gray-400";
   };
 
-  const calculateTotal = () => {
+  const calculateTotal = (): number => {
     return selectedSeats.reduce((total, seatId) => {
       const status = getSeatStatus(seatId[0], parseInt(seatId.slice(1)));
       return total + status.price;
     }, 0);
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",

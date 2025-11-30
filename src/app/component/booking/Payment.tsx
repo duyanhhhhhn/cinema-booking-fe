@@ -16,12 +16,21 @@ import {
   TextField,
   Alert,
 } from "@mui/material";
+import { BookingData, PaymentData } from "@/types";
 
-export default function Payment({ bookingData, onPaymentSuccess }) {
-  const [paymentMethod, setPaymentMethod] = useState("vnpay");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+interface PaymentProps {
+  bookingData: BookingData;
+  onPaymentSuccess: (paymentData: PaymentData) => void;
+}
+
+export default function Payment({
+  bookingData,
+  onPaymentSuccess,
+}: PaymentProps) {
+  const [paymentMethod, setPaymentMethod] = useState<string>("vnpay");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const paymentMethods = [
     {
@@ -116,12 +125,20 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
                         control={<Radio />}
                         label={
                           <div className="flex items-center gap-3 flex-1">
-                            <i className={`${method.icon} text-2xl text-teal-500`}></i>
+                            <i
+                              className={`${method.icon} text-2xl text-teal-500`}
+                            ></i>
                             <div>
-                              <Typography variant="subtitle1" className="font-semibold">
+                              <Typography
+                                variant="subtitle1"
+                                className="font-semibold"
+                              >
                                 {method.name}
                               </Typography>
-                              <Typography variant="caption" className="text-gray-600">
+                              <Typography
+                                variant="caption"
+                                className="text-gray-600"
+                              >
                                 {method.description}
                               </Typography>
                             </div>
@@ -164,7 +181,8 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
               </div>
 
               <Alert severity="info" className="mt-4">
-                Mã vé điện tử sẽ được gửi đến email này sau khi thanh toán thành công.
+                Mã vé điện tử sẽ được gửi đến email này sau khi thanh toán thành
+                công.
               </Alert>
             </CardContent>
           </Card>
@@ -181,7 +199,10 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
               {/* Movie Info */}
               {bookingData?.movie && (
                 <div className="mb-4">
-                  <Typography variant="subtitle2" className="font-semibold mb-1">
+                  <Typography
+                    variant="subtitle2"
+                    className="font-semibold mb-1"
+                  >
                     {bookingData.movie.title}
                   </Typography>
                   <Typography variant="caption" className="text-gray-600">
@@ -195,7 +216,10 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
               {/* Seats */}
               {bookingData?.seats && bookingData.seats.length > 0 && (
                 <div className="mb-4">
-                  <Typography variant="subtitle2" className="font-semibold mb-2">
+                  <Typography
+                    variant="subtitle2"
+                    className="font-semibold mb-2"
+                  >
                     Ghế ngồi:
                   </Typography>
                   <div className="space-y-1">
@@ -212,7 +236,10 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
               {/* Combos */}
               {bookingData?.combos && bookingData.combos.length > 0 && (
                 <div className="mb-4">
-                  <Typography variant="subtitle2" className="font-semibold mb-2">
+                  <Typography
+                    variant="subtitle2"
+                    className="font-semibold mb-2"
+                  >
                     Combo:
                   </Typography>
                   <div className="space-y-1">
@@ -263,7 +290,10 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
                 )}
               </Button>
 
-              <Typography variant="caption" className="text-gray-500 text-center block mt-4">
+              <Typography
+                variant="caption"
+                className="text-gray-500 text-center block mt-4"
+              >
                 Bằng cách thanh toán, bạn đồng ý với{" "}
                 <a href="#" className="text-teal-600 hover:underline">
                   Điều khoản & Điều kiện
@@ -276,4 +306,3 @@ export default function Payment({ bookingData, onPaymentSuccess }) {
     </Box>
   );
 }
-

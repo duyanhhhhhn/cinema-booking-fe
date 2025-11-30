@@ -6,15 +6,29 @@ import ShowtimeSelection from "../../component/booking/ShowtimeSelection";
 import SeatSelection from "../../component/booking/SeatSelection";
 import ComboSelection from "../../component/booking/ComboSelection";
 import Payment from "../../component/booking/Payment";
-import { Box, Stepper, Step, StepLabel, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Stepper,
+  Step,
+  StepLabel,
+  Button,
+  Typography,
+} from "@mui/material";
 
 const steps = ["Chọn suất chiếu", "Chọn ghế", "Chọn combo", "Thanh toán"];
+
+interface BookingData {
+  movieId: string | string[] | undefined;
+  showtime: any;
+  seats: any[];
+  combos: any[];
+}
 
 export default function BookingPage() {
   const params = useParams();
   const router = useRouter();
-  const [activeStep, setActiveStep] = useState(0);
-  const [bookingData, setBookingData] = useState({
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const [bookingData, setBookingData] = useState<BookingData>({
     movieId: params.movieId,
     showtime: null,
     seats: [],
@@ -31,20 +45,20 @@ export default function BookingPage() {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const handleShowtimeSelect = (showtime) => {
+  const handleShowtimeSelect = (showtime: any) => {
     setBookingData((prev) => ({ ...prev, showtime }));
     handleNext();
   };
 
-  const handleSeatSelect = (seats) => {
+  const handleSeatSelect = (seats: any[]) => {
     setBookingData((prev) => ({ ...prev, seats }));
   };
 
-  const handleComboSelect = (combos) => {
+  const handleComboSelect = (combos: any[]) => {
     setBookingData((prev) => ({ ...prev, combos }));
   };
 
-  const handlePaymentSuccess = (paymentData) => {
+  const handlePaymentSuccess = (paymentData: any) => {
     // Redirect to success page
     router.push(`/booking-success?bookingId=${paymentData.bookingId}`);
   };
@@ -54,11 +68,7 @@ export default function BookingPage() {
       case 0:
         return <ShowtimeSelection onSelectShowtime={handleShowtimeSelect} />;
       case 1:
-        return (
-          <SeatSelection
-            onSeatSelect={handleSeatSelect}
-          />
-        );
+        return <SeatSelection onSeatSelect={handleSeatSelect} />;
       case 2:
         return (
           <ComboSelection
@@ -80,7 +90,10 @@ export default function BookingPage() {
 
   return (
     <Box className="container mx-auto px-4 py-8">
-      <Typography variant="h4" className="font-bold mb-6 text-gray-900 text-center">
+      <Typography
+        variant="h4"
+        className="font-bold mb-6 text-gray-900 text-center"
+      >
         Đặt vé xem phim
       </Typography>
 
@@ -129,4 +142,3 @@ export default function BookingPage() {
     </Box>
   );
 }
-

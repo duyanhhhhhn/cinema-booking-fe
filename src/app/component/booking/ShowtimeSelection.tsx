@@ -13,10 +13,19 @@ import {
   Grid,
   Divider,
 } from "@mui/material";
+import { Showtime } from "@/types";
 
-export default function ShowtimeSelection({ onSelectShowtime }) {
-  const [selectedDate, setSelectedDate] = useState(0);
-  const [selectedTime, setSelectedTime] = useState(null);
+interface ShowtimeSelectionProps {
+  onSelectShowtime: (showtime: Showtime) => void;
+}
+
+export default function ShowtimeSelection({
+  onSelectShowtime,
+}: ShowtimeSelectionProps) {
+  const [selectedDate, setSelectedDate] = useState<number>(0);
+  const [selectedTime, setSelectedTime] = useState<number | string | null>(
+    null
+  );
 
   // Sample data - replace with API call
   const dates = [
@@ -33,10 +42,22 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
       address: "123 Nguyễn Huệ, Q1, TP.HCM",
       showtimes: [
         { id: 1, time: "09:00", format: "2D", price: 80000, available: true },
-        { id: 2, time: "12:00", format: "IMAX", price: 150000, available: true },
+        {
+          id: 2,
+          time: "12:00",
+          format: "IMAX",
+          price: 150000,
+          available: true,
+        },
         { id: 3, time: "15:30", format: "2D", price: 80000, available: false },
         { id: 4, time: "18:00", format: "3D", price: 120000, available: true },
-        { id: 5, time: "21:00", format: "IMAX", price: 150000, available: true },
+        {
+          id: 5,
+          time: "21:00",
+          format: "IMAX",
+          price: 150000,
+          available: true,
+        },
       ],
     },
     {
@@ -46,24 +67,32 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
       showtimes: [
         { id: 6, time: "10:00", format: "2D", price: 80000, available: true },
         { id: 7, time: "13:30", format: "3D", price: 120000, available: true },
-        { id: 8, time: "17:00", format: "IMAX", price: 150000, available: true },
+        {
+          id: 8,
+          time: "17:00",
+          format: "IMAX",
+          price: 150000,
+          available: true,
+        },
         { id: 9, time: "20:30", format: "2D", price: 80000, available: true },
       ],
     },
   ];
 
-  const handleTimeSelect = (showtime) => {
+  const handleTimeSelect = (showtime: any) => {
     if (!showtime.available) return;
     setSelectedTime(showtime.id);
     if (onSelectShowtime) {
       onSelectShowtime({
         ...showtime,
         date: dates[selectedDate].date,
+        cinema: "CineMax Central",
+        room: "Phòng 1",
       });
     }
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
@@ -78,7 +107,10 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
 
       {/* Date Selection */}
       <div className="mb-8">
-        <Typography variant="subtitle1" className="font-semibold mb-3 text-gray-700">
+        <Typography
+          variant="subtitle1"
+          className="font-semibold mb-3 text-gray-700"
+        >
           Chọn ngày
         </Typography>
         <div className="flex gap-3 overflow-x-auto pb-2">
@@ -112,7 +144,10 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <Typography variant="h6" className="font-bold text-gray-900 mb-1">
+                  <Typography
+                    variant="h6"
+                    className="font-bold text-gray-900 mb-1"
+                  >
                     {cinema.name}
                   </Typography>
                   <div className="flex items-center gap-2 text-gray-600 text-sm">
@@ -131,14 +166,19 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
 
               <Divider className="mb-4" />
 
-              <Typography variant="subtitle2" className="font-semibold mb-3 text-gray-700">
+              <Typography
+                variant="subtitle2"
+                className="font-semibold mb-3 text-gray-700"
+              >
                 Suất chiếu
               </Typography>
               <div className="flex flex-wrap gap-3">
                 {cinema.showtimes.map((showtime) => (
                   <Button
                     key={showtime.id}
-                    variant={selectedTime === showtime.id ? "contained" : "outlined"}
+                    variant={
+                      selectedTime === showtime.id ? "contained" : "outlined"
+                    }
                     onClick={() => handleTimeSelect(showtime)}
                     disabled={!showtime.available}
                     className={`min-w-[140px] ${
@@ -150,7 +190,9 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
                     }`}
                   >
                     <div className="text-center w-full">
-                      <div className="font-semibold text-lg">{showtime.time}</div>
+                      <div className="font-semibold text-lg">
+                        {showtime.time}
+                      </div>
                       <Chip
                         label={showtime.format}
                         size="small"
@@ -190,4 +232,3 @@ export default function ShowtimeSelection({ onSelectShowtime }) {
     </Box>
   );
 }
-

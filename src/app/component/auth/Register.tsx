@@ -23,19 +23,20 @@ export default function Register() {
     password: "",
     confirmPassword: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
@@ -152,8 +153,13 @@ export default function Register() {
                 ),
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                      <i className={showPassword ? "ti ti-eye-off" : "ti ti-eye"}></i>
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      <i
+                        className={showPassword ? "ti ti-eye-off" : "ti ti-eye"}
+                      ></i>
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -178,10 +184,16 @@ export default function Register() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       edge="end"
                     >
-                      <i className={showConfirmPassword ? "ti ti-eye-off" : "ti ti-eye"}></i>
+                      <i
+                        className={
+                          showConfirmPassword ? "ti ti-eye-off" : "ti ti-eye"
+                        }
+                      ></i>
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -189,7 +201,12 @@ export default function Register() {
             />
 
             <div className="flex items-start">
-              <input type="checkbox" id="terms" className="mt-1 mr-2" required />
+              <input
+                type="checkbox"
+                id="terms"
+                className="mt-1 mr-2"
+                required
+              />
               <label htmlFor="terms" className="text-sm text-gray-600">
                 Tôi đồng ý với{" "}
                 <Link href="/terms" className="text-teal-600 hover:underline">
@@ -249,7 +266,10 @@ export default function Register() {
           <div className="mt-6 text-center">
             <Typography variant="body2" className="text-gray-600">
               Đã có tài khoản?{" "}
-              <Link href="/login" className="text-teal-600 font-semibold hover:underline">
+              <Link
+                href="/login"
+                className="text-teal-600 font-semibold hover:underline"
+              >
                 Đăng nhập ngay
               </Link>
             </Typography>
@@ -259,4 +279,3 @@ export default function Register() {
     </Box>
   );
 }
-

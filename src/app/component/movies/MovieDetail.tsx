@@ -17,16 +17,22 @@ import {
   Rating,
 } from "@mui/material";
 
-export default function MovieDetail({ movieId }) {
-  const [tabValue, setTabValue] = useState(0);
-  const [trailerOpen, setTrailerOpen] = useState(false);
+interface MovieDetailProps {
+  movieId: string;
+}
+
+export default function MovieDetail({ movieId }: MovieDetailProps) {
+  const [tabValue, setTabValue] = useState<number>(0);
+  const [trailerOpen, setTrailerOpen] = useState<boolean>(false);
 
   // Sample data - replace with API call
   const movie = {
     id: movieId || 1,
     title: "Avengers: Secret Wars",
-    description: "Cuộc chiến cuối cùng của vũ trụ Marvel với những siêu anh hùng yêu thích. Đây là bộ phim epic nhất từ trước đến nay với nhiều tình tiết bất ngờ và hiệu ứng đặc biệt đỉnh cao.",
-    fullDescription: "Trong phần cuối của loạt phim Avengers, các siêu anh hùng phải đoàn kết để chống lại kẻ thù mạnh nhất từ trước đến nay. Với sự tham gia của tất cả các nhân vật yêu thích từ Marvel Cinematic Universe, Avengers: Secret Wars hứa hẹn sẽ là một trải nghiệm điện ảnh không thể bỏ lỡ.",
+    description:
+      "Cuộc chiến cuối cùng của vũ trụ Marvel với những siêu anh hùng yêu thích. Đây là bộ phim epic nhất từ trước đến nay với nhiều tình tiết bất ngờ và hiệu ứng đặc biệt đỉnh cao.",
+    fullDescription:
+      "Trong phần cuối của loạt phim Avengers, các siêu anh hùng phải đoàn kết để chống lại kẻ thù mạnh nhất từ trước đến nay. Với sự tham gia của tất cả các nhân vật yêu thích từ Marvel Cinematic Universe, Avengers: Secret Wars hứa hẹn sẽ là một trải nghiệm điện ảnh không thể bỏ lỡ.",
     poster: "/logo/logo.png",
     trailer: "https://www.youtube.com/embed/example",
     rating: 4.8,
@@ -34,17 +40,32 @@ export default function MovieDetail({ movieId }) {
     format: "IMAX",
     genre: ["Hành động", "Khoa học viễn tưởng", "Siêu anh hùng"],
     director: "Kevin Feige",
-    cast: ["Robert Downey Jr.", "Chris Evans", "Scarlett Johansson", "Mark Ruffalo"],
+    cast: [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Scarlett Johansson",
+      "Mark Ruffalo",
+    ],
     releaseDate: "2024-01-15",
     language: "Tiếng Anh - Phụ đề Việt",
     ageRating: "C18",
     reviews: [
-      { user: "Nguyễn Văn A", rating: 5, comment: "Phim tuyệt vời! Hiệu ứng đỉnh cao.", date: "2024-01-20" },
-      { user: "Trần Thị B", rating: 4, comment: "Câu chuyện hay nhưng hơi dài.", date: "2024-01-19" },
+      {
+        user: "Nguyễn Văn A",
+        rating: 5,
+        comment: "Phim tuyệt vời! Hiệu ứng đỉnh cao.",
+        date: "2024-01-20",
+      },
+      {
+        user: "Trần Thị B",
+        rating: 4,
+        comment: "Câu chuyện hay nhưng hơi dài.",
+        date: "2024-01-19",
+      },
     ],
   };
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -68,7 +89,7 @@ export default function MovieDetail({ movieId }) {
               />
             </div>
           </div>
-          
+
           <div className="space-y-3 mb-6">
             <div className="flex items-center gap-2">
               <i className="ti ti-star-filled text-yellow-500 text-xl"></i>
@@ -138,7 +159,10 @@ export default function MovieDetail({ movieId }) {
 
           {tabValue === 0 && (
             <div className="space-y-4">
-              <Typography variant="body1" className="text-gray-700 leading-relaxed">
+              <Typography
+                variant="body1"
+                className="text-gray-700 leading-relaxed"
+              >
                 {movie.fullDescription}
               </Typography>
             </div>
@@ -224,4 +248,3 @@ export default function MovieDetail({ movieId }) {
     </Box>
   );
 }
-

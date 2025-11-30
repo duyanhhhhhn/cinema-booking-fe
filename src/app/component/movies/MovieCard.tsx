@@ -2,9 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardMedia, Chip, Box, Typography } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Chip,
+  Box,
+  Typography,
+} from "@mui/material";
+import { Movie } from "@/types";
 
-export default function MovieCard({ movie }) {
+interface MovieCardProps {
+  movie: Movie;
+}
+
+export default function MovieCard({ movie }: MovieCardProps) {
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer h-full flex flex-col">
       <div className="relative overflow-hidden">
@@ -62,7 +74,9 @@ export default function MovieCard({ movie }) {
         <div className="flex items-center justify-between mt-auto pt-3 border-t">
           <div className="flex items-center gap-1 text-yellow-500">
             <i className="ti ti-star-filled text-sm"></i>
-            <span className="text-sm font-semibold">{movie.rating || "N/A"}</span>
+            <span className="text-sm font-semibold">
+              {movie.rating || "N/A"}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-gray-600">
             <i className="ti ti-clock text-sm"></i>
@@ -78,4 +92,3 @@ export default function MovieCard({ movie }) {
     </Card>
   );
 }
-

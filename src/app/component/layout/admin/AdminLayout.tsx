@@ -39,8 +39,12 @@ const menuItems = [
   { text: "Thống kê", icon: "ti ti-chart-bar", path: "/admin/statistics" },
 ];
 
-export default function AdminLayout({ children }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const pathname = usePathname();
 
   const handleDrawerToggle = () => {
@@ -50,7 +54,10 @@ export default function AdminLayout({ children }) {
   const drawer = (
     <div>
       <Toolbar className="bg-teal-600">
-        <Typography variant="h6" className="text-white font-bold flex items-center gap-2">
+        <Typography
+          variant="h6"
+          className="text-white font-bold flex items-center gap-2"
+        >
           <i className="ti ti-ticket"></i>
           Admin Panel
         </Typography>
@@ -69,11 +76,17 @@ export default function AdminLayout({ children }) {
                 }
               >
                 <ListItemIcon>
-                  <i className={`${item.icon} text-xl ${pathname === item.path ? "text-teal-500" : "text-gray-600"}`}></i>
+                  <i
+                    className={`${item.icon} text-xl ${
+                      pathname === item.path ? "text-teal-500" : "text-gray-600"
+                    }`}
+                  ></i>
                 </ListItemIcon>
                 <ListItemText
                   primary={item.text}
-                  className={pathname === item.path ? "text-teal-600 font-semibold" : ""}
+                  className={
+                    pathname === item.path ? "text-teal-600 font-semibold" : ""
+                  }
                 />
               </ListItemButton>
             </Link>
@@ -143,7 +156,10 @@ export default function AdminLayout({ children }) {
           }}
           sx={{
             display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
@@ -152,7 +168,10 @@ export default function AdminLayout({ children }) {
           variant="permanent"
           sx={{
             display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
@@ -173,4 +192,3 @@ export default function AdminLayout({ children }) {
     </Box>
   );
 }
-
