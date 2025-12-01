@@ -1,305 +1,181 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  CardActions,
-  IconButton,
-  Chip,
-  Divider,
-} from "@mui/material";
-import { Combo } from "@/types";
+import { useState, useEffect } from "react";
+import { useBooking } from "@/contexts/BookingContext";
+import OrderSummary from "./OrderSummary";
+import { Combo } from "@/types/booking/booking";
+import StepIndicator from "./StepIndicator";
 
-interface ComboSelectionProps {
-  onComboSelect: (combos: Combo[]) => void;
-  selectedCombos?: Combo[];
-}
+const availableCombos: Combo[] = [
+  {
+    id: "combo1",
+    name: "Combo Bắp Nước Lớn",
+    description: "1 Bắp lớn + 2 Nước ngọt lớn (Coca/Pepsi/7Up)",
+    price: 129000,
+    image:
+      "https://images.pexels.com/photos/3850838/pexels-photo-3850838.jpeg?auto=compress&cs=tinysrgb&w=400",
+    quantity: 0,
+  },
+  {
+    id: "combo2",
+    name: "Combo Bạn Bè",
+    description: "2 Bắp vừa + 2 Nước ngọt vừa + 1 Snack",
+    price: 159000,
+    image:
+      "https://images.pexels.com/photos/7234388/pexels-photo-7234388.jpeg?auto=compress&cs=tinysrgb&w=400",
+    quantity: 0,
+  },
+  {
+    id: "combo3",
+    name: "Combo Couple",
+    description: "1 Bắp lớn + 2 Nước ngọt vừa",
+    price: 109000,
+    image:
+      "https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg?auto=compress&cs=tinysrgb&w=400",
+    quantity: 0,
+  },
+];
 
-export default function ComboSelection({
-  onComboSelect,
-  selectedCombos = [],
-}: ComboSelectionProps) {
-  const [combos, setCombos] = useState<Combo[]>(selectedCombos);
+export default function ComboSelectionStep() {
+  const { bookingState, setCombos, setStep } = useBooking();
+  const [combos, setCombosLocal] = useState<Combo[]>(
+    bookingState.combos.length > 0 ? bookingState.combos : availableCombos
+  );
+  const [timer, setTimer] = useState("08:45");
 
-  // Sample combo data - replace with API call
-  const availableCombos = [
-    {
-      id: 1,
-      name: "Combo Solo",
-      description: "1 bắp lớn + 1 nước ngọt",
-      image: "/logo/logo.png",
-      price: 89000,
-      items: ["Bắp lớn", "Nước ngọt 500ml"],
-      available: true,
-    },
-    {
-      id: 2,
-      name: "Combo Đôi",
-      description: "2 bắp vừa + 2 nước ngọt",
-      image: "/logo/logo.png",
-      price: 159000,
-      items: ["Bắp vừa x2", "Nước ngọt 500ml x2"],
-      available: true,
-    },
-    {
-      id: 3,
-      name: "Combo Gia Đình",
-      description: "2 bắp lớn + 4 nước ngọt + 2 snack",
-      image: "/logo/logo.png",
-      price: 299000,
-      items: ["Bắp lớn x2", "Nước ngọt 500ml x4", "Snack x2"],
-      available: true,
-    },
-    {
-      id: 4,
-      name: "Bắp lớn",
-      description: "Bắp rang bơ size lớn",
-      image: "/logo/logo.png",
-      price: 45000,
-      items: ["Bắp lớn"],
-      available: true,
-    },
-    {
-      id: 5,
-      name: "Nước ngọt",
-      description: "Các loại nước ngọt 500ml",
-      image: "/logo/logo.png",
-      price: 25000,
-      items: ["Nước ngọt 500ml"],
-      available: true,
-    },
-    {
-      id: 6,
-      name: "Combo Premium",
-      description: "2 bắp lớn + 2 nước + 1 snack + 1 kẹo",
-      image: "/logo/logo.png",
-      price: 189000,
-      items: ["Bắp lớn x2", "Nước ngọt 500ml x2", "Snack", "Kẹo"],
-      available: false,
-    },
-  ];
-
-  const updateQuantity = (comboId: number, change: number) => {
-    const updatedCombos = [...combos];
-    const existingIndex = updatedCombos.findIndex((c) => c.id === comboId);
-
-    if (existingIndex >= 0) {
-      const currentQuantity = updatedCombos[existingIndex].quantity || 0;
-      const newQuantity = currentQuantity + change;
-      if (newQuantity <= 0) {
-        updatedCombos.splice(existingIndex, 1);
-      } else {
-        updatedCombos[existingIndex].quantity = newQuantity;
-      }
-    } else if (change > 0) {
-      const combo = availableCombos.find((c) => c.id === comboId);
-      if (combo) {
-        updatedCombos.push({ ...combo, quantity: 1 });
-      }
-    }
-
-    setCombos(updatedCombos);
-    if (onComboSelect) {
-      onComboSelect(updatedCombos);
-    }
-  };
-
-  const getQuantity = (comboId: number): number => {
-    const combo = combos.find((c) => c.id === comboId);
-    return combo ? combo.quantity || 0 : 0;
-  };
-
-  const calculateTotal = (): number => {
-    return combos.reduce(
-      (total, combo) => total + combo.price * (combo.quantity || 0),
-      0
+  const updateQuantity = (comboId: string, change: number) => {
+    setCombosLocal((prev) =>
+      prev.map((combo) => {
+        if (combo.id === comboId) {
+          const newQuantity = Math.max(0, combo.quantity + change);
+          return { ...combo, quantity: newQuantity };
+        }
+        return combo;
+      })
     );
   };
 
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
+  const handleProceed = () => {
+    setCombos(combos);
+    setStep(3);
+  };
+
+  const handleBack = () => {
+    setCombos(combos);
+    setStep(1);
   };
 
   return (
-    <Box className="container mx-auto px-4 py-6">
-      <Typography variant="h5" className="font-bold mb-6 text-gray-900">
-        Chọn combo đồ ăn
-      </Typography>
+    <div className="min-h-screen bg-[#0f0f1e]">
+      <StepIndicator currentStep={2} />
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <div className="mb-4">
-            <Typography variant="subtitle1" className="text-gray-600 mb-2">
-              Bạn có thể bỏ qua bước này nếu không muốn mua đồ ăn
-            </Typography>
+      <div className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="mb-8">
+              <h1 className="text-white text-4xl font-bold mb-2">
+                Chọn Combo Của Bạn
+              </h1>
+              <p className="text-gray-400">
+                Chọn combo đồ ăn & thức uống yêu thích của bạn.
+              </p>
+
+              <div className="bg-[#1a1a2e] rounded-lg p-4 mt-4 inline-flex items-center gap-2">
+                {/* <Clock className="w-4 h-4 text-red-500" /> */}
+                <span className="text-white text-sm">
+                  Ghế đang được giữ trong
+                </span>
+                <span className="text-red-500 font-bold">{timer}</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {combos.map((combo) => (
+                <div
+                  key={combo.id}
+                  className="bg-[#1a1a2e] rounded-xl p-6 flex items-center gap-6"
+                >
+                  <div className="w-24 h-24 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={combo.image}
+                      alt={combo.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="text-white text-lg font-bold mb-1">
+                      {combo.name}
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-3">
+                      {combo.description}
+                    </p>
+                    <span className="text-red-500 text-xl font-bold">
+                      {combo.price.toLocaleString("vi-VN")}đ
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => updateQuantity(combo.id, -1)}
+                      disabled={combo.quantity === 0}
+                      className="w-10 h-10 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      {/* <Minus className="w-5 h-5" /> */}
+                    </button>
+
+                    <span className="text-white text-xl font-bold w-8 text-center">
+                      {combo.quantity}
+                    </span>
+
+                    <button
+                      onClick={() => updateQuantity(combo.id, 1)}
+                      className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition"
+                    >
+                      {/* <PlusIcon className="w-5 h-5" /> */}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <Grid container spacing={3}>
-            {availableCombos.map((combo) => (
-              <Grid item xs={12} sm={6} key={combo.id}>
-                <Card
-                  className={`h-full ${
-                    !combo.available ? "opacity-60" : ""
-                  } hover:shadow-lg transition-shadow`}
-                >
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={combo.image}
-                    alt={combo.name}
-                    className="object-cover"
-                  />
-                  <CardContent>
-                    <div className="flex items-start justify-between mb-2">
-                      <Typography variant="h6" className="font-bold">
-                        {combo.name}
-                      </Typography>
-                      {!combo.available && (
-                        <Chip
-                          label="Hết hàng"
-                          size="small"
-                          className="bg-red-500 text-white"
-                        />
-                      )}
+          <div className="lg:col-span-1">
+            <div className="mb-6 bg-[#1a1a2e] rounded-lg p-4">
+              <div className="flex gap-4">
+                <img
+                  src="https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=400"
+                  alt="Movie poster"
+                  className="w-24 h-32 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <h3 className="text-white font-bold mb-3">
+                    Doraemon: Nobita và Bản Giao Hưởng Địa Cầu
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <span>CGV Vincom Center</span>
                     </div>
-                    <Typography variant="body2" className="text-gray-600 mb-2">
-                      {combo.description}
-                    </Typography>
-                    <div className="mb-3">
-                      {combo.items.map((item, idx) => (
-                        <Chip
-                          key={idx}
-                          label={item}
-                          size="small"
-                          variant="outlined"
-                          className="mr-1 mb-1"
-                        />
-                      ))}
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <span>Thứ Hai, 27/05/2024</span>
                     </div>
-                    <Typography
-                      variant="h6"
-                      className="font-bold text-teal-600 mb-3"
-                    >
-                      {formatPrice(combo.price)}
-                    </Typography>
-                  </CardContent>
-                  <CardActions className="px-3 pb-3">
-                    {combo.available ? (
-                      <div className="flex items-center gap-3 w-full">
-                        <IconButton
-                          onClick={() => updateQuantity(combo.id, -1)}
-                          disabled={getQuantity(combo.id) === 0}
-                          className="border border-gray-300"
-                        >
-                          <i className="ti ti-minus"></i>
-                        </IconButton>
-                        <Typography
-                          variant="h6"
-                          className="flex-1 text-center font-semibold"
-                        >
-                          {getQuantity(combo.id)}
-                        </Typography>
-                        <IconButton
-                          onClick={() => updateQuantity(combo.id, 1)}
-                          className="border border-gray-300 bg-teal-500 text-white hover:bg-teal-600"
-                        >
-                          <i className="ti ti-plus"></i>
-                        </IconButton>
-                      </div>
-                    ) : (
-                      <Button disabled fullWidth>
-                        Hết hàng
-                      </Button>
-                    )}
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-
-        {/* Summary Sidebar */}
-        <Grid item xs={12} md={4}>
-          <Card className="sticky top-20 shadow-lg">
-            <CardContent className="p-6">
-              <Typography variant="h6" className="font-bold mb-4">
-                Đơn hàng
-              </Typography>
-
-              {combos.length === 0 ? (
-                <Typography
-                  variant="body2"
-                  className="text-gray-500 text-center py-8"
-                >
-                  Chưa có sản phẩm nào
-                </Typography>
-              ) : (
-                <div className="space-y-3 mb-4">
-                  {combos.map((combo) => (
-                    <div
-                      key={combo.id}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                    >
-                      <div className="flex-1">
-                        <Typography
-                          variant="subtitle2"
-                          className="font-semibold"
-                        >
-                          {combo.name}
-                        </Typography>
-                        <Typography variant="caption" className="text-gray-600">
-                          SL: {combo.quantity} x {formatPrice(combo.price)}
-                        </Typography>
-                      </div>
-                      <Typography
-                        variant="subtitle2"
-                        className="font-semibold text-teal-600"
-                      >
-                        {formatPrice(combo.price * (combo.quantity || 0))}
-                      </Typography>
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <span>19:30 - Phòng chiếu 4</span>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              <Divider className="my-4" />
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tạm tính:</span>
-                  <span className="font-semibold">
-                    {formatPrice(calculateTotal())}
-                  </span>
-                </div>
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Tổng tiền:</span>
-                  <span className="text-teal-600">
-                    {formatPrice(calculateTotal())}
-                  </span>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                className="bg-teal-500 hover:bg-teal-600 mt-4"
-              >
-                Tiếp tục thanh toán
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+            <OrderSummary
+              onProceed={handleProceed}
+              onBack={handleBack}
+              proceedLabel="Tiếp tục"
+              showMovieInfo={false}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

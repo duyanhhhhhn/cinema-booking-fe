@@ -1,248 +1,226 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  Card,
-  CardContent,
-  Divider,
-} from "@mui/material";
-import { Seat } from "@/types";
+import { useBooking } from "@/contexts/BookingContext";
+import OrderSummary from "./OrderSummary";
+import StepIndicator from "./StepIndicator";
 
-interface SeatSelectionProps {
-  onSeatSelect: (seats: Seat[]) => void;
-}
+const seatLayout = [
+  {
+    row: "A",
+    seats: Array.from({ length: 10 }, (_, i) => ({
+      number: i + 1,
+      type: "standard" as const,
+    })),
+  },
+  {
+    row: "B",
+    seats: [
+      ...Array.from({ length: 2 }, (_, i) => ({
+        number: i + 1,
+        type: "standard" as const,
+      })),
+      ...Array.from({ length: 2 }, (_, i) => ({
+        number: i + 3,
+        type: "booked" as const,
+      })),
+      ...Array.from({ length: 7 }, (_, i) => ({
+        number: i + 5,
+        type: "standard" as const,
+      })),
+    ],
+  },
+  {
+    row: "C",
+    seats: Array.from({ length: 14 }, (_, i) => ({
+      number: i + 1,
+      type: "vip" as const,
+    })),
+  },
+  {
+    row: "D",
+    seats: Array.from({ length: 14 }, (_, i) => ({
+      number: i + 1,
+      type: "vip" as const,
+    })),
+  },
+  {
+    row: "E",
+    seats: [
+      ...Array.from({ length: 2 }, (_, i) => ({
+        number: i + 1,
+        type: "couple" as const,
+      })),
+      { number: 3, type: "couple" as const },
+      { number: 4, type: "selected" as const },
+      { number: 5, type: "booked" as const },
+      { number: 6, type: "couple" as const },
+      { number: 7, type: "couple" as const },
+    ],
+  },
+];
 
-export default function SeatSelection({ onSeatSelect }: SeatSelectionProps) {
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+const seatTypes = [
+  { label: "Ghế thường", color: "bg-gray-600", key: "standard" },
+  { label: "Ghế VIP", color: "bg-yellow-500", key: "vip" },
+  { label: "Ghế đôi", color: "bg-pink-400", key: "couple" },
+  { label: "Đang chọn", color: "bg-red-600", key: "selected" },
+  { label: "Đã chọn", color: "bg-teal-500", key: "booked" },
+  { label: "Đã đặt", color: "bg-red-800", key: "reserved" },
+];
 
-  // Seat layout - sample data
-  const rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
-  const columns = Array.from({ length: 12 }, (_, i) => i + 1);
+export default function SeatSelectionStep() {
+  const { bookingState, setSeats, setStep } = useBooking();
+  const [selectedSeats, setSelectedSeats] = useState<string[]>(
+    bookingState.seats
+  );
+  const [timer, setTimer] = useState("10:00");
 
-  // Sample seat data - replace with API call
-  const getSeatStatus = (row: string, col: number) => {
-    // VIP seats (rows A-D)
-    if (["A", "B", "C", "D"].includes(row)) {
-      return { type: "vip", price: 150000, available: Math.random() > 0.2 };
-    }
-    // Couple seats (middle section)
-    if (col >= 5 && col <= 8) {
-      return { type: "couple", price: 200000, available: Math.random() > 0.3 };
-    }
-    // Standard seats
-    return { type: "standard", price: 80000, available: Math.random() > 0.15 };
+  const handleSeatClick = (row: string, number: number, type: string) => {
+    if (type === "booked") return;
+
+    const seatId = `${row}${number}`;
+    setSelectedSeats((prev) => {
+      if (prev.includes(seatId)) {
+        return prev.filter((s) => s !== seatId);
+      }
+      return [...prev, seatId];
+    });
   };
 
-  const handleSeatClick = (row: string, col: number) => {
-    const seatId = `${row}${col}`;
-    const seatData = getSeatStatus(row, col);
-
-    if (!seatData.available) return;
-
-    if (selectedSeats.includes(seatId)) {
-      setSelectedSeats(selectedSeats.filter((id) => id !== seatId));
-    } else {
-      setSelectedSeats([...selectedSeats, seatId]);
-    }
-
-    if (onSeatSelect) {
-      const seats = selectedSeats.includes(seatId)
-        ? selectedSeats.filter((id) => id !== seatId)
-        : [...selectedSeats, seatId];
-      
-      const seatObjects: Seat[] = seats.map((id) => {
-        const r = id[0];
-        const c = parseInt(id.slice(1));
-        const status = getSeatStatus(r, c);
-        return {
-          id,
-          row: r,
-          col: c,
-          price: status.price,
-          status: status.available ? 'selected' : 'occupied',
-          type: status.type as 'standard' | 'vip' | 'couple'
-        };
-      });
-      onSeatSelect(seatObjects);
+  const handleProceed = () => {
+    if (selectedSeats.length > 0) {
+      setSeats(selectedSeats);
+      setStep(2);
     }
   };
 
-  const getSeatColor = (row: string, col: number, status: any) => {
-    if (!status.available) return "bg-gray-400 cursor-not-allowed";
-    if (selectedSeats.includes(`${row}${col}`)) return "bg-teal-500 hover:bg-teal-600";
-    if (status.type === "vip") return "bg-purple-500 hover:bg-purple-600";
-    if (status.type === "couple") return "bg-pink-500 hover:bg-pink-600";
-    return "bg-gray-300 hover:bg-gray-400";
+  const handleBack = () => {
+    setStep(3);
   };
 
-  const calculateTotal = (): number => {
-    return selectedSeats.reduce((total, seatId) => {
-      const status = getSeatStatus(seatId[0], parseInt(seatId.slice(1)));
-      return total + status.price;
-    }, 0);
-  };
+  const getSeatColor = (type: string, row: string, number: number) => {
+    const seatId = `${row}${number}`;
+    if (selectedSeats.includes(seatId)) return "bg-teal-500 text-white";
 
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
+    switch (type) {
+      case "standard":
+        return "bg-gray-600 text-white hover:bg-gray-500";
+      case "vip":
+        return "bg-yellow-500 text-gray-900 hover:bg-yellow-400";
+      case "couple":
+        return "bg-pink-400 text-white hover:bg-pink-300";
+      case "booked":
+        return "bg-red-800 text-gray-400 cursor-not-allowed";
+      case "selected":
+        return "bg-red-600 text-white";
+      default:
+        return "bg-gray-600 text-white";
+    }
   };
 
   return (
-    <Box className="container mx-auto px-4 py-6">
-      <Typography variant="h5" className="font-bold mb-6 text-gray-900">
-        Chọn ghế ngồi
-      </Typography>
+    <div className="min-h-screen bg-[#0f0f1e]">
+      <StepIndicator currentStep={1} />
 
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
-          {/* Screen */}
-          <div className="mb-8 text-center">
-            <div className="bg-gradient-to-b from-gray-800 to-gray-900 text-white py-4 px-8 rounded-lg mb-4 inline-block min-w-[80%]">
-              <Typography variant="h6" className="font-bold">
-                MÀN HÌNH
-              </Typography>
-            </div>
-          </div>
+      <div className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="mb-6">
+              <h1 className="text-white text-4xl font-bold mb-4">Chọn Ghế</h1>
 
-          {/* Seat Map */}
-          <div className="bg-gray-100 p-6 rounded-lg mb-6">
-            {/* Column Numbers */}
-            <div className="flex justify-center mb-2">
-              <div className="w-8"></div>
-              {columns.map((col) => (
-                <div key={col} className="w-8 text-center text-sm font-semibold">
-                  {col}
-                </div>
-              ))}
-            </div>
-
-            {/* Rows */}
-            {rows.map((row) => (
-              <div key={row} className="flex items-center mb-2">
-                <div className="w-8 text-center font-semibold">{row}</div>
-                {columns.map((col) => {
-                  const status = getSeatStatus(row, col);
-                  return (
-                    <button
-                      key={`${row}${col}`}
-                      onClick={() => handleSeatClick(row, col)}
-                      disabled={!status.available}
-                      className={`w-8 h-8 m-1 rounded transition-all ${getSeatColor(
-                        row,
-                        col,
-                        status
-                      )} text-white text-xs font-semibold`}
-                      title={`${row}${col} - ${formatPrice(status.price)}`}
-                    >
-                      {status.type === "couple" ? (
-                        <i className="ti ti-heart text-xs"></i>
-                      ) : (
-                        col
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="bg-[#1a1a2e] rounded-lg p-4 mb-6 inline-flex items-center gap-2">
+                {/* <Clock className="w-4 h-4 text-red-500" /> */}
+                <span className="text-white text-sm">
+                  Ghế đang được giữ trong
+                </span>
+                <span className="text-red-500 font-bold">{timer}</span>
               </div>
-            ))}
-          </div>
-
-          {/* Legend */}
-          <div className="flex flex-wrap gap-4 justify-center mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-300 rounded"></div>
-              <span className="text-sm">Ghế thường ({formatPrice(80000)})</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-purple-500 rounded"></div>
-              <span className="text-sm">VIP ({formatPrice(150000)})</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-pink-500 rounded"></div>
-              <span className="text-sm">Đôi ({formatPrice(200000)})</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-teal-500 rounded"></div>
-              <span className="text-sm">Đã chọn</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-400 rounded"></div>
-              <span className="text-sm">Đã bán</span>
-            </div>
-          </div>
-        </Grid>
 
-        {/* Right Sidebar - Selected Seats Summary */}
-        <Grid item xs={12} md={4}>
-          <Card className="sticky top-20 shadow-lg">
-            <CardContent className="p-6">
-              <Typography variant="h6" className="font-bold mb-4">
-                Ghế đã chọn
-              </Typography>
-
-              {selectedSeats.length === 0 ? (
-                <Typography variant="body2" className="text-gray-500 text-center py-8">
-                  Chưa chọn ghế nào
-                </Typography>
-              ) : (
-                <div className="space-y-3 mb-4">
-                  {selectedSeats.map((seatId) => {
-                    const status = getSeatStatus(seatId[0], parseInt(seatId.slice(1)));
-                    return (
-                      <div
-                        key={seatId}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Chip
-                            label={seatId}
-                            size="small"
-                            className="bg-teal-500 text-white font-semibold"
-                          />
-                          <span className="text-sm text-gray-600">{status.type}</span>
-                        </div>
-                        <span className="font-semibold text-teal-600">
-                          {formatPrice(status.price)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <Divider className="my-4" />
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Số ghế:</span>
-                  <span className="font-semibold">{selectedSeats.length}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Tổng tiền:</span>
-                  <span className="text-teal-600">{formatPrice(calculateTotal())}</span>
-                </div>
+            <div className="bg-[#1a1a2e] rounded-lg p-8 mb-6">
+              <div className="bg-gray-700 rounded-lg py-3 mb-8 text-center">
+                <span className="text-white font-medium">Màn hình</span>
               </div>
 
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                className="bg-teal-500 hover:bg-teal-600 mt-4"
-                disabled={selectedSeats.length === 0}
-              >
-                Tiếp tục
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+              <div className="space-y-3 mb-8">
+                {seatLayout.map((rowData) => (
+                  <div key={rowData.row} className="flex items-center gap-2">
+                    <span className="text-white font-bold w-8">
+                      {rowData.row}
+                    </span>
+                    <div className="flex gap-2 flex-wrap">
+                      {rowData.seats.map((seat) => (
+                        <button
+                          key={seat.number}
+                          onClick={() =>
+                            handleSeatClick(rowData.row, seat.number, seat.type)
+                          }
+                          disabled={seat.type === "booked"}
+                          className={`w-10 h-10 rounded-lg font-semibold text-sm transition ${getSeatColor(
+                            seat.type,
+                            rowData.row,
+                            seat.number
+                          )}`}
+                        >
+                          {seat.number}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-4 justify-center">
+                {seatTypes.map((type) => (
+                  <div key={type.key} className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded ${type.color}`}></div>
+                    <span className="text-gray-400 text-sm">{type.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-1">
+            <div className="mb-6 bg-[#1a1a2e] rounded-lg p-4">
+              <div className="flex gap-4">
+                <img
+                  src="https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=400"
+                  alt="Movie poster"
+                  className="w-24 h-32 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <h3 className="text-white font-bold mb-3">
+                    Doraemon: Nobita và Bản Giao Hưởng Địa Cầu
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      {/* <MapPin className="w-4 h-4" /> */}
+                      <span>CGV Vincom Center</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-400">
+                      {/* <Calendar className="w-4 h-4" /> */}
+                      <span>Thứ Hai, 27/05/2024</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-400">
+                      {/* <Clock className="w-4 h-4" /> */}
+                      <span>19:30 - Phòng chiếu 4</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <OrderSummary
+              onProceed={handleProceed}
+              onBack={handleBack}
+              proceedLabel="Tiếp tục"
+              showMovieInfo={false}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
-

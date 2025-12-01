@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import router from "next/router";
 import { useState } from "react";
 
 export default function Header() {
@@ -10,6 +11,7 @@ export default function Header() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+ 
 
   return (
     <header className="bg-[#1a1a1a] border-b border-gray-800 sticky top-0 z-50">
@@ -56,12 +58,12 @@ export default function Header() {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
-            <button className="px-4 lg:px-5 py-2 bg-transparent text-white border border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+            <a href="/login" className="px-4 lg:px-5 py-2 bg-transparent text-white border border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-800 transition cursor-pointer">
               Đăng nhập
-            </button>
-            <button className="px-4 lg:px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">
+            </a>
+            <a href="/register" className="px-4 lg:px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition cursor-pointer">
               Đăng ký
-            </button>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -126,12 +128,12 @@ export default function Header() {
               Tin tức
             </a>
             <div className="flex flex-col gap-3 pt-2 border-t border-gray-800">
-              <button className="w-full px-5 py-2 bg-transparent text-white border border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+              <Link href="/login" className="w-full px-5 py-2 bg-transparent text-white border border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-800 transition cursor-pointer">
                 Đăng nhập
-              </button>
-              <button className="w-full px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">
+              </Link>
+              <Link href="/register" className="w-full px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition cursor-pointer">
                 Đăng ký
-              </button>
+              </Link>
             </div>
           </nav>
         </div>

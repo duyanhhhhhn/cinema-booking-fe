@@ -1,192 +1,125 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
-
-import { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Divider,
-  Alert,
-  IconButton,
-  InputAdornment,
-} from "@mui/material";
+import { useState } from "react";
 
-export default function Login() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      // Handle login logic here
-      console.log("Login:", formData);
-    }, 1000);
   };
 
   return (
-    <Box className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 py-12 px-4">
-      <Card className="max-w-md w-full shadow-xl">
-        <CardContent className="p-8">
-          <div className="text-center mb-8">
-            <div className="mb-4">
-              <i className="ti ti-ticket text-6xl text-teal-500"></i>
+    <div className="min-h-screen bg-black flex">
+      <div className="w-full lg:w-1/2 flex md:items-center md:justify-center p-8">
+        <div className="w-full max-w-md">
+          <div className="flex justify-center ">
+            <div className="  rounded-lg flex items-center justify-center">
+              <img
+                src="/logo/logo_cinema.png"
+                alt="Cinema"
+                className="w-40 h-40"
+              />
             </div>
-            <Typography variant="h4" className="font-bold text-gray-900 mb-2">
-              Đăng nhập
-            </Typography>
-            <Typography variant="body2" className="text-gray-600">
-              Chào mừng bạn quay trở lại!
-            </Typography>
           </div>
 
-          {error && (
-            <Alert severity="error" className="mb-4">
-              {error}
-            </Alert>
-          )}
+          <h1 className="text-white text-4xl font-bold text-center mb-2">
+            Đăng nhập
+          </h1>
+          <p className="text-gray-400 text-center mb-8">Chào mừng trở lại!</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="your@email.com"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-mail text-gray-400"></i>
-                  </InputAdornment>
-                ),
-              }}
-            />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Email hoặc Tên đăng nhập
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nhập email hoặc tên đăng nhập"
+                className="w-full bg-[#1a1a1a] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 placeholder:text-gray-600"
+                required
+              />
+            </div>
 
-            <TextField
-              fullWidth
-              label="Mật khẩu"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Nhập mật khẩu"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-lock text-gray-400"></i>
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      <i
-                        className={showPassword ? "ti ti-eye-off" : "ti ti-eye"}
-                      ></i>
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input type="checkbox" id="remember" className="mr-2" />
-                <label htmlFor="remember" className="text-sm text-gray-600">
-                  Ghi nhớ đăng nhập
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-white text-sm font-medium">
+                  Mật khẩu
                 </label>
+                <Link
+                  href="#"
+                  className="text-gray-400 text-sm hover:text-white"
+                >
+                  Quên mật khẩu?
+                </Link>
               </div>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-teal-600 hover:underline"
-              >
-                Quên mật khẩu?
-              </Link>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu của bạn"
+                  className="w-full bg-[#1a1a1a] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 placeholder:text-gray-600"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPassword
+                    ? // <EyeOff className="w-5 h-5" />
+                      123
+                    : // <Eye className="w-5 h-5" />
+                      123}
+                </button>
+              </div>
             </div>
 
-            <Button
+            {error && (
+              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
               type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              className="bg-teal-500 hover:bg-teal-600 py-3 text-lg font-semibold"
               disabled={loading}
+              className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
-                <>
-                  <i className="ti ti-loader-2 animate-spin mr-2"></i>
-                  Đang đăng nhập...
-                </>
-              ) : (
-                "Đăng nhập"
-              )}
-            </Button>
-          </form>
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
 
-          <Divider className="my-6">
-            <Typography variant="body2" className="text-gray-500">
-              Hoặc
-            </Typography>
-          </Divider>
-
-          <div className="space-y-3">
-            <Button
-              variant="outlined"
-              fullWidth
-              className="border-gray-300"
-              startIcon={<i className="ti ti-brand-google text-xl"></i>}
-            >
-              Đăng nhập bằng Google
-            </Button>
-            <Button
-              variant="outlined"
-              fullWidth
-              className="border-gray-300"
-              startIcon={<i className="ti ti-brand-facebook text-xl"></i>}
-            >
-              Đăng nhập bằng Facebook
-            </Button>
-          </div>
-
-          <div className="mt-6 text-center">
-            <Typography variant="body2" className="text-gray-600">
+            <p className="text-center text-gray-400 text-sm">
               Chưa có tài khoản?{" "}
               <Link
                 href="/register"
-                className="text-teal-600 font-semibold hover:underline"
+                className="text-red-600 hover:text-red-500 font-semibold"
               >
                 Đăng ký ngay
               </Link>
-            </Typography>
-          </div>
-        </CardContent>
-      </Card>
-    </Box>
+            </p>
+          </form>
+        </div>
+      </div>
+
+      <div className="hidden lg:block lg:w-1/2 relative">
+        <img
+          src="/auth/login.png"
+          alt="Cinema"
+          className="w-full h-[968px] object-cover"
+        />
+      </div>
+    </div>
   );
 }
