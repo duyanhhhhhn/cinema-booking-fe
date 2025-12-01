@@ -1,281 +1,207 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Divider,
-  Alert,
-  IconButton,
-  InputAdornment,
-} from "@mui/material";
+import React from "react";
 
-export default function Register() {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+export default function RegisterPage() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+    if (password !== confirmPassword) {
+      setError("Mật khẩu không khớp");
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (password.length < 6) {
       setError("Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      // Handle registration logic here
-      console.log("Register:", formData);
-    }, 1000);
+
+
   };
 
   return (
-    <Box className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 py-12 px-4">
-      <Card className="max-w-md w-full shadow-xl">
-        <CardContent className="p-8">
-          <div className="text-center mb-8">
-            <div className="mb-4">
-              <i className="ti ti-user-plus text-6xl text-teal-500"></i>
-            </div>
-            <Typography variant="h4" className="font-bold text-gray-900 mb-2">
-              Đăng ký tài khoản
-            </Typography>
-            <Typography variant="body2" className="text-gray-600">
-              Tạo tài khoản để đặt vé nhanh chóng
-            </Typography>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#0a0a0a] flex items-center justify-center p-4">
+      <div className="absolute inset-0 overflow-hidden opacity-20">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600 rounded-full blur-3xl"></div>
+      </div>
 
-          {error && (
-            <Alert severity="error" className="mb-4">
-              {error}
-            </Alert>
-          )}
+      <div className="relative w-full max-w-md">
+        <div className="bg-[#1a1a2e]/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-800">
+          <h1 className="text-white text-3xl font-bold text-center mb-2">
+            Đăng ký 
+          </h1>
+          <p className="text-gray-400 text-center text-sm mb-8">
+            Tạo tài khoản mới để trải nghiệm những bộ phim hay nhất.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <TextField
-              fullWidth
-              label="Họ và tên"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-              placeholder="Nguyễn Văn A"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-user text-gray-400"></i>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="your@email.com"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-mail text-gray-400"></i>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Số điện thoại"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              placeholder="0901234567"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-phone text-gray-400"></i>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Mật khẩu"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Tối thiểu 6 ký tự"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-lock text-gray-400"></i>
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      <i
-                        className={showPassword ? "ti ti-eye-off" : "ti ti-eye"}
-                      ></i>
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Xác nhận mật khẩu"
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              placeholder="Nhập lại mật khẩu"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ti ti-lock text-gray-400"></i>
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      edge="end"
-                    >
-                      <i
-                        className={
-                          showConfirmPassword ? "ti ti-eye-off" : "ti ti-eye"
-                        }
-                      ></i>
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <div className="flex items-start">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Họ và tên
+              </label>
               <input
-                type="checkbox"
-                id="terms"
-                className="mt-1 mr-2"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Nhập họ và tên của bạn"
+                className="w-full bg-[#0f0f1e] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent placeholder:text-gray-600"
                 required
               />
-              <label htmlFor="terms" className="text-sm text-gray-600">
-                Tôi đồng ý với{" "}
-                <Link href="/terms" className="text-teal-600 hover:underline">
-                  Điều khoản & Điều kiện
-                </Link>{" "}
-                và{" "}
-                <Link href="/privacy" className="text-teal-600 hover:underline">
-                  Chính sách bảo mật
-                </Link>
-              </label>
             </div>
 
-            <Button
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nhập địa chỉ email"
+                className="w-full bg-[#0f0f1e] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent placeholder:text-gray-600"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Số điện thoại
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Nhập số điện thoại"
+                className="w-full bg-[#0f0f1e] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent placeholder:text-gray-600"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu"
+                  className="w-full bg-[#0f0f1e] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent placeholder:text-gray-600"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPassword ? (
+                    // <EyeOff className="w-5 h-5" />
+                    123
+                  ) : (
+                      // <Eye className="w-5 h-5" />
+                      123
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Xác nhận mật khẩu
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Nhập lại mật khẩu"
+                  className="w-full bg-[#0f0f1e] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent placeholder:text-gray-600"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showConfirmPassword ? (
+                    // <EyeOff className="w-5 h-5" />
+                    123
+                  ) : (
+                    // <Eye className="w-5 h-5" />
+                    123
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white text-sm font-medium block mb-2">
+                Mã OTP
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="------"
+                  maxLength={6}
+                  className="flex-1 bg-[#0f0f1e] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent placeholder:text-gray-600 text-center tracking-widest"
+                />
+                <button
+                  type="button"
+                  className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-medium text-sm whitespace-nowrap"
+                >
+                  Gửi mã OTP
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
               type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              className="bg-teal-500 hover:bg-teal-600 py-3 text-lg font-semibold"
               disabled={loading}
+              className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
-                <>
-                  <i className="ti ti-loader-2 animate-spin mr-2"></i>
-                  Đang đăng ký...
-                </>
-              ) : (
-                "Đăng ký"
-              )}
-            </Button>
-          </form>
-
-          <Divider className="my-6">
-            <Typography variant="body2" className="text-gray-500">
-              Hoặc
-            </Typography>
-          </Divider>
-
-          <div className="space-y-3">
-            <Button
-              variant="outlined"
-              fullWidth
-              className="border-gray-300"
-              startIcon={<i className="ti ti-brand-google text-xl"></i>}
-            >
-              Đăng ký bằng Google
-            </Button>
-            <Button
-              variant="outlined"
-              fullWidth
-              className="border-gray-300"
-              startIcon={<i className="ti ti-brand-facebook text-xl"></i>}
-            >
-              Đăng ký bằng Facebook
-            </Button>
-          </div>
-
-          <div className="mt-6 text-center">
-            <Typography variant="body2" className="text-gray-600">
+              {loading ? "Đang đăng ký..." : "Đăng ký"}
+            </button>
+            <p className="text-center text-gray-400 text-sm">
               Đã có tài khoản?{" "}
               <Link
                 href="/login"
-                className="text-teal-600 font-semibold hover:underline"
+                className="text-red-600 hover:text-red-500 font-semibold"
               >
                 Đăng nhập ngay
               </Link>
-            </Typography>
-          </div>
-        </CardContent>
-      </Card>
-    </Box>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
