@@ -1,6 +1,32 @@
 "use client"
 
 export default function Home() {
+    const render = [];
+    for (let i = 0; i < 6; i++) {
+        render.push(<div className="flex flex-col gap-3 pb-3 group">
+            <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
+                <div className="absolute inset-0 bg-cover bg-center" data-alt="Movie poster 1"
+                    style={{
+                        backgroundImage:
+                            'url("")'
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
+                    <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                        Mua Vé
+                    </button>
+                </div>
+            </div>
+            <div>
+                <p className="text-white text-base font-medium leading-normal">
+                    Tên Phim 1
+                </p>
+                <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
+                    Hành động
+                </p>
+            </div>
+        </div>)
+    }
     return (
         <>
             <div className="bg-dark relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden" style={{ backgroundColor: "#121212" }}>
@@ -56,154 +82,7 @@ export default function Home() {
                                 </div>
                             </div>
                             <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 sm:gap-6">
-                                <div className="flex flex-col gap-3 pb-3 group">
-                                    <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
-                                        <div className="absolute inset-0 bg-cover bg-center" data-alt="Movie poster 1"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("")'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                            <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                                Mua Vé
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-base font-medium leading-normal">
-                                            Tên Phim 1
-                                        </p>
-                                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                            Hành động
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 pb-3 group">
-                                    <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center"
-                                            data-alt="Movie poster 2"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("")'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                            <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                                Mua Vé
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-base font-medium leading-normal">
-                                            Tên Phim 2
-                                        </p>
-                                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                            Hài
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 pb-3 group">
-                                    <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center"
-                                            data-alt="Movie poster 3"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD--pKNyXxc_RI3pmLkQMRhukptIl_SpXAmzwvUtH3ZN_UTn8cpnZgXvfbab2V1gZTt1O2BotxiYjc-tmjNVNDl7ndXNuPXQgzRwy35iF2hNfVqv8yuCFYSQGxBP6epoxQdx58R8l5HseGgSNUxH4eR0YHn0eYsaDP7adaB7c3YS5eQTEZPWKYI2MRpzOha_pYwfGO1IOM2gPrB4u19g7pDCEsryaZUStvnhGF2cyz2GaRThRpsPaL-U-pEHf6NCjEfc6VbFDmS4LiN")'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                            <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                                Mua Vé
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-base font-medium leading-normal">
-                                            Tên Phim 3
-                                        </p>
-                                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                            Kinh dị
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 pb-3 group">
-                                    <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center"
-                                            data-alt="Movie poster 4"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBxJy7pIzGyNplbZ4m1wNzZSXi-FMglIEVOIy0ISCQ4Cvx2QS-eb6k0GUB3AMTFmXl0Vr_OJcRhF-GQKJwew23GZpPoY4kGc9PESpgWeSkyGBLMudZ5AkSmQaNuIAgLbDu5kIY7fEdxVPs2vK9EErhVKyw-sXrP-7EEI9UcEy91QZ1yp7qlTCjF73Pe75CzwPxue5HAVTzsqFzZtjM6tr86ShDPWcG5DB6vgBcajzg4DkjMD4w4GayhJ1kdppTZVJMc6w-DxqVmFzKt")'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                            <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                                Mua Vé
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-base font-medium leading-normal">
-                                            Tên Phim 4
-                                        </p>
-                                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                            Tình cảm
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 pb-3 group">
-                                    <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center"
-                                            data-alt="Movie poster 5"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDaHg7KVAe2f4a1kXPV28-MT1zslIDU5coEHTAm5QW3KI_G7ALY3yhJBO5DwB6NOyS1uaRpp70pa7pZE3Hso4Cv0nv_XMRVP4gCVojIqvecXfqCwXSUV1Tf-MUzCqf9FOE2IHTLSj4vNW6YpNW67Nhdz6I6Gyh6mMLDaPXgNQvQFjeUIsDVkUiWl2B8wVeVmcdewFeMWLt1oXs2sbTMX-P-1UsvzNm3o7BDJqvJyUltePjhlIsX5ZPJZFw30Npzxo1nm1fUXszm5dIy")'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                            <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                                Mua Vé
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-base font-medium leading-normal">
-                                            Tên Phim 5
-                                        </p>
-                                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                            Phiêu lưu
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 pb-3 group">
-                                    <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center"
-                                            data-alt="Movie poster 6"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDNL-04G4LLJJ_iCf0rsdcnXy4ae3GcKtFfpzxoQI0stzhF9-wHoOmAlUj82X_2TcsWa4ZnzbzsCpchAhWFWQeJpPYdxaiCbzSN6YpWQYKTo5KUi9F_yeLJVYX7qLkHi2jWY7krDyOfTrocfZ9QlXP7o392SpZPo4Bu2n3J4Gi11OBOIIQHbZZud7FQNHufkvzxun7YGXrrE5VVj8KEHO2eMXG-bcjfHH_t_-uW8Er6F347CjYBjDX6vR7yTiOcQ_gRNM7s8M06_02X")'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                                            <button className="w-full text-center bg-primary text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                                                Mua Vé
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-base font-medium leading-normal">
-                                            Tên Phim 6
-                                        </p>
-                                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                            Hoạt hình
-                                        </p>
-                                    </div>
-                                </div>
+                                {render}
                             </div>
                             <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-10">
                                 Tin Tức &amp; Ưu Đãi
