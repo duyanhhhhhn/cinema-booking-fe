@@ -22,11 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={outfit.className}>
-        <Box sx={{ minHeight: '100vh' }}>
+        <Box sx={{ minHeight: "100vh"  }}>
           <Header />
-          <main>
-            {children}
-          </main>
+          <div className="h-[calc(100vh-64px)]">{children}</div>
           <Footer />
         </Box>
       </body>
