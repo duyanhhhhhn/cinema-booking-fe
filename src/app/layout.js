@@ -7,10 +7,11 @@ const outfit = Outfit({ subsets: ["latin"] });
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={outfit.className}
-      >
-        <div> <Header/>
+      <head>
+        <link rel="stylesheet" href="/css/home.css" />
+      </head>
+      <body className={outfit.className}>
+        <div> <Header />
           {children}
         </div>
       </body>
