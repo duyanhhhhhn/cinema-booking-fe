@@ -1,10 +1,20 @@
 "use client"
 
+import { useState } from "react";
+
 export default function Home() {
+    const dangChieu = [];
+    const sapChieu = [];
     const render = [];
+    const [movies, setMovies] = useState([]);
+    const [tab, setTab] = useState("dangChieu");
+    function change(movie, key) {
+        setMovies(movie);
+        setTab(key);
+    }
     for (let i = 0; i < 6; i++) {
         render.push(
-            <div className="flex flex-col gap-3 pb-3 group">
+            <div key={i} className="flex flex-col gap-3 pb-3 group">
                 <a>
                     <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
                         <div className="absolute inset-0 bg-cover bg-center" data-alt="Movie poster 1"
@@ -66,17 +76,16 @@ export default function Home() {
                             </div>
                             <div className="pb-3 mb-4">
                                 <div className="flex border-b border-white/10 gap-8">
-                                    <a
-                                        className="flex flex-col items-center justify-center border-b-[3px] border-b-primary text-white pb-[13px] pt-4"
-                                        href="#"
-                                    >
-                                        <p className="text-white text-sm font-bold leading-normal tracking-[0.015em]">
+                                    <a className={tab === "dangChieu" ? "flex flex-col items-center justify-center border-b-[3px] border-b-primary text-white pb-[13px] pt-4" : "flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#E0E0E0]/70 pb-[13px] pt-4 hover:text-white transition-colors"}
+                                        href="#" onClick={() => change(dangChieu, "dangChieu")}>
+                                        <p className="text-sm font-bold leading-normal tracking-[0.015em]">
                                             Phim Đang Chiếu
                                         </p>
                                     </a>{" "}
                                     <a
-                                        className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#E0E0E0]/70 pb-[13px] pt-4 hover:text-white transition-colors"
+                                        className={tab === "sapChieu" ? "flex flex-col items-center justify-center border-b-[3px] border-b-primary text-white pb-[13px] pt-4" : "flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#E0E0E0]/70 pb-[13px] pt-4 hover:text-white transition-colors"}
                                         href="#"
+                                        onClick={() => change(sapChieu, "sapChieu")}
                                     >
                                         <p className="text-sm font-bold leading-normal tracking-[0.015em]">
                                             Phim Sắp Chiếu
@@ -239,7 +248,7 @@ export default function Home() {
                             <p className="text-[#E0E0E0]/70 text-lg">
                                 Đăng ký ngay để nhận ưu đãi đặc biệt và điểm thành viên.
                             </p>
-                            <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors mt-2">
+                            <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em]">
                                 <span className="truncate">Đăng Ký Ngay</span>
                             </button>
                         </div>

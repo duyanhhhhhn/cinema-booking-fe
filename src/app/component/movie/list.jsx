@@ -9,7 +9,7 @@ export default function CinemaList() {
                 <a>
                     <div
                         className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg"
-                        data-alt="Movie poster for Dune: Part Two"
+                        data-alt="Image"
                         style={{
                             backgroundImage:
                                 'url("")'

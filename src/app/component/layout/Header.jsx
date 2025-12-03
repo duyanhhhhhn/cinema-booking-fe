@@ -9,10 +9,10 @@ export default function Header() {
         <a
           href="/"
           className="flex items-center text-black"
-          sx={{height:'55px'}}
+          sx={{ height: '55px' }}
         >
           <Image src="/logo/logo1.png" alt="CineMax Logo" width={132} height={55} sx={{
-          }}/>
+          }} />
         </a>
 
         <nav className="flex space-x-8 items-center">
@@ -20,7 +20,7 @@ export default function Header() {
             href="/movies"
             className="text-black hover:text-[#337AB7] transition-colors"
           >
-            
+
             Phim
           </a>
           <a
