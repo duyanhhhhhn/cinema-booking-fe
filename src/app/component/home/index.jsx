@@ -8,7 +8,14 @@ export default function Home() {
     const render = [];
     const [movies, setMovies] = useState([]);
     const [tab, setTab] = useState("dangChieu");
-    function change(movie, key) {
+    function change(key) {
+        let movie = [];
+        if (key === "dangChieu") {
+            movie = dangChieu;
+        }
+        else if (key === "sapChieu") {
+            movie = sapChieu;
+        }
         setMovies(movie);
         setTab(key);
     }
@@ -64,7 +71,8 @@ export default function Home() {
                                         Trải nghiệm những thước phim hành động mãn nhãn và kỹ xảo đỉnh
                                         cao trên màn ảnh rộng.
                                     </p>
-                                    <button className="btn btn-danger flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+                                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors"
+                                        style={{ backgroundColor: "red" }}>
                                         <span className="truncate">Đặt Vé Ngay</span>
                                     </button>
                                 </div>
