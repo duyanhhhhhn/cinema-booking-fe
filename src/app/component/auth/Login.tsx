@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useState } from "react";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className=" bg-black flex">
       <div className="w-full lg:w-1/2 flex md:items-center md:justify-center p-8">
         <div className="w-full max-w-md">
           <div className="flex justify-center ">
@@ -75,13 +76,13 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
                 >
-                  {showPassword
-                    ? // <EyeOff className="w-5 h-5" />
-                      123
-                    : // <Eye className="w-5 h-5" />
-                      123}
+                  {showPassword ? (
+                    <VisibilityOff className="w-5 h-5" />
+                  ) : (
+                    <Visibility className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -117,7 +118,7 @@ export default function LoginPage() {
         <img
           src="/auth/login.png"
           alt="Cinema"
-          className="w-full h-[968px] object-cover"
+          className="w-full h-auto object-cover"
         />
       </div>
     </div>

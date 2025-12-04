@@ -1,3 +1,4 @@
+import CinemaList from "../component/movie/list";
 import MovieList from "../component/movies/MovieList";
 
 export const metadata = {
@@ -6,6 +7,5 @@ export const metadata = {
 };
 
 export default function MoviesPage() {
-  return <MovieList />;
+  return <CinemaList />;
 }
-

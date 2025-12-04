@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React from "react";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -33,13 +34,10 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-
-
-
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#0a0a0a] flex items-center justify-center p-4">
+    <div className=" from-[#0a0a0a] via-[#1a1a2e] to-[#0a0a0a] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden opacity-20">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600 rounded-full blur-3xl"></div>
@@ -48,7 +46,7 @@ export default function RegisterPage() {
       <div className="relative w-full max-w-md">
         <div className="bg-[#1a1a2e]/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-800">
           <h1 className="text-white text-3xl font-bold text-center mb-2">
-            Đăng ký 
+            Đăng ký
           </h1>
           <p className="text-gray-400 text-center text-sm mb-8">
             Tạo tài khoản mới để trải nghiệm những bộ phim hay nhất.
@@ -113,14 +111,12 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
                 >
                   {showPassword ? (
-                    // <EyeOff className="w-5 h-5" />
-                    123
+                    <VisibilityOff className="w-5 h-5" />
                   ) : (
-                      // <Eye className="w-5 h-5" />
-                      123
+                    <Visibility className="w-5 h-5" />
                   )}
                 </button>
               </div>
@@ -142,14 +138,12 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
                 >
                   {showConfirmPassword ? (
-                    // <EyeOff className="w-5 h-5" />
-                    123
+                    <VisibilityOff className="w-5 h-5" />
                   ) : (
-                    // <Eye className="w-5 h-5" />
-                    123
+                    <Visibility className="w-5 h-5" />
                   )}
                 </button>
               </div>
