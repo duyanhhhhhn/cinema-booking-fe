@@ -58,10 +58,10 @@ const theaters: Theater[] = [
 
 export default function CinemaFind() {
   return (
-    <section className="w-full bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14 space-y-8">
-        {/* HEADER: nền đen, chữ trắng */}
-        <header className="space-y-2 rounded-2xl bg-slate-900 px-6 py-5 text-slate-50 shadow-md">
+    <section className="w-full bg-[#1a1a1a]">
+ <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 text-slate-50 md:px-8 md:py-14">
+        {/* HEADER */}
+        <header className="space-y-2 rounded-2xl border border-[#3b1c22] bg-gradient-to-r from-[#261117] to-[#160b0f] px-6 py-5 shadow-[0_18px_45px_rgba(0,0,0,0.65)]">
           <h1 className="text-2xl font-semibold md:text-3xl">
             Tìm Rạp Chiếu Phim
           </h1>
@@ -80,13 +80,13 @@ export default function CinemaFind() {
             <input
               type="text"
               placeholder="Tìm rạp theo tên hoặc địa chỉ..."
-              className="h-12 w-full rounded-xl border border-slate-200 bg-slate-100/80 pl-11 pr-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 backdrop-blur-sm focus:border-red-400 focus:bg-slate-50"
+              className="h-12 w-full rounded-xl border border-[#3b252c] bg-[#201219]/95 pl-11 pr-4 text-sm text-slate-100 outline-none placeholder:text-slate-500 backdrop-blur-sm focus:border-[#fb6c6c] focus:bg-[#26141c]"
             />
           </div>
 
           {/* Filter buttons */}
           <div className="flex flex-wrap gap-3 text-xs md:text-sm">
-            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-4 py-2 text-slate-900 backdrop-blur-sm transition hover:border-red-300 hover:bg-red-50">
+            <button className="inline-flex items-center gap-2 rounded-full border border-[#3b252c] bg-[#1c1117]/95 px-4 py-2 text-slate-100 backdrop-blur-sm transition hover:border-[#fb6c6c] hover:bg-[#27141d]">
               <span className="material-symbols-outlined text-base">
                 location_on
               </span>
@@ -96,7 +96,7 @@ export default function CinemaFind() {
               </span>
             </button>
 
-            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-4 py-2 text-slate-900 backdrop-blur-sm transition hover:border-red-300 hover:bg-red-50">
+            <button className="inline-flex items-center gap-2 rounded-full border border-[#3b252c] bg-[#1c1117]/95 px-4 py-2 text-slate-100 backdrop-blur-sm transition hover:border-[#fb6c6c] hover:bg-[#27141d]">
               <span className="material-symbols-outlined text-base">sort</span>
               <span>Sắp xếp: Gần nhất</span>
               <span className="material-symbols-outlined text-sm">
@@ -104,7 +104,7 @@ export default function CinemaFind() {
               </span>
             </button>
 
-            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-4 py-2 text-slate-900 backdrop-blur-sm transition hover:border-red-300 hover:bg-red-50">
+            <button className="inline-flex items-center gap-2 rounded-full border border-[#3b252c] bg-[#1c1117]/95 px-4 py-2 text-slate-100 backdrop-blur-sm transition hover:border-[#fb6c6c] hover:bg-[#27141d]">
               <span className="material-symbols-outlined text-base">map</span>
               <span>Xem trên bản đồ</span>
             </button>
@@ -116,10 +116,10 @@ export default function CinemaFind() {
           {theaters.map((theater) => (
             <article
               key={theater.id}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/95 text-slate-50 shadow-[0_16px_40px_rgba(15,23,42,0.35)] backdrop-blur-sm"
+              className="overflow-hidden rounded-2xl border border-[#3d2229] bg-gradient-to-b from-[#221119] to-[#12060a] text-slate-50 shadow-[0_20px_45px_rgba(0,0,0,0.75)]"
             >
               {/* Ảnh rạp */}
-              <div className="h-48 w-full overflow-hidden bg-slate-900">
+              <div className="h-48 w-full overflow-hidden bg-black">
                 <img
                   src={theater.image}
                   alt={theater.name}
@@ -129,7 +129,7 @@ export default function CinemaFind() {
 
               {/* Nội dung rạp */}
               <div className="space-y-2 px-5 pb-5 pt-4">
-                <p className="text-[12px] font-medium text-red-300">
+                <p className="text-[12px] font-medium text-[#ff8b7c]">
                   {theater.city}
                 </p>
                 <h3 className="text-lg font-semibold">{theater.name}</h3>
@@ -139,20 +139,20 @@ export default function CinemaFind() {
                   {theater.features.map((feature) => (
                     <span
                       key={feature}
-                      className="rounded-full bg-slate-800 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-red-300"
+                      className="rounded-full border border-[#ff5f5f]/60 bg-[#2b151c] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[#ffd8cf]"
                     >
                       {feature}
                     </span>
                   ))}
 
                   {theater.status === "maintenance" && (
-                    <span className="rounded-full bg-amber-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-amber-300">
+                    <span className="rounded-full border border-amber-400/60 bg-[#3b2a14] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-amber-200">
                       Tạm dừng
                     </span>
                   )}
                 </div>
 
-                <button className="mt-4 inline-flex items-center justify-center rounded-full bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-red-500/50 transition hover:bg-red-400">
+                <button className="mt-4 inline-flex items-center justify-center rounded-full bg-[#ff4337] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#ff4337]/60 transition hover:bg-[#ff5b4d]">
                   Xem Lịch Chiếu
                 </button>
               </div>
