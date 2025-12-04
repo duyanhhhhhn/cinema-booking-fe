@@ -1,3 +1,5 @@
+// src/app/component/cinemas/CinemaFind.tsx
+
 type TheaterStatus = "active" | "maintenance";
 
 type Theater = {
@@ -56,18 +58,21 @@ const theaters: Theater[] = [
 
 export default function CinemaFind() {
   return (
-    <section className="w-full bg-slate-950">
-      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14 space-y-8 text-slate-50">
-        <header className="space-y-2">
+    <section className="w-full bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14 space-y-8">
+        {/* HEADER: nền đen, chữ trắng */}
+        <header className="space-y-2 rounded-2xl bg-slate-900 px-6 py-5 text-slate-50 shadow-md">
           <h1 className="text-2xl font-semibold md:text-3xl">
             Tìm Rạp Chiếu Phim
           </h1>
-          <p className="text-sm text-slate-400 md:text-base">
+          <p className="text-sm text-slate-300 md:text-base">
             Khám phá các rạp chiếu phim gần bạn và xem lịch chiếu mới nhất.
           </p>
         </header>
 
+        {/* Search + Filters */}
         <div className="space-y-4">
+          {/* Ô search */}
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
               <span className="material-symbols-outlined">search</span>
@@ -75,12 +80,13 @@ export default function CinemaFind() {
             <input
               type="text"
               placeholder="Tìm rạp theo tên hoặc địa chỉ..."
-              className="h-12 w-full rounded-xl bg-slate-800 pl-11 pr-4 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-red-500/70"
+              className="h-12 w-full rounded-xl border border-slate-200 bg-slate-100/80 pl-11 pr-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 backdrop-blur-sm focus:border-red-400 focus:bg-slate-50"
             />
           </div>
 
+          {/* Filter buttons */}
           <div className="flex flex-wrap gap-3 text-xs md:text-sm">
-            <button className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-2 text-slate-100 transition hover:bg-slate-700">
+            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-4 py-2 text-slate-900 backdrop-blur-sm transition hover:border-red-300 hover:bg-red-50">
               <span className="material-symbols-outlined text-base">
                 location_on
               </span>
@@ -90,7 +96,7 @@ export default function CinemaFind() {
               </span>
             </button>
 
-            <button className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-2 text-slate-100 transition hover:bg-slate-700">
+            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-4 py-2 text-slate-900 backdrop-blur-sm transition hover:border-red-300 hover:bg-red-50">
               <span className="material-symbols-outlined text-base">sort</span>
               <span>Sắp xếp: Gần nhất</span>
               <span className="material-symbols-outlined text-sm">
@@ -98,19 +104,21 @@ export default function CinemaFind() {
               </span>
             </button>
 
-            <button className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-2 text-slate-100 transition hover:bg-slate-700">
+            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-4 py-2 text-slate-900 backdrop-blur-sm transition hover:border-red-300 hover:bg-red-50">
               <span className="material-symbols-outlined text-base">map</span>
               <span>Xem trên bản đồ</span>
             </button>
           </div>
         </div>
 
+        {/* Danh sách rạp */}
         <div className="grid gap-6 md:grid-cols-2">
           {theaters.map((theater) => (
             <article
               key={theater.id}
-              className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.7)]"
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/95 text-slate-50 shadow-[0_16px_40px_rgba(15,23,42,0.35)] backdrop-blur-sm"
             >
+              {/* Ảnh rạp */}
               <div className="h-48 w-full overflow-hidden bg-slate-900">
                 <img
                   src={theater.image}
@@ -119,8 +127,9 @@ export default function CinemaFind() {
                 />
               </div>
 
+              {/* Nội dung rạp */}
               <div className="space-y-2 px-5 pb-5 pt-4">
-                <p className="text-[12px] font-medium text-red-400">
+                <p className="text-[12px] font-medium text-red-300">
                   {theater.city}
                 </p>
                 <h3 className="text-lg font-semibold">{theater.name}</h3>
@@ -154,5 +163,3 @@ export default function CinemaFind() {
     </section>
   );
 }
-
-
