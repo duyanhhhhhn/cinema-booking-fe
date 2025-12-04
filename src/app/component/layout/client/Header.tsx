@@ -42,13 +42,13 @@ export default function Header() {
               Phim
             </a>
             <a
-              href="/movies"
+              href="/cinemas"
               className="text-gray-300 hover:text-white transition text-sm"
             >
               Rạp chiếu
             </a>
             <a
-              href="#"
+              href="/news"
               className="text-gray-300 hover:text-white transition text-sm"
             >
               Tin tức
