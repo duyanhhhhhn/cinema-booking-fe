@@ -31,7 +31,7 @@ export default function NewsInfo() {
         )
     }
     CommentSection.push(
-        <div className="mt-12 pt-8 border-t border-black/10 dark:border-white/10">
+        <div key="comment-section" className="mt-12 pt-8 border-t border-black/10 dark:border-white/10">
             <h2 className="text-2xl font-bold text-white dark:text-white mb-6">
                 Bình luận ({numC})
             </h2>
@@ -65,39 +65,37 @@ export default function NewsInfo() {
     )
     for (let i = 1; i <= 3; i++) {
         relateNews.push(
-            <>
-                <div key={"a" + i} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                    <a href="#">
-                        <img
-                            className="w-full h-40 object-cover"
-                            data-alt=""
-                            src="https://heritagevietnamairlines.cdn.vccloud.vn/wp-content/uploads/2025/02/Godzilla_-King-of-the-Monsters-2019-1024x683.png"
-                        />
-                    </a>
-                    <div className="p-4 flex flex-col flex-grow">
-                        <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
-                            <a
-                                className="hover:text-primary dark:hover:text-primary"
-                                href="#"
-                            >
-                                Phim 1
-                            </a>
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                            Thông tin 1
-                        </p>
-                        <div className="mt-auto pt-3">
-                            <span className="text-xs text-gray-500 dark:text-gray-500">
-                                Ngày 1
-                            </span>
-                        </div>
+            <div key={"a" + i} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <a href="#">
+                    <img
+                        className="w-full h-40 object-cover"
+                        data-alt=""
+                        src="https://heritagevietnamairlines.cdn.vccloud.vn/wp-content/uploads/2025/02/Godzilla_-King-of-the-Monsters-2019-1024x683.png"
+                    />
+                </a>
+                <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
+                        <a
+                            className="hover:text-primary dark:hover:text-primary"
+                            href="#"
+                        >
+                            Phim 1
+                        </a>
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        Thông tin 1
+                    </p>
+                    <div className="mt-auto pt-3">
+                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                            Ngày 1
+                        </span>
                     </div>
                 </div>
-            </>
+            </div>
         )
     }
     ContentArea.push(
-        <div className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
+        <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
             <p>
                 Line 1
             </p>
@@ -112,9 +110,9 @@ export default function NewsInfo() {
             </p>
             <figure>
                 <img
-                    alt=""
+                    alt="text"
                     className="rounded-lg w-full"
-                    src="https://play-lh.googleusercontent.com/6ggwsMSu19shp7GE6MKsMZZWH5oh88pGith43OMNGkGDtr3ocy0SMeKSHxguqRRL3WDvRN3BF-dehqwDoyk"
+                    src="https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3"
                 />
                 <figcaption className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
                     Image
