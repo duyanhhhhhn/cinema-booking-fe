@@ -12,6 +12,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [tabValue, setTabValue] = useState<number>(0);
   const [trailerOpen, setTrailerOpen] = useState<boolean>(false);
 
+  // style dùng chung cho card
+  const glassCard =
+    "rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.9)] backdrop-blur-xl";
+  const glassCardSoft =
+    "rounded-2xl border border-white/5 bg-black/40 shadow-[0_14px_35px_rgba(0,0,0,0.85)] backdrop-blur-lg";
+
   // Sample data - replace with API call
   const movie = {
     id: movieId || 1,
@@ -80,13 +86,14 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50">
+    <main className="">
+      {/* HERO */}
       <section className="relative overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url("${movie.poster}")` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-red-950/40 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-red-950/40 backdrop-blur-md" />
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-32">
           <div className="flex justify-center md:justify-start">
@@ -109,7 +116,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </p>
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
-              <div className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm shadow">
+              <div className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm shadow backdrop-blur-md">
                 <span className="material-symbols-outlined text-base align-middle text-yellow-400">
                   star
                 </span>
@@ -117,11 +124,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 <span className="text-xs text-slate-300">/ 5</span>
               </div>
 
-              <div className="rounded-full border border-red-400/70 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
+              <div className="rounded-full border border-red-400/70 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300 backdrop-blur-md">
                 {movie.ageRating}
               </div>
 
-              <div className="rounded-full bg-black/40 px-3 py-1 text-xs text-slate-200">
+              <div className="rounded-full bg-black/40 px-3 py-1 text-xs text-slate-200 backdrop-blur-md">
                 {movie.duration} phút
               </div>
             </div>
@@ -130,7 +137,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
               {movie.genre.map((x) => (
                 <li
                   key={x}
-                  className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-slate-100"
+                  className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-slate-100 backdrop-blur-md"
                 >
                   {x}
                 </li>
@@ -157,20 +164,20 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         </div>
       </section>
 
-      <section className="bg-slate-950">
+      {/* NỘI DUNG DƯỚI */}
+      <section>
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col gap-10 lg:flex-row">
+            {/* CỘT TRÁI */}
             <div className="flex-1 space-y-10">
-              <section className="rounded-2xl border border-white/5 bg-slate-900/70 p-5 shadow-lg shadow-black/50 backdrop-blur-sm md:p-6 lg:p-7">
+              {/* Thông tin phim */}
+              <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">
                   Thông Tin Phim
                 </h2>
 
                 <div className="grid gap-4 text-sm text-slate-100 md:grid-cols-2">
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-red-400">
-                      calendar_today
-                    </span>
                     <span>
                       Khởi chiếu:{" "}
                       <span className="font-semibold text-red-300">
@@ -180,9 +187,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-red-400">
-                      person
-                    </span>
                     <span>
                       Đạo diễn:{" "}
                       <span className="font-semibold text-red-300">
@@ -192,9 +196,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-red-400">
-                      schedule
-                    </span>
                     <span>
                       Thời lượng:{" "}
                       <span className="font-semibold text-red-300">
@@ -204,9 +205,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-red-400">
-                      star_half
-                    </span>
                     <span>
                       Đánh giá:{" "}
                       <span className="font-semibold text-red-300">
@@ -216,9 +214,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-red-400">
-                      translate
-                    </span>
                     <span>
                       Ngôn ngữ:{" "}
                       <span className="font-semibold text-red-300">
@@ -228,9 +223,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-red-400">
-                      badge
-                    </span>
                     <span>
                       Phân loại:{" "}
                       <span className="font-semibold text-red-300">
@@ -248,7 +240,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     {movie.cast.map((actor) => (
                       <li
                         key={actor}
-                        className="rounded-full bg-slate-800/80 px-3 py-1 text-slate-100"
+                        className="rounded-full bg-slate-800/80 px-3 py-1 text-slate-100 backdrop-blur-md"
                       >
                         {actor}
                       </li>
@@ -266,7 +258,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-white/5 bg-slate-900/70 p-5 shadow-lg shadow-black/50 backdrop-blur-sm md:p-6 lg:p-7">
+              {/* Lịch chiếu */}
+              <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">
                   Lịch Chiếu
                 </h2>
@@ -288,7 +281,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       <button
                         key={d.label + d.day}
                         className={
-                          "flex w-14 flex-col items-center rounded-xl border px-2 py-2 text-xs font-medium transition hover:border-red-400 hover:bg-red-500/10 " +
+                          "flex w-14 flex-col items-center rounded-xl border px-2 py-2 text-xs font-medium transition backdrop-blur-md hover:border-red-400 hover:bg-red-500/10 " +
                           (index === 0
                             ? "border-red-400 bg-red-500/15 text-red-300"
                             : "border-slate-700 text-slate-300")
@@ -304,7 +297,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/90 p-4 md:p-5 backdrop-blur-sm">
+                  <div className={`${glassCardSoft} p-4 md:p-5`}>
                     <h4 className="text-sm font-semibold md:text-base">
                       CGV Vincom Center
                     </h4>
@@ -316,7 +309,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         (time) => (
                           <button
                             key={time}
-                            className="rounded-full bg-slate-800/80 px-3 py-1.5 text-xs font-medium text-slate-100 transition hover:bg-red-500 hover:text-slate-950"
+                            className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium text-slate-100 backdrop-blur-md transition hover:border-red-400 hover:bg-red-500 hover:text-slate-950"
                           >
                             {time}
                           </button>
@@ -325,7 +318,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/90 p-4 md:p-5 backdrop-blur-sm">
+                  <div className={`${glassCardSoft} p-4 md:p-5`}>
                     <h4 className="text-sm font-semibold md:text-base">
                       Lotte Cinema Landmark
                     </h4>
@@ -336,7 +329,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       {["11:15", "14:00", "17:15", "20:30"].map((time) => (
                         <button
                           key={time}
-                          className="rounded-full bg-slate-800/80 px-3 py-1.5 text-xs font-medium text-slate-100 transition hover:bg-red-500 hover:text-slate-950"
+                          className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium text-slate-100 backdrop-blur-md transition hover:border-red-400 hover:bg-red-500 hover:text-slate-950"
                         >
                           {time}
                         </button>
@@ -346,7 +339,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-white/5 bg-slate-900/70 p-5 shadow-lg shadow-black/50 backdrop-blur-sm md:p-6 lg:p-7">
+              {/* Đánh giá */}
+              <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">
                   Đánh Giá
                 </h2>
@@ -358,7 +352,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     return (
                       <div
                         key={review.user + review.date}
-                        className="flex gap-4 rounded-2xl border border-white/5 bg-slate-900/80 p-4 backdrop-blur-sm"
+                        className={`${glassCardSoft} flex gap-4 p-4`}
                       >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20 text-sm font-semibold text-red-300">
                           {initial}
@@ -405,9 +399,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
               </section>
             </div>
 
+            {/* CỘT PHẢI */}
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
-              <section className="rounded-2xl border border-red-400/40 bg-gradient-to-br from-red-500 to-rose-500 p-[1px] shadow-lg shadow-red-500/40">
-                <div className="rounded-2xl bg-slate-950/95 px-5 py-6 text-center backdrop-blur-sm">
+              {/* Đặt vé nhanh */}
+              <section className="rounded-2xl border border-red-400/50 bg-gradient-to-br from-red-500/80 via-rose-500/80 to-red-600/80 p-[1px] shadow-[0_18px_45px_rgba(248,113,113,0.65)]">
+                <div className="rounded-2xl bg-black/60 px-5 py-6 text-center backdrop-blur-2xl">
                   <p className="text-xs font-semibold uppercase tracking-wide text-red-200">
                     Đặt Vé Nhanh
                   </p>
@@ -416,22 +412,17 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </p>
 
                   <button className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-red-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-md shadow-red-500/40 transition hover:bg-red-400">
-                    <span className="material-symbols-outlined text-base">
-                      confirmation_number
-                    </span>
                     <span>Đặt Vé Ngay</span>
                   </button>
 
-                  <button className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-red-400/60 bg-transparent px-4 py-2.5 text-xs font-medium text-red-200 transition hover:bg-red-500/10">
-                    <span className="material-symbols-outlined text-base">
-                      event
-                    </span>
+                  <button className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-red-200/70 bg-transparent px-4 py-2.5 text-xs font-medium text-red-100 transition hover:bg-red-500/10">
                     <span>Chọn Suất Chiếu Khác</span>
                   </button>
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-white/5 bg-slate-900/80 p-4 shadow-lg shadow-black/50 backdrop-blur-sm">
+              {/* Phim hot */}
+              <section className={`${glassCard} p-4`}>
                 <h2 className="mb-4 text-base font-semibold md:text-lg">
                   Phim Hot
                 </h2>
@@ -440,7 +431,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   {relatedMovies.map((item) => (
                     <button
                       key={item.id}
-                      className="flex w-full items-center gap-3 rounded-xl bg-slate-800/80 p-2 text-left transition hover:bg-red-900/40"
+                      className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-black/40 p-2 text-left shadow-[0_10px_28px_rgba(0,0,0,0.75)] backdrop-blur-lg transition hover:border-red-400/60 hover:bg-red-900/40"
                     >
                       <div className="h-16 w-12 overflow-hidden rounded-lg bg-slate-700">
                         <img
