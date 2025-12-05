@@ -1,8 +1,8 @@
 import UserProfile from "../component/user/UserProfile";
 
 export const metadata = {
-  title: "Thông tin tài khoản - Cinema Booking",
-  description: "Quản lý thông tin cá nhân và cài đặt tài khoản",
+  title: "Profile User - Cinema Booking",
+  description: "Profile management and settings account page for Cinema Booking users.",
 };
 
 export default function ProfilePage() {
