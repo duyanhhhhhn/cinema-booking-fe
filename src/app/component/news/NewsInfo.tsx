@@ -3,8 +3,10 @@ export default function NewsInfo() {
     const CommentSection = [];
     const CommentList = [];
     const ContentArea = [];
-    let numC = 0;
-    for (let i = 0; i <= 5; i++) {
+    const LoadCommentsButton = [];
+    let numC = 6;
+    let numTotalC = 10;
+    for (let i = 0; i < numC; i++) {
         CommentList.push(
             <div key={i} className="flex items-start gap-4">
                 <img
@@ -45,7 +47,7 @@ export default function NewsInfo() {
                     />
                     <div className="flex-1">
                         <textarea
-                            className="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 focus:border-primary focus:ring-primary placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            className="w-full ps-2 pt-2 pb-1 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 focus:border-primary focus:ring-primary placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             placeholder="Viết bình luận của bạn..."
                             rows={3}
                             defaultValue={""}
@@ -60,9 +62,19 @@ export default function NewsInfo() {
                     {/* Comment */}
                     {CommentList}
                 </div>
+                {LoadCommentsButton}
             </div>
         </div>
     )
+    if (numTotalC >= numC) {
+        LoadCommentsButton.push(
+            <div className="mt-4 flex justify-center items-center">
+                <button className="bg-red-500 rounded-lg w-75 py-3 hover:text-gray-200 hover:bg-red-600 hover:border-white">
+                    <span className="truncate text-white">Tải thêm bình luận</span>
+                </button>
+            </div>
+        )
+    }
     for (let i = 1; i <= 3; i++) {
         relateNews.push(
             <div key={"a" + i} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
