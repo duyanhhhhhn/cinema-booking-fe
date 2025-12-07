@@ -8,6 +8,7 @@ export default function HomePage() {
     const render = [];
     const [movies, setMovies] = useState([]);
     const [tab, setTab] = useState("dangChieu");
+    const news = [];
     function change(key) {
         let movie = [];
         if (key === "dangChieu") {
@@ -19,10 +20,42 @@ export default function HomePage() {
         setMovies(movie);
         setTab(key);
     }
-    for (let i = 0; i < 6; i++) {
+    for (let i = 1; i <= 3; i++) {
+        news.push(
+            <div key={"news-section" + i} className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
+                <a href={`/news/${i}`}
+                    className="w-full bg-center bg-no-repeat aspect-video bg-cover"
+                    data-alt="Three friends smiling and eating popcorn in a cinema."
+                    style={{
+                        backgroundImage:
+                            'url("https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3")'
+                    }}>
+                </a>
+                <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                    <div>
+                        <span className="inline-block bg-[#FFC107] text-black text-xs font-bold px-2 py-1 rounded-full mb-2">
+                            KHUYẾN MÃI
+                        </span>
+                        <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
+                            Thứ Ba Vui Vẻ - Đồng giá vé 2D
+                        </p>
+                        <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
+                            Giảm giá vé đặc biệt chỉ trong hôm nay cho tất cả các suất
+                            chiếu phim 2D.
+                        </p>
+                    </div>
+                    <a className="text-primary text-sm font-bold hover:underline"
+                        href="#">
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        )
+    }
+    for (let i = 1; i <= 6; i++) {
         render.push(
             <div key={i} className="flex flex-col gap-3 pb-3 group">
-                <a>
+                <a href={`movies/${i}`}>
                     <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-lg overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-105 transition-transform duration-300">
                         <div className="absolute inset-0 bg-cover bg-center" data-alt="Movie poster 1"
                             style={{
@@ -38,7 +71,7 @@ export default function HomePage() {
                     </div>
                     <div>
                         <p className="text-white text-base font-medium leading-normal">
-                            Tên Phim 1
+                            Tên Phim {i}
                         </p>
                         <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
                             Hành động
@@ -71,8 +104,7 @@ export default function HomePage() {
                                         Trải nghiệm những thước phim hành động mãn nhãn và kỹ xảo đỉnh
                                         cao trên màn ảnh rộng.
                                     </p>
-                                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors"
-                                        style={{ backgroundColor: "red" }}>
+                                    <button className="flex min-w-[84px] max-w-[480px] bg-red-600 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-red-700 transition-colors hover:text-black">
                                         <span className="truncate">Đặt Vé Ngay</span>
                                     </button>
                                 </div>
@@ -108,96 +140,7 @@ export default function HomePage() {
                                 Tin Tức &amp; Ưu Đãi
                             </h2>
                             <div className="grid md:grid-cols-3 gap-6">
-                                <div className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
-                                    <div
-                                        className="w-full bg-center bg-no-repeat aspect-video bg-cover"
-                                        data-alt="Three friends smiling and eating popcorn in a cinema."
-                                        style={{
-                                            backgroundImage:
-                                                'url("/image/banner/sale1.jpg")'
-                                        }}
-                                    />
-                                    <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
-                                        <div>
-                                            <span className="inline-block bg-[#FFC107] text-black text-xs font-bold px-2 py-1 rounded-full mb-2">
-                                                KHUYẾN MÃI
-                                            </span>
-                                            <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
-                                                Thứ Ba Vui Vẻ - Đồng giá vé 2D
-                                            </p>
-                                            <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                                Giảm giá vé đặc biệt chỉ trong hôm nay cho tất cả các suất
-                                                chiếu phim 2D.
-                                            </p>
-                                        </div>
-                                        <a
-                                            className="text-primary text-sm font-bold hover:underline"
-                                            href="#"
-                                        >
-                                            Xem chi tiết
-                                        </a>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
-                                    <div
-                                        className="w-full bg-center bg-no-repeat aspect-video bg-cover"
-                                        data-alt="A close-up of a film review article on a tablet screen."
-                                        style={{
-                                            backgroundImage:
-                                                'url("/image/banner/news1.jpg")'
-                                        }}
-                                    />
-                                    <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
-                                        <div>
-                                            <span className="inline-block bg-white/10 text-white text-xs font-bold px-2 py-1 rounded-full mb-2">
-                                                TIN TỨC
-                                            </span>
-                                            <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
-                                                Review Phim A: Siêu phẩm không thể bỏ lỡ
-                                            </p>
-                                            <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                                Cùng khám phá những điểm đặc sắc nhất của bộ phim đang làm
-                                                mưa làm gió tại các rạp.
-                                            </p>
-                                        </div>
-                                        <a
-                                            className="text-primary text-sm font-bold hover:underline"
-                                            href="#"
-                                        >
-                                            Xem chi tiết
-                                        </a>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
-                                    <div
-                                        className="w-full bg-center bg-no-repeat aspect-video bg-cover"
-                                        data-alt="A movie director with a clapperboard."
-                                        style={{
-                                            backgroundImage:
-                                                'url("/image/banner/event1.jpg")'
-                                        }}
-                                    />
-                                    <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
-                                        <div>
-                                            <span className="inline-block bg-white/10 text-white text-xs font-bold px-2 py-1 rounded-full mb-2">
-                                                SỰ KIỆN
-                                            </span>
-                                            <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
-                                                Giao lưu cùng đoàn làm phim
-                                            </p>
-                                            <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                                                Cơ hội gặp gỡ và trò chuyện trực tiếp với các diễn viên và
-                                                đạo diễn của bộ phim.
-                                            </p>
-                                        </div>
-                                        <a
-                                            className="text-primary text-sm font-bold hover:underline"
-                                            href="#"
-                                        >
-                                            Xem chi tiết
-                                        </a>
-                                    </div>
-                                </div>
+                                {news}
                             </div>
                         </div>
                     </main>
