@@ -1,151 +1,174 @@
 "use client";
-import { useState } from "react";
+
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+const baseInputClass =
+  "w-full rounded-xl border border-[#3a2225] bg-[#1b0d10] px-4 py-3 text-sm text-slate-50 placeholder:text-[#b3a6aa] focus:outline-none focus:ring-2 focus:ring-[#f97373]/80 focus:border-[#f97373]/80 transition";
+
 export default function ChangePasswordPage() {
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmNewPassword, setConfirmNewPassword] = useState("");
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
 
-        if (newPassword !== confirmNewPassword) {
-            setError("Mật khẩu mới không khớp");
-            return;
-        }
-        if (newPassword.length < 6) {
-            setError("Mật khẩu mới phải có ít nhất 6 ký tự");
-            return;
-        }
-    };
+    if (newPassword !== confirmNewPassword) {
+      setError("Mật khẩu mới không khớp");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
 
-    return (
-        <div className="px-4 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
-            <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-                <main className="flex-1 px-4 py-8 sm:px-10">
-                    <div className="flex flex-wrap gap-2 mb-8">
-                        <a className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal" href="#">Trang chủ</a>
-                        <span className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal">/</span>
-                        <a className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal" href="#">Tài khoản của tôi</a>
-                        <span className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal">/</span>
-                        <span className="text-black dark:text-white text-base font-medium leading-normal">Đổi mật khẩu</span>
-                    </div>
+    // TODO: call API đổi mật khẩu
+  };
 
-                    <div className="mb-10">
-                        <div className="flex flex-wrap justify-between gap-3">
-                            <div className="flex min-w-72 flex-col gap-3">
-                                <p className="text-black dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
-                                    Đổi Mật khẩu
-                                </p>
-                                <p className="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal">
-                                    Để bảo vệ tài khoản của bạn, vui lòng không chia sẻ mật khẩu cho người khác.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+  return (
+    <div className="flex-1 flex justify-center px-4 sm:px-8 lg:px-24 py-10">
+      <div className="w-full max-w-6xl">
+        <main className="pt-2">
+          {/* Breadcrumb */}
+          <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-[#9b8e93]">
+            <a href="#" className="hover:text-slate-50 transition">
+              Trang chủ
+            </a>
+            <span>/</span>
+            <a href="#" className="hover:text-slate-50 transition">
+              Tài khoản của tôi
+            </a>
+            <span>/</span>
+            <span className="text-slate-50">Đổi mật khẩu</span>
+          </div>
 
-                    <div className="bg-white dark:bg-black/20 p-6 sm:p-8 rounded-xl border border-black/10 dark:border-white/10">
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                            <div className="flex flex-col w-full gap-6">
-                                {/* Mật khẩu hiện tại */}
-                                <label className="flex flex-col w-full">
-                                    <p className="text-black dark:text-white text-base font-medium leading-normal pb-2">
-                                        Mật khẩu hiện tại
-                                    </p>
-                                    <div className="flex w-full items-stretch rounded-lg">
-                                        <input
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            placeholder="Nhập mật khẩu hiện tại của bạn"
-                                            className="form-input w-full text-black dark:text-white border border-black/20 dark:border-white/20 bg-transparent focus:outline-0 focus:ring-2 focus:ring-primary/50 h-14 px-[15px]"
-                                            required
-                                        />
-                                        <div
-                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            className="text-gray-500 dark:text-gray-400 flex items-center justify-center px-[15px] border border-black/20 dark:border-white/20 rounded-r-lg cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {showCurrentPassword ? "visibility" : "visibility_off"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
+          {/* Heading */}
+          <div className="mb-6">
+            <h1 className="text-3xl sm:text-[32px] font-black leading-tight tracking-tight text-slate-50">
+              Đổi Mật khẩu
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm sm:text-base text-[#b0a5a8]">
+              Để bảo vệ tài khoản của bạn, vui lòng không chia sẻ mật khẩu cho
+              người khác.
+            </p>
+          </div>
 
-                                {/* Mật khẩu mới */}
-                                <label className="flex flex-col w-full">
-                                    <p className="text-black dark:text-white text-base font-medium leading-normal pb-2">
-                                        Mật khẩu mới
-                                    </p>
-                                    <div className="flex w-full items-stretch rounded-lg">
-                                        <input
-                                            type={showNewPassword ? "text" : "password"}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
-                                            className="form-input w-full text-black dark:text-white border border-black/20 dark:border-white/20 bg-transparent focus:outline-0 focus:ring-2 focus:ring-primary/50 h-14 px-[15px]"
-                                            required
-                                        />
-                                        <div
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="text-gray-500 dark:text-gray-400 flex items-center justify-center px-[15px] border border-black/20 dark:border-white/20 rounded-r-lg cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {showNewPassword ? "visibility" : "visibility_off"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
+          {/* Card form – căn giữa và rộng hơn */}
+          <div className="w-full max-w-[960px] mx-auto mt-10">
+            <div className="rounded-2xl border border-[#2b171a] bg-[#12090b] px-4 py-6 sm:px-8 sm:py-8 shadow-[0_0_0_1px_rgba(0,0,0,0.45)]">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Mật khẩu hiện tại */}
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-slate-50">
+                    Mật khẩu hiện tại
+                  </span>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu hiện tại của bạn"
+                      className={`${baseInputClass} pr-12`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowCurrentPassword((prev) => !prev)
+                      }
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#a89a9e] hover:text-slate-50 transition"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {showCurrentPassword ? "visibility" : "visibility_off"}
+                      </span>
+                    </button>
+                  </div>
+                </label>
 
-                                {/* Xác nhận mật khẩu */}
-                                <label className="flex flex-col w-full">
-                                    <p className="text-black dark:text-white text-base font-medium leading-normal pb-2">
-                                        Xác nhận mật khẩu mới
-                                    </p>
-                                    <div className="flex w-full items-stretch rounded-lg">
-                                        <input
-                                            type={showConfirmNewPassword ? "text" : "password"}
-                                            value={confirmNewPassword}
-                                            onChange={(e) => setConfirmNewPassword(e.target.value)}
-                                            placeholder="Nhập lại mật khẩu mới của bạn"
-                                            className="form-input w-full text-black dark:text-white border border-black/20 dark:border-white/20 bg-transparent focus:outline-0 focus:ring-2 focus:ring-primary/50 h-14 px-[15px]"
-                                            required
-                                        />
-                                        <div
-                                            onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                                            className="text-gray-500 dark:text-gray-400 flex items-center justify-center px-[15px] border border-black/20 dark:border-white/20 rounded-r-lg cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {showConfirmNewPassword ? "visibility" : "visibility_off"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
+                {/* Mật khẩu mới */}
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-slate-50">
+                    Mật khẩu mới
+                  </span>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                      className={`${baseInputClass} pr-12`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#a89a9e] hover:text-slate-50 transition"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {showNewPassword ? "visibility" : "visibility_off"}
+                      </span>
+                    </button>
+                  </div>
+                </label>
 
-                            {error && <p className="text-red-500 text-sm">{error}</p>}
+                {/* Xác nhận mật khẩu mới */}
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-slate-50">
+                    Xác nhận mật khẩu mới
+                  </span>
+                  <div className="relative">
+                    <input
+                      type={showConfirmNewPassword ? "text" : "password"}
+                      value={confirmNewPassword}
+                      onChange={(e) =>
+                        setConfirmNewPassword(e.target.value)
+                      }
+                      placeholder="Nhập lại mật khẩu mới của bạn"
+                      className={`${baseInputClass} pr-12`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmNewPassword((prev) => !prev)
+                      }
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#a89a9e] hover:text-slate-50 transition"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {showConfirmNewPassword
+                          ? "visibility"
+                          : "visibility_off"}
+                      </span>
+                    </button>
+                  </div>
+                </label>
 
-                            <div className="flex justify-end pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex items-center justify-center rounded-lg h-12 bg-primary text-white gap-2 text-base font-bold px-8 py-3 w-full sm:w-auto disabled:opacity-50"
-                                >
-                                    {loading ? "Đang đổi mật khẩu..." : "Lưu Thay đổi"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </main>
+                {error && (
+                  <p className="text-sm text-[#f97373] pt-1">{error}</p>
+                )}
+
+                <div className="flex justify-end pt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex items-center justify-center rounded-lg bg-[#f04438] px-8 py-3 text-sm sm:text-base font-semibold text-white shadow-[0_8px_24px_rgba(240,68,56,0.45)] hover:bg-[#f25544] focus:outline-none focus:ring-2 focus:ring-[#f97373] focus:ring-offset-2 focus:ring-offset-[#12090b] transition disabled:opacity-60"
+                  >
+                    {loading ? "Đang đổi mật khẩu..." : "Lưu Thay đổi"}
+                  </button>
+                </div>
+              </form>
             </div>
-        </div>
-    );
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }
