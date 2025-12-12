@@ -1,391 +1,201 @@
 "use client";
 
+import Head from "next/head";
 import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Avatar,
-  Grid,
-  Divider,
-  Tabs,
-  Tab,
-} from "@mui/material";
 
-export default function UserProfile() {
-  const [tabValue, setTabValue] = useState(0);
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
+export default function ProfilePage() {
+  const [profile, setProfile] = useState({
+    fullName: "Nguyen Van A",
+    email: "nguyenvana@email.com",
     phone: "0901234567",
-    dateOfBirth: "1990-01-01",
+    dateOfBirth: "1995-08-15",
     gender: "male",
-    address: "123 Đường ABC, Quận 1, TP.HCM",
+    avatar:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBU9_GeKTb6bZJzJV3Gc6V0yReaJm8q9iLUL95Hj3M4Ey9Jh6yxIojnEokEaFJsIAR5ZJbaMAweawXF7gPNeEwxJKIlKP1SKXSyVunztvDP3gCFV0Lt9QVW8AQWvoq8R25fsUZJ-hATz4VCxtNNBeGPTVRC0nkk746DzcyBglZjj5tcIqUWY7B7hqzBIo8fBEhCebu_WV3xvfvP31wp6jKT_d8OYwVxacYlYM20tMfOr1ukn78ShH8eUjWk8hw8qTlyztWnq8JfTtOZ",
   });
 
-  const handleChange = (e: any) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfile((p) => ({ ...p, [name]: value }));
   };
 
-  const handleSave = () => {
-    // Handle save logic
-    setEditing(false);
-  };
-
-  const textFieldSx = {
-    "& .MuiOutlinedInput-root": {
-      color: "#e5e7eb",
-      backgroundColor: "rgba(15,23,42,0.75)",
-      backdropFilter: "blur(14px)",
-      "& fieldset": {
-        borderColor: "rgba(148,163,184,0.6)",
-      },
-      "&:hover fieldset": {
-        borderColor: "#f97373",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "#ef4444",
-        boxShadow: "0 0 0 1px rgba(248,113,113,0.7)",
-      },
-    },
-    "& .MuiInputLabel-root": {
-      color: "rgba(148,163,184,0.9)",
-      "&.Mui-focused": {
-        color: "#fecaca",
-      },
-    },
-  };
-
-  const glassCardSx = {
-    backgroundColor: "rgba(15,23,42,0.9)",
-    backdropFilter: "blur(18px)",
-    borderRadius: 18,
-    border: "1px solid rgba(248,250,252,0.08)",
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: call your API here
+    alert("Đã lưu (demo). Thay bằng call API của bạn");
   };
 
   return (
-    <main className="relative flex flex-1 justify-center p-4 sm:p-6 md:p-10 overflow-hidden bg-gradient-to-br from-black via-slate-950 to-red-950">
-      {/* Glow đỏ mờ phía sau */}
-      <div className="pointer-events-none absolute -top-40 right-[-120px] h-72 w-72 rounded-full bg-red-500/40 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-[-140px] left-[-80px] h-80 w-80 rounded-full bg-red-700/40 blur-3xl" />
+    <>
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Profile Khách hàng</title>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        />
+        <style>{`.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}`}</style>
+      </Head>
 
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 gap-8 md:grid-cols-12 text-slate-100">
-        {/* Sidebar bên trái */}
-        <aside className="md:col-span-4 lg:col-span-3">
-          <Box className="space-y-4">
-            {/* Card avatar */}
-            <Card
-              sx={glassCardSx}
-              className="relative overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.75)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(0,0,0,0.9)] hover:border-red-500/80"
-            >
-              <CardContent className="p-6 text-center">
-                <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-red-500 via-red-400 to-rose-500 shadow-[0_0_40px_rgba(248,113,113,0.75)]">
-                  <Avatar
-                    sx={{
-                      width: 112,
-                      height: 112,
-                      backgroundColor: "rgba(15,23,42,0.9)",
-border: "2px solid rgba(248,250,252,0.18)",
-                    }}
-                  >
-                    <i className="ti ti-user text-5xl text-red-400" />
-                  </Avatar>
-                </div>
+      <div className="font-display bg-background-light dark:bg-background-dark min-h-screen">
+        
 
-                <Typography
-                  variant="h6"
-                  className="font-semibold mb-1 text-slate-50 tracking-wide"
-                >
-                  {formData.fullName}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  className="text-slate-300/80 mb-4 text-sm"
-                >
-                  {formData.email}
-                </Typography>
-
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<i className="ti ti-camera" />}
-                  className="border-red-500/70 text-red-300 hover:border-red-400 hover:bg-red-500/10 hover:text-red-200 transition-all duration-200"
-                >
-                  Đổi ảnh đại diện
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Card Tabs */}
-            <Card
-              sx={glassCardSx}
-              className="relative overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.7)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(0,0,0,0.9)] hover:border-red-500/80"
-            >
-              <CardContent className="p-4">
-                <Tabs
-                  orientation="vertical"
-                  value={tabValue}
-                  onChange={(e, v) => setTabValue(v)}
-                  sx={{
-                    "& .MuiTabs-flexContainer": {
-                      gap: 6,
-                    },
-                    "& .MuiTabs-indicator": {
-                      left: 0,
-                      width: 3,
-                      borderRadius: 9999,
-                      backgroundColor: "#ef4444",
-                    },
-                  }}
-                >
-                  <Tab
-                    disableRipple
-                    label={
-                      <div className="flex items-center gap-2">
-                        <i className="ti ti-user text-sm" />
-                        <span className="text-sm">Thông tin cá nhân</span>
+        <main className="flex justify-center p-6">
+          <div className="w-full max-w-6xl">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
+              {/* Sidebar */}
+              <aside className="md:col-span-4 lg:col-span-3">
+                <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div
+                          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-12 h-12"
+                          style={{ backgroundImage: `url(${profile.avatar})` }}
+                        />
                       </div>
-                    }
-                    sx={{
-                      justifyContent: "flex-start",
-                      textTransform: "none",
-                      alignItems: "center",
-                      color: "rgba(248,250,252,0.7)",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      borderRadius: 9999,
-                      paddingInline: 14,
-                      minHeight: 44,
-                      "&:hover": {
-                        backgroundColor: "rgba(248,113,113,0.12)",
-                        color: "#fecaca",
-                      },
-                      "&.Mui-selected": {
-                        color: "#fca5a5",
-backgroundColor: "rgba(248,113,113,0.2)",
-                      },
-                    }}
-                  />
-                  <Tab
-                    disableRipple
-                    label={
-                      <div className="flex items-center gap-2">
-                        <i className="ti ti-lock text-sm" />
-                        <span className="text-sm">Đổi mật khẩu</span>
-                      </div>
-                    }
-                    sx={{
-                      justifyContent: "flex-start",
-                      textTransform: "none",
-                      alignItems: "center",
-                      color: "rgba(248,250,252,0.7)",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      borderRadius: 9999,
-                      paddingInline: 14,
-                      minHeight: 44,
-                      "&:hover": {
-                        backgroundColor: "rgba(248,113,113,0.12)",
-                        color: "#fecaca",
-                      },
-                      "&.Mui-selected": {
-                        color: "#fca5a5",
-                        backgroundColor: "rgba(248,113,113,0.2)",
-                      },
-                    }}
-                  />
-                  <Tab
-                    disableRipple
-                    label={
-                      <div className="flex items-center gap-2">
-                        <i className="ti ti-bell text-sm" />
-                        <span className="text-sm">Thông báo</span>
-                      </div>
-                    }
-                    sx={{
-                      justifyContent: "flex-start",
-                      textTransform: "none",
-                      alignItems: "center",
-                      color: "rgba(248,250,252,0.7)",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      borderRadius: 9999,
-                      paddingInline: 14,
-                      minHeight: 44,
-                      "&:hover": {
-                        backgroundColor: "rgba(248,113,113,0.12)",
-                        color: "#fecaca",
-                      },
-                      "&.Mui-selected": {
-                        color: "#fca5a5",
-                        backgroundColor: "rgba(248,113,113,0.2)",
-                      },
-                    }}
-                  />
-                </Tabs>
-              </CardContent>
-            </Card>
-          </Box>
-        </aside>
 
-        {/* Nội dung chính bên phải */}
-        <section className="md:col-span-8 lg:col-span-9">
-          {/* Tab 0 */}
-          {tabValue === 0 && (
-            <Card
-              sx={glassCardSx}
-              className="relative overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.75)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(0,0,0,0.9)] hover:border-red-500/80"
-            >
-              <CardContent className="p-6 sm:p-7">
-<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <div>
-                    <Typography
-                      variant="h6"
-                      className="font-semibold tracking-wide text-slate-50"
-                    >
-                      Thông tin cá nhân
-                    </Typography>
-                    <p className="mt-1 text-xs text-slate-300/70">
-                      Cập nhật thông tin để bảo mật và đồng bộ tài khoản.
-                    </p>
+                      <div>
+                        <h1 className="text-base font-medium text-slate-900 dark:text-white">{profile.fullName}</h1>
+                        <p className="text-sm text-primary cursor-pointer">Thay đổi ảnh</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <a className="flex items-center gap-3 rounded-md bg-primary/10 px-3 py-2 text-primary" href="#">
+                        <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: `'FILL' 1` }}>person</span>
+                        <p className="text-sm font-medium">Thông tin tài khoản</p>
+                      </a>
+
+                      <a className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10" href="#">
+                        <span className="material-symbols-outlined text-xl">history</span>
+                        <p className="text-sm font-medium">Lịch sử đặt vé</p>
+                      </a>
+
+                      <a className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10" href="#">
+                        <span className="material-symbols-outlined text-xl">confirmation_number</span>
+                        <p className="text-sm font-medium">Thẻ thành viên</p>
+                      </a>
+                    </div>
                   </div>
 
-                  {!editing ? (
-                    <Button
-                      variant="outlined"
-                      onClick={() => setEditing(true)}
-                      startIcon={<i className="ti ti-edit" />}
-                      className="border-red-500/70 text-red-300 hover:border-red-400 hover:bg-red-500/10 hover:text-red-200 transition-all duration-200"
-                    >
-                      Chỉnh sửa
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outlined"
-                        onClick={() => setEditing(false)}
-                        className="border-slate-500/60 text-slate-200 hover:bg-slate-500/10 hover:border-slate-300/80 transition-all duration-200"
-                      >
-                        Hủy
-                      </Button>
-                      <Button
-                        variant="contained"
-                        onClick={handleSave}
-                        className="bg-red-600 hover:bg-red-500 shadow-[0_10px_30px_rgba(248,113,113,0.4)] normal-case"
-                      >
-                        Lưu thay đổi
-                      </Button>
-                    </div>
-                  )}
+                  <div className="mt-auto pt-4">
+                    <a className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10" href="#">
+                      <span className="material-symbols-outlined text-xl">logout</span>
+                      <p className="text-sm font-medium">Đăng xuất</p>
+                    </a>
+                  </div>
                 </div>
+              </aside>
 
-                <Divider className="mb-6 border-slate-700/80" />
+              {/* Main content */}
+              <div className="md:col-span-8 lg:col-span-9">
+                <div className="flex flex-col gap-8 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5 sm:p-6 md:p-8">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-2xl font-bold">Thông tin tài khoản</p>
+                    <p className="text-sm text-slate-500">Quản lý thông tin của bạn để chúng tôi phục vụ tốt hơn.</p>
+                  </div>
 
-                {/* Form */}
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Họ và tên"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      sx={textFieldSx}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      sx={textFieldSx}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-label="Số điện thoại"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      sx={textFieldSx}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Ngày sinh"
-                      name="dateOfBirth"
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      InputLabelProps={{ shrink: true }}
-                      sx={textFieldSx}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Giới tính"
-                      name="gender"
-                      select
-                      value={formData.gender}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      SelectProps={{ native: true }}
-                      sx={textFieldSx}
-                    >
-                      <option value="male">Nam</option>
-                      <option value="female">Nữ</option>
-                      <option value="other">Khác</option>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Địa chỉ"
-                      multiline
-                      rows={3}
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      sx={textFieldSx}
-                    />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          )}
+                  <form onSubmit={handleSave} className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <label className="flex flex-col sm:col-span-2">
+                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Họ và Tên</p>
+                      <input
+                        name="fullName"
+                        value={profile.fullName}
+                        onChange={handleChange}
+                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/20 dark:text-white"
+                      />
+                    </label>
 
-          {tabValue === 1 && (
-            <>
-              {/* ... code cũ giữ nguyên */}
-            </>
-          )}
+                    <label className="flex flex-col">
+                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Email</p>
+                      <input
+                        name="email"
+                        value={profile.email}
+                        onChange={handleChange}
+                        disabled
+                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 focus:outline-none dark:border-white/20 dark:bg-white/5 dark:text-slate-400"
+                      />
+                    </label>
 
-          {tabValue === 2 && (
-            <>
-              {/* ... code cũ giữ nguyên */}
-            </>
-          )}
-        </section>
+                    <label className="flex flex-col">
+                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Số điện thoại</p>
+                      <input
+                        name="phone"
+                        value={profile.phone}
+                        onChange={handleChange}
+                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/20 dark:text-white"
+                      />
+                    </label>
+
+                    <label className="flex flex-col">
+                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Ngày sinh</p>
+                      <input
+                        type="date"
+                        name="dateOfBirth"
+                        value={profile.dateOfBirth}
+                        onChange={handleChange}
+                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/20 dark:text-white"
+                      />
+                    </label>
+
+                    <div className="flex flex-col">
+                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Giới tính</p>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="male"
+                            checked={profile.gender === "male"}
+                            onChange={handleChange}
+                            className="form-radio h-4 w-4"
+                          />
+                          <span className="text-sm">Nam</span>
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="female"
+                            checked={profile.gender === "female"}
+                            onChange={handleChange}
+                            className="form-radio h-4 w-4"
+                          />
+                          <span className="text-sm">Nữ</span>
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="other"
+                            checked={profile.gender === "other"}
+                            onChange={handleChange}
+                            className="form-radio h-4 w-4"
+                          />
+                          <span className="text-sm">Khác</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-2 mt-2 flex gap-3 justify-end border-t border-slate-200 pt-6 dark:border-white/10">
+                      <button type="button" className="flex h-10 w-full sm:w-auto items-center justify-center rounded-lg bg-slate-200 px-6 text-sm font-bold text-slate-700 dark:bg-white/10 dark:text-white">Hủy</button>
+                      <button type="submit" className="flex h-10 w-full sm:w-auto items-center justify-center rounded-lg bg-primary px-6 text-sm font-bold text-white">Lưu thay đổi</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
-    </main>
+    </>
   );
 }
