@@ -1,5 +1,8 @@
 // Common types for the cinema booking application
 
+export * from './role';
+import { Role } from './role';
+
 export interface Movie {
   id: number | string;
   title: string;
@@ -99,7 +102,7 @@ export interface User {
   dateOfBirth?: string;
   gender?: string;
   address?: string;
-  role: 'customer' | 'staff' | 'admin';
+  role: Role; // 'client' | 'staff' | 'admin'
   status: 'active' | 'banned' | 'pending';
   joinDate: string;
 }

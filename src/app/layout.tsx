@@ -6,6 +6,9 @@ import "./globals.css";
 import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 import Header from "./component/layout/client/Header";
 import Footer from "./component/layout/client/Footer";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { GlobalRouteGuard } from "@/guards";
 import { Metadata } from "next";
 
 const outfit = Outfit({ subsets: ["latin"] });
@@ -22,11 +25,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} `}>
-        <Box sx={{ minHeight: "100vh", backgroundColor: "#000000" }}>
-          <Header />
-          <div className="min-h-[calc(100vh-64px)]">{children}</div>
-          <Footer />
-        </Box>
+        <QueryProvider>
+          <AuthProvider>
+            <GlobalRouteGuard>
+              <Box sx={{ minHeight: "100vh", backgroundColor: "#000000" }}>
+                <Header />
+                <div className="min-h-[calc(100vh-64px)]">{children}</div>
+                <Footer />
+              </Box>
+            </GlobalRouteGuard>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
