@@ -1,201 +1,250 @@
-"use client";
+'use client';
 
-import Head from "next/head";
-import { useState } from "react";
+import React, { useState, ChangeEvent } from 'react';
 
-export default function ProfilePage() {
-  const [profile, setProfile] = useState({
-    fullName: "Nguyen Van A",
-    email: "nguyenvana@email.com",
-    phone: "0901234567",
-    dateOfBirth: "1995-08-15",
-    gender: "male",
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBU9_GeKTb6bZJzJV3Gc6V0yReaJm8q9iLUL95Hj3M4Ey9Jh6yxIojnEokEaFJsIAR5ZJbaMAweawXF7gPNeEwxJKIlKP1SKXSyVunztvDP3gCFV0Lt9QVW8AQWvoq8R25fsUZJ-hATz4VCxtNNBeGPTVRC0nkk746DzcyBglZjj5tcIqUWY7B7hqzBIo8fBEhCebu_WV3xvfvP31wp6jKT_d8OYwVxacYlYM20tMfOr1ukn78ShH8eUjWk8hw8qTlyztWnq8JfTtOZ",
+type Gender = 'male' | 'female' | 'other';
+
+interface FormState {
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: Gender;
+}
+
+const baseInputClass =
+  'w-full rounded-md border border-[#3a2225] bg-[#14080a] px-3 py-2.5 text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition disabled:cursor-not-allowed disabled:opacity-70';
+
+export default function AccountProfilePage() {
+  const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState<FormState>({
+    fullName: 'Nguyễn Văn A',
+    email: 'nguyen.vana@example.com',
+    phone: '0901234567',
+    dateOfBirth: '1995-11-08',
+    gender: 'male',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProfile((p) => ({ ...p, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: call your API here
-    alert("Đã lưu (demo). Thay bằng call API của bạn");
+  const handleSave = () => {
+    // TODO: gọi API lưu dữ liệu
+    setEditing(false);
   };
 
   return (
-    <>
-      <Head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Profile Khách hàng</title>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
-        <style>{`.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}`}</style>
-      </Head>
-
-      <div className="font-display bg-background-light dark:bg-background-dark min-h-screen">
-        
-
-        <main className="flex justify-center p-6">
-          <div className="w-full max-w-6xl">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
-              {/* Sidebar */}
-              <aside className="md:col-span-4 lg:col-span-3">
-                <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div
-                          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-12 h-12"
-                          style={{ backgroundImage: `url(${profile.avatar})` }}
-                        />
-                      </div>
-
-                      <div>
-                        <h1 className="text-base font-medium text-slate-900 dark:text-white">{profile.fullName}</h1>
-                        <p className="text-sm text-primary cursor-pointer">Thay đổi ảnh</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <a className="flex items-center gap-3 rounded-md bg-primary/10 px-3 py-2 text-primary" href="#">
-                        <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: `'FILL' 1` }}>person</span>
-                        <p className="text-sm font-medium">Thông tin tài khoản</p>
-                      </a>
-
-                      <a className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10" href="#">
-                        <span className="material-symbols-outlined text-xl">history</span>
-                        <p className="text-sm font-medium">Lịch sử đặt vé</p>
-                      </a>
-
-                      <a className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10" href="#">
-                        <span className="material-symbols-outlined text-xl">confirmation_number</span>
-                        <p className="text-sm font-medium">Thẻ thành viên</p>
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-4">
-                    <a className="flex items-center gap-3 rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10" href="#">
-                      <span className="material-symbols-outlined text-xl">logout</span>
-                      <p className="text-sm font-medium">Đăng xuất</p>
-                    </a>
-                  </div>
+    <main className="min-h-200 bg-[#120608] flex items-center justify-center px-4 py-6 text-slate-100">
+      <div className="w-full max-w-7xl min-h-[450px] flex flex-col gap-6 md:flex-row">
+        {/* SIDEBAR */}
+        <aside className="w-full md:w-64 lg:w-72">
+          <div className="flex h-full flex-col rounded-xl border border-[#3a2225] bg-[#1b0b0d] px-5 py-6 shadow-[0_18px_45px_rgba(0,0,0,0.75)]">
+            {/* User block */}
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-b from-[#f5dba8] to-[#c2955b] text-sm font-semibold text-[#4a2b10]">
+                  NA
                 </div>
-              </aside>
-
-              {/* Main content */}
-              <div className="md:col-span-8 lg:col-span-9">
-                <div className="flex flex-col gap-8 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5 sm:p-6 md:p-8">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-2xl font-bold">Thông tin tài khoản</p>
-                    <p className="text-sm text-slate-500">Quản lý thông tin của bạn để chúng tôi phục vụ tốt hơn.</p>
-                  </div>
-
-                  <form onSubmit={handleSave} className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <label className="flex flex-col sm:col-span-2">
-                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Họ và Tên</p>
-                      <input
-                        name="fullName"
-                        value={profile.fullName}
-                        onChange={handleChange}
-                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/20 dark:text-white"
-                      />
-                    </label>
-
-                    <label className="flex flex-col">
-                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Email</p>
-                      <input
-                        name="email"
-                        value={profile.email}
-                        onChange={handleChange}
-                        disabled
-                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 focus:outline-none dark:border-white/20 dark:bg-white/5 dark:text-slate-400"
-                      />
-                    </label>
-
-                    <label className="flex flex-col">
-                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Số điện thoại</p>
-                      <input
-                        name="phone"
-                        value={profile.phone}
-                        onChange={handleChange}
-                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/20 dark:text-white"
-                      />
-                    </label>
-
-                    <label className="flex flex-col">
-                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Ngày sinh</p>
-                      <input
-                        type="date"
-                        name="dateOfBirth"
-                        value={profile.dateOfBirth}
-                        onChange={handleChange}
-                        className="form-input h-11 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-white/20 dark:text-white"
-                      />
-                    </label>
-
-                    <div className="flex flex-col">
-                      <p className="pb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Giới tính</p>
-                      <div className="flex items-center gap-6">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="male"
-                            checked={profile.gender === "male"}
-                            onChange={handleChange}
-                            className="form-radio h-4 w-4"
-                          />
-                          <span className="text-sm">Nam</span>
-                        </label>
-
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="female"
-                            checked={profile.gender === "female"}
-                            onChange={handleChange}
-                            className="form-radio h-4 w-4"
-                          />
-                          <span className="text-sm">Nữ</span>
-                        </label>
-
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="other"
-                            checked={profile.gender === "other"}
-                            onChange={handleChange}
-                            className="form-radio h-4 w-4"
-                          />
-                          <span className="text-sm">Khác</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-2 mt-2 flex gap-3 justify-end border-t border-slate-200 pt-6 dark:border-white/10">
-                      <button type="button" className="flex h-10 w-full sm:w-auto items-center justify-center rounded-lg bg-slate-200 px-6 text-sm font-bold text-slate-700 dark:bg-white/10 dark:text-white">Hủy</button>
-                      <button type="submit" className="flex h-10 w-full sm:w-auto items-center justify-center rounded-lg bg-primary px-6 text-sm font-bold text-white">Lưu thay đổi</button>
-                    </div>
-                  </form>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold leading-tight">
+                    Nguyễn Văn A
+                  </span>
+                  <button className="mt-1 w-max rounded-full bg-[#f97373] px-2.5 py-0.5 text-[11px] font-medium text-white">
+                    Thay đổi ảnh
+                  </button>
                 </div>
               </div>
+
+              {/* Nav list */}
+              <nav className="mt-8 space-y-1 text-[13px]">
+                <button className="flex w-full items-center gap-2 rounded-md bg-[#b91c1c] px-3 py-2 text-left text-[13px] font-medium text-[#fee2e2] shadow-inner shadow-red-900/40 transition hover:bg-[#dc2626]">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm bg-red-900/80">
+                    <i className="ti ti-user text-[11px]" />
+                  </span>
+                  <span>Thông tin tài khoản</span>
+                </button>
+
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-200/80 transition hover:bg-[#261013] hover:text-slate-50">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-slate-500/60">
+                    <i className="ti ti-ticket text-[11px]" />
+                  </span>
+                  <span>Lịch sử đặt vé</span>
+                </button>
+
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-200/80 transition hover:bg-[#261013] hover:text-slate-50">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-slate-500/60">
+                    <i className="ti ti-credit-card text-[11px]" />
+                  </span>
+                  <span>Thẻ thành viên</span>
+                </button>
+              </nav>
             </div>
+
+            {/* Logout */}
+            <button className="mt-10 flex items-center gap-2 text-[13px] text-slate-400 transition hover:text-slate-100">
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-slate-600">
+                <i className="ti ti-logout-2 text-[11px]" />
+              </span>
+              <span>Đăng xuất</span>
+            </button>
           </div>
-        </main>
+        </aside>
+
+        {/* MAIN CONTENT */}
+        <section className="flex-1">
+          <div className="h-full rounded-xl border border-[#3a2225] bg-[#1f1012] px-6 py-6 sm:px-8 sm:py-7 shadow-[0_18px_45px_rgba(0,0,0,0.75)]">
+            {/* Header */}
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-lg font-semibold tracking-wide text-slate-50">
+                  Thông tin tài khoản
+                </h1>
+                <p className="mt-1 text-xs text-slate-300/80">
+                  Quản lý thông tin cá nhân để chúng tôi phục vụ tốt hơn.
+                </p>
+              </div>
+
+              {!editing ? (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center justify-center rounded-md border border-slate-500/70 bg-transparent px-4 py-1.5 text-xs font-medium text-slate-100 transition hover:border-slate-300 hover:bg-slate-500/10"
+                >
+                  Chỉnh sửa
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="inline-flex items-center justify-center rounded-md border border-slate-600 bg-transparent px-4 py-1.5 text-xs font-medium text-slate-100 transition hover:border-slate-300 hover:bg-slate-500/10"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="inline-flex items-center justify-center rounded-md bg-[#e31b23] px-4 py-1.5 text-xs font-medium text-white shadow-[0_10px_30px_rgba(248,113,113,0.45)] transition hover:bg-[#f04349]"
+                  >
+                    Lưu thay đổi
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="mb-6 h-px bg-[#3a2225]" />
+
+            {/* Form */}
+            <form className="space-y-4 text-sm">
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-slate-100">
+                  Họ và Tên
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  disabled={!editing}
+                  className={baseInputClass}
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-slate-100">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={!editing}
+                    className={baseInputClass}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-slate-100">
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={!editing}
+                    className={baseInputClass}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-slate-100">
+                    Ngày sinh
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleChange}
+                    disabled={!editing}
+                    className={baseInputClass}
+                  />
+                </div>
+
+                <div>
+                  <span className="mb-1 block text-[12px] font-medium text-slate-100">
+                    Giới tính
+                  </span>
+                  <div className="mt-1 flex items-center gap-6 text-xs text-slate-200">
+                    <label className="inline-flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="male"
+                        checked={formData.gender === 'male'}
+                        onChange={handleChange}
+                        disabled={!editing}
+                        className="h-3.5 w-3.5 border border-slate-500 bg-transparent text-[#e31b23] focus:ring-1 focus:ring-[#e31b23]"
+                      />
+                      <span>Nam</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="female"
+                        checked={formData.gender === 'female'}
+                        onChange={handleChange}
+                        disabled={!editing}
+                        className="h-3.5 w-3.5 border border-slate-500 bg-transparent text-[#e31b23] focus:ring-1 focus:ring-[#e31b23]"
+                      />
+                      <span>Nữ</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="other"
+                        checked={formData.gender === 'other'}
+                        onChange={handleChange}
+                        disabled={!editing}
+                        className="h-3.5 w-3.5 border border-slate-500 bg-transparent text-[#e31b23] focus:ring-1 focus:ring-[#e31b23]"
+                      />
+                      <span>Khác</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
       </div>
-    </>
+    </main>
   );
 }
