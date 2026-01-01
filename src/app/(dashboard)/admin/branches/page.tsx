@@ -1,4 +1,5 @@
-import BranchManagement from "../../component/admin/BranchManagement";
+import BranchManagement from "@/app/component/admin/BranchManagement";
+
 
 export const metadata = {
   title: "Quản lý chi nhánh - Admin",

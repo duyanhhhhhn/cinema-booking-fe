@@ -121,7 +121,7 @@ export class Auth extends Model {
       if (!refreshToken) return false;
 
       const response = await this.api.post<IResponse<any>>({
-        url: "/auth/refresh-token",
+        url: "/auth/refresh",
         headers: {
           Authorization: `Bearer ${refreshToken}`,
         },
