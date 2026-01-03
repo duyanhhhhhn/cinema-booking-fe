@@ -1,4 +1,4 @@
-import ContentManagement from "../../component/admin/ContentManagement";
+import ContentManagement from "@/app/component/admin/ContentManagement";
 
 export const metadata = {
   title: "Quản lý nội dung - Admin",

@@ -1,4 +1,5 @@
-import AdminLayout from "../component/layout/admin/AdminLayout";
+import React from "react";
+import AdminLayout from "@/app/component/layout/admin/AdminLayout";
 
 export default function AdminLayoutWrapper({
   children,

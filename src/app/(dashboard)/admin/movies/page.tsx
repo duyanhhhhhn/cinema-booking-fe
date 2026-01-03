@@ -1,4 +1,4 @@
-import MovieManagement from "../../component/admin/MovieManagement";
+import MovieManagement from "@/app/component/admin/MovieManagement";
 
 export const metadata = {
   title: "Quản lý phim - Admin",

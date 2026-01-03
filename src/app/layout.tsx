@@ -1,11 +1,11 @@
 import React from "react";
 
 import { Outfit } from "next/font/google";
-import { Box } from "@mui/material";
 import "./globals.css";
 import "@tabler/icons-webfont/dist/tabler-icons.min.css";
-import Header from "./component/layout/client/Header";
-import Footer from "./component/layout/client/Footer";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import ClientLayoutWrapper from "./component/layout/ClientLayoutWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GlobalRouteGuard } from "@/guards";
@@ -28,11 +28,21 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <GlobalRouteGuard>
-              <Box sx={{ minHeight: "100vh", backgroundColor: "#000000" }}>
-                <Header />
-                <div className="min-h-[calc(100vh-64px)]">{children}</div>
-                <Footer />
-              </Box>
+              <ClientLayoutWrapper>
+                {children}
+              </ClientLayoutWrapper>
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
             </GlobalRouteGuard>
           </AuthProvider>
         </QueryProvider>

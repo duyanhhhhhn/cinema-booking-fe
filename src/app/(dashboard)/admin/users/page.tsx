@@ -1,4 +1,4 @@
-import UserManagement from "../../component/admin/UserManagement";
+import UserManagement from "@/app/component/admin/UserManagement";
 
 export const metadata = {
   title: "Quản lý người dùng - Admin",
