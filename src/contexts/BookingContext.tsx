@@ -1,6 +1,6 @@
 'use client';
 
-import { BookingState, Combo } from '@/types/booking/booking';
+import { BookingState, Combo } from '@/types/data/booking/booking';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface BookingContextType {

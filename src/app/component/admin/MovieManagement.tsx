@@ -1,322 +1,111 @@
 "use client";
-
-import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  IconButton,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Grid,
-  MenuItem,
-  Switch,
-} from "@mui/material";
+import React, { useMemo, useState } from "react";
+import { Search, Add, ArrowDropDown } from "@mui/icons-material";
+import { Movie } from "@/types/data/movie/movie";
+import MovieTable from "./movies/MovieTable";
+import CustomPagination from "./table/CustomPagination";
+import AddMoviePopup from "./movies/modal/AddMoviePopup";
+import { useQuery } from "@tanstack/react-query";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function MovieManagement() {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMovie, setEditingMovie] = useState(null);
+  const [page, setPage] = useState(1);
+  const [openAddMovieModal, setopenAddMovieModal] = useState(false);
+  const totalPages = 10; // Giả sử có 10 trang
+  const { searchQuery } = useRouteQuery();
 
-  // Sample data - replace with API call
-  const movies = [
-    {
-      id: 1,
-      title: "Avengers: Secret Wars",
-      genre: "Hành động, Khoa học viễn tưởng",
-      duration: 180,
-      format: "IMAX",
-      rating: 4.8,
-      status: "showing",
-      releaseDate: "2024-01-15",
-      endDate: "2024-02-15",
-    },
-    {
-      id: 2,
-      title: "The Last Kingdom",
-      genre: "Hành động, Lịch sử",
-      duration: 150,
-      format: "2D",
-      rating: 4.5,
-      status: "showing",
-      releaseDate: "2024-01-10",
-      endDate: "2024-02-10",
-    },
-    {
-      id: 3,
-      title: "Space Odyssey 2024",
-      genre: "Khoa học viễn tưởng",
-      duration: 165,
-      format: "3D",
-      rating: 4.7,
-      status: "coming-soon",
-      releaseDate: "2024-02-01",
-      endDate: "2024-03-01",
-    },
-  ];
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleEdit = (movie) => {
-    setEditingMovie(movie);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (movieId) => {
-    if (confirm("Bạn có chắc chắn muốn xóa phim này?")) {
-      // Handle delete logic
-      console.log("Delete movie:", movieId);
-    }
-  };
-
-  const getStatusChip = (status) => {
-    const statusMap = {
-      showing: { label: "Đang chiếu", color: "green" },
-      "coming-soon": { label: "Sắp chiếu", color: "orange" },
-      ended: { label: "Đã kết thúc", color: "gray" },
+  const queryParams = useMemo(() => {
+    return {
+      page: searchQuery.get("page") || 1,
+      perPage: searchQuery.get("perPage") || 10,
     };
-    const statusInfo = statusMap[status] || statusMap.showing;
-    return (
-      <Chip
-        label={statusInfo.label}
-        size="small"
-        className={`bg-${statusInfo.color}-500 text-white`}
-      />
-    );
-  };
+  }, [searchQuery]);
+   const handlePageChange = (value: number) => {
+     setPage(value);
+   };
+  const { data: moviesData,refetch: refetchMovies } = useQuery({
+    ...Movie.objects.paginateQueryFactory(queryParams),
+  });
+  
 
   return (
-    <Box>
-      <div className="flex items-center justify-between mb-6">
-        <Typography variant="h4" className="font-bold text-gray-900">
-          Quản lý phim
-        </Typography>
-        <Button
-          variant="contained"
-          className="bg-teal-500 hover:bg-teal-600"
-          startIcon={<i className="ti ti-plus"></i>}
-          onClick={() => {
-            setEditingMovie(null);
-            setDialogOpen(true);
-          }}
-        >
-          Thêm phim mới
-        </Button>
-      </div>
+    <div className=" w-full p-8 font-sans text-zinc-900">
+      <div className=" flex flex-col gap-6">
+        <div className="flex flex-wrap justify-between gap-3">
+          <div className="flex min-w-72 flex-col gap-3">
+            <h1 className="text-4xl font-black leading-tight tracking-tight text-zinc-900">
+              Quản lý Phim
+            </h1>
+            <p className="text-zinc-600 text-base font-normal">
+              Thêm, sửa, xóa và quản lý tất cả các phim trong hệ thống.
+            </p>
+          </div>
+        </div>
 
-      <Card className="shadow-md">
-        <CardContent className="p-0">
-          <TableContainer>
-            <Table>
-              <TableHead className="bg-gray-50">
-                <TableRow>
-                  <TableCell className="font-semibold">ID</TableCell>
-                  <TableCell className="font-semibold">Tên phim</TableCell>
-                  <TableCell className="font-semibold">Thể loại</TableCell>
-                  <TableCell className="font-semibold">Thời lượng</TableCell>
-                  <TableCell className="font-semibold">Định dạng</TableCell>
-                  <TableCell className="font-semibold">Đánh giá</TableCell>
-                  <TableCell className="font-semibold">Trạng thái</TableCell>
-                  <TableCell className="font-semibold">Thao tác</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {movies
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((movie) => (
-                    <TableRow key={movie.id} hover>
-                      <TableCell>{movie.id}</TableCell>
-                      <TableCell className="font-semibold">{movie.title}</TableCell>
-                      <TableCell>{movie.genre}</TableCell>
-                      <TableCell>{movie.duration} phút</TableCell>
-                      <TableCell>
-                        <Chip label={movie.format} size="small" className="bg-purple-500 text-white" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <i className="ti ti-star-filled text-yellow-500"></i>
-                          <span>{movie.rating}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusChip(movie.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEdit(movie)}
-                            className="text-blue-600"
-                          >
-                            <i className="ti ti-edit"></i>
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDelete(movie.id)}
-                            className="text-red-600"
-                          >
-                            <i className="ti ti-trash"></i>
-                          </IconButton>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component="div"
-            count={movies.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Số hàng mỗi trang:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} của ${count !== -1 ? count : `nhiều hơn ${to}`}`
-            }
+        {/* --- Toolbar & Filters (Giữ nguyên Tailwind cho layout linh hoạt) --- */}
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex-1 max-w-lg">
+              <label className="flex flex-col min-w-40 h-12 w-full">
+                <div className="flex w-full flex-1 items-stretch rounded-lg h-full shadow-sm">
+                  <div className="text-zinc-500 flex bg-white items-center justify-center pl-4 rounded-l-lg border border-zinc-300 border-r-0">
+                    <Search fontSize="small" />
+                  </div>
+                  <input
+                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ec131e] border border-zinc-300 border-l-0 bg-white h-full placeholder:text-zinc-500 px-4 pl-2 text-base font-normal"
+                    placeholder="Tìm kiếm phim theo tên..."
+                  />
+                </div>
+              </label>
+            </div>
+
+            <button onClick={() => setopenAddMovieModal(true)} className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec131e] text-white gap-2 text-sm font-bold tracking-wide min-w-0 px-5 hover:bg-[#ec131e]/90 transition-colors shadow-sm">
+              <Add fontSize="small" />
+              <span className="truncate">Thêm Phim Mới</span>
+            </button>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-zinc-200 px-4 hover:bg-zinc-300 transition-colors">
+              <p className="text-zinc-800 text-sm font-medium">Tất cả</p>
+            </button>
+            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
+              <p className="text-zinc-600 text-sm font-medium">Đang chiếu</p>
+            </button>
+            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
+              <p className="text-zinc-600 text-sm font-medium">Sắp chiếu</p>
+            </button>
+            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
+              <p className="text-zinc-600 text-sm font-medium">Ngừng chiếu</p>
+            </button>
+            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 pl-4 pr-3 hover:bg-zinc-200 transition-colors">
+              <p className="text-zinc-600 text-sm font-medium">Thể loại</p>
+              <ArrowDropDown className="text-zinc-600" fontSize="small" />
+            </button>
+          </div>
+        </div>
+
+        {/* --- Main Content Area: Table & Pagination --- */}
+        <div className="flex flex-col gap-4">
+          {/* Component Bảng */}
+          <MovieTable
+            movies={moviesData?.data || []}
+            onEdit={() => {}}
+            refetchMovies={refetchMovies}
+           
           />
-        </CardContent>
-      </Card>
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingMovie ? "Chỉnh sửa phim" : "Thêm phim mới"}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={3} className="mt-2">
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Tên phim"
-                defaultValue={editingMovie?.title || ""}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Mô tả"
-                multiline
-                rows={4}
-                defaultValue={editingMovie?.description || ""}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Thể loại"
-                defaultValue={editingMovie?.genre || ""}
-                required
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Thời lượng (phút)"
-                type="number"
-                defaultValue={editingMovie?.duration || ""}
-                required
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Định dạng"
-                select
-                defaultValue={editingMovie?.format || "2D"}
-                required
-              >
-                <MenuItem value="2D">2D</MenuItem>
-                <MenuItem value="3D">3D</MenuItem>
-                <MenuItem value="IMAX">IMAX</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Ngôn ngữ"
-                defaultValue={editingMovie?.language || "Tiếng Anh - Phụ đề Việt"}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Ngày khởi chiếu"
-                type="date"
-                defaultValue={editingMovie?.releaseDate || ""}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Ngày kết thúc"
-                type="date"
-                defaultValue={editingMovie?.endDate || ""}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Đạo diễn"
-                defaultValue={editingMovie?.director || ""}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Diễn viên (phân cách bằng dấu phẩy)"
-                defaultValue={editingMovie?.cast || ""}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Link trailer (YouTube)"
-                defaultValue={editingMovie?.trailer || ""}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <div className="flex items-center gap-2">
-                <label>Trạng thái:</label>
-                <Switch defaultChecked={editingMovie?.status === "showing"} />
-                <span>{editingMovie?.status === "showing" ? "Đang chiếu" : "Sắp chiếu"}</span>
-              </div>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Hủy</Button>
-          <Button variant="contained" className="bg-teal-500 hover:bg-teal-600">
-            {editingMovie ? "Cập nhật" : "Thêm mới"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          {/* Component Phân Trang */}
+          <CustomPagination
+            count={totalPages}
+            page={page}
+            onChange={() => handlePageChange(page)}
+          />
+        </div>
+        <AddMoviePopup open={openAddMovieModal} onClose={() => setopenAddMovieModal(false)} refetchMovies={refetchMovies} />
+       
+      </div>
+    </div>
   );
-}
+};
 

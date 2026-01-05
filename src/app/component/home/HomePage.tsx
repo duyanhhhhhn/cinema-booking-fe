@@ -1,5 +1,6 @@
 "use client"
 
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
 export default function HomePage() {
@@ -7,6 +8,7 @@ export default function HomePage() {
     const sapChieu = [];
     const render = [];
     const [movies, setMovies] = useState([]);
+     const {isAuthenticated, logout } = useAuth();
     const [tab, setTab] = useState("dangChieu");
     const news = [];
     function change(key) {
@@ -191,6 +193,7 @@ export default function HomePage() {
                             </div>
                         </div>
                     </div>
+                    {!isAuthenticated && (
                     <div className="bg-[#1E1E1E]">
                         <div className="max-w-7xl mx-auto py-16 sm:py-20 px-4 sm:px-10 flex flex-col items-center text-center gap-6">
                             <h2 className="text-white text-3xl md:text-4xl font-bold">
@@ -202,8 +205,9 @@ export default function HomePage() {
                             <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em]">
                                 <span className="truncate">Đăng Ký Ngay</span>
                             </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </>

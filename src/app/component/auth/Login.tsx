@@ -3,19 +3,37 @@
 import React from "react";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, isLoggingIn } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+
+    try {
+      const result = await login(email, password);
+
+      if (result.success) {
+        // Lấy redirect URL từ query params hoặc mặc định
+        const redirectUrl = searchParams.get("redirect") || "/";
+        router.push(redirectUrl);
+      } else {
+        setError(result.error || "Đăng nhập thất bại");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Có lỗi xảy ra, vui lòng thử lại");
+    }
   };
 
   return (
@@ -95,10 +113,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoggingIn}
               className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+              {isLoggingIn ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
             <p className="text-center text-gray-400 text-sm">

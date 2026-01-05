@@ -1,4 +1,4 @@
-import ShowtimeManagement from "../../component/admin/ShowtimeManagement";
+import ShowtimeManagement from "@/app/component/admin/ShowtimeManagement";
 
 export const metadata = {
   title: "Quản lý suất chiếu - Admin",

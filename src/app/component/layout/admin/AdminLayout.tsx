@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -19,6 +20,7 @@ import {
   Badge,
   Avatar,
 } from "@mui/material";
+import Image from "next/image";
 
 const drawerWidth = 280;
 
@@ -54,13 +56,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const drawer = (
     <div>
       <Toolbar className="bg-teal-600">
-        <Typography
-          variant="h6"
-          className="text-white font-bold flex items-center gap-2"
-        >
-          <i className="ti ti-ticket"></i>
-          Admin Panel
-        </Typography>
+       
+          <Image src="/logo/logo_cinema.png" alt="logo" width={100} height={100} />
+       
       </Toolbar>
       <Divider />
       <List>
@@ -97,7 +95,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   );
 
   return (
-    <Box className="flex">
+    <Box 
+      className="flex" 
+      sx={{ 
+        minHeight: "100vh", 
+        backgroundColor: "#ffffff" 
+      }}
+    >
       <AppBar
         position="fixed"
         sx={{
@@ -185,6 +189,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           mt: "64px",
+          backgroundColor: "#ffffff",
         }}
       >
         {children}

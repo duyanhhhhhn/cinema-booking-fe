@@ -10,4 +10,3 @@ export default function BookingLayout({
 }) {
   return <BookingProvider>{children}</BookingProvider>;
 }
-

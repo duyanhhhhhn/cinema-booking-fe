@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useBooking } from "@/contexts/BookingContext";
 import OrderSummary from "./OrderSummary";
-import { Combo } from "@/types/booking/booking";
+import { Combo } from "@/types/data/booking/booking";
 import StepIndicator from "./StepIndicator";
 
 const availableCombos: Combo[] = [
