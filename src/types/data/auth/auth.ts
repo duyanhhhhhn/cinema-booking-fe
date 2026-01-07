@@ -6,6 +6,15 @@ export interface ILoginPayload {
   email: string;
   password: string;
 }
+export interface IRegisterPayload {
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  otp: string;
+}
+
 
 export class Auth extends Model {
   static login(payload: ILoginPayload) {
@@ -26,7 +35,7 @@ export class Auth extends Model {
 
   static getMe() {
     return this.api.get<IResponse<any>>({
-      url: "/user/me",
+      url: "/users/me",
     });
   }
 
@@ -141,6 +150,20 @@ export class Auth extends Model {
       return false;
     }
   }
+  static registerOtp({email}: {email: string}) {
+    return this.api.post<IResponse<any>>({
+      url: "/auth/register/send-otp",
+    data: {
+      email
+    }
+    })
+  }
+  static register({payload}: {payload: IRegisterPayload}) {
+    return this.api.post<IResponse<any>>({
+      url: "/auth/register/verify",
+    data: payload
+    })
+  }
 }
 
 Auth.setup();
@@ -154,6 +177,28 @@ export function useLoginMutation() {
   >({
     mutationFn: (payload) => {
       return Auth.login(payload).then((r) => r.data);
+    },
+  });
+}
+export function useRegisterOtpMutation() {
+  return useMutation<
+    IResponse<any>,
+    IHttpError,
+    {email: string}
+  >({
+    mutationFn: (payload) => {
+      return Auth.registerOtp(payload).then((r) => r.data);
+    },
+  });
+}
+export function useRegisterMutation() {
+  return useMutation<
+    IResponse<any>,
+    IHttpError,
+    IRegisterPayload
+  >({
+    mutationFn: (payload) => {
+      return Auth.register({payload}).then((r) => r.data);
     },
   });
 }
