@@ -35,7 +35,7 @@ export class Auth extends Model {
 
   static getMe() {
     return this.api.get<IResponse<any>>({
-      url: "/user/me",
+      url: "/users/me",
     });
   }
 
