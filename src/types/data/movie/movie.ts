@@ -4,14 +4,23 @@ import { ObjectsFactory } from "@/types/core/objectFactory";
 import { useMutation } from "@tanstack/react-query";
 
 export interface IMovie {
-  id: number;
-  poster: string;
-  name: string;
-  genre: string;
-  duration: string;
-  startDate: string;
-  endDate: string;
-  status: 'active' | 'upcoming' | 'ended';
+  id: number
+  title: string
+  shortDescription: string
+  description?: string
+  durationMinutes: number
+  genre: string
+  language?: string
+  format: string
+  director: string
+  cast?: string
+  posterUrl: string
+  bannerUrl?: string
+  trailerUrl?: string
+  releaseDate?: string
+  endDate?: string
+  status: string
+  createdAt: string
 }
 export interface MovieFormData {
   title: string
@@ -23,8 +32,8 @@ export interface MovieFormData {
   format: string
   director: string
   cast: string
-  posterUrl: string
-  bannerUrl: string
+  posterFile: FileList
+  bannerFile: FileList
   trailerUrl: string
   releaseDate: string
   endDate: string
@@ -43,8 +52,8 @@ export const initialData: MovieFormData = {
   cast: "",
   releaseDate: "",
   endDate: "",
-  posterUrl: "",
-  bannerUrl: "",
+  posterFile: null,
+  bannerFile: null,
   trailerUrl: "",
   status: "COMING_SOON",
 };
@@ -65,7 +74,7 @@ export class Movie extends Model {
       queryKey: ['CONVERSIONRATES_PAGINATE_QUERY'],
       queryFn: () => {
         return this.api
-          .get<IPaginateResponse<IMovie[]>>({
+          .get<IPaginateResponse<IMovie>>({
             url: '/movies',
           })
           .then(r => r.data)
@@ -73,7 +82,7 @@ export class Movie extends Model {
     }
   }
   static createMovie(payload: MovieFormData) {
-    return this.api.post<IResponse<IMovie>>({
+    return this.api.upload<IResponse<IMovie>>({
       url: '/movies/create-movies',
       data: payload,
     })
@@ -82,6 +91,18 @@ export class Movie extends Model {
     return this.api.delete<IResponse<IMovie>>({
       url: `/movies/delete-movies/${id}`,
     })
+  }
+  static getMoviesDetail(id: number) {
+    return {
+      queryKey: ['MOVIES_DETAIL_QUERY', id],
+      queryFn: () => {
+        return this.api
+          .get<IResponse<IMovie>>({
+            url: `/public/movie-detail/${id}`,
+          })
+          .then(r => r.data)
+      }
+    }
   }
 }
 Movie.setup();

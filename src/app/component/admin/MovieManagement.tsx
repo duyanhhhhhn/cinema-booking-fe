@@ -9,10 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function MovieManagement() {
-  const [page, setPage] = useState(1);
   const [openAddMovieModal, setopenAddMovieModal] = useState(false);
-  const totalPages = 10; // Giả sử có 10 trang
   const { searchQuery } = useRouteQuery();
+  const [page, setPage] = useState(Number(searchQuery.get("page") || 1));
 
   const queryParams = useMemo(() => {
     return {
@@ -26,6 +25,7 @@ export default function MovieManagement() {
   const { data: moviesData,refetch: refetchMovies } = useQuery({
     ...Movie.objects.paginateQueryFactory(queryParams),
   });
+  
   
 
   return (
@@ -41,7 +41,6 @@ export default function MovieManagement() {
             </p>
           </div>
         </div>
-
         {/* --- Toolbar & Filters (Giữ nguyên Tailwind cho layout linh hoạt) --- */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center gap-4">
@@ -59,7 +58,10 @@ export default function MovieManagement() {
               </label>
             </div>
 
-            <button onClick={() => setopenAddMovieModal(true)} className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec131e] text-white gap-2 text-sm font-bold tracking-wide min-w-0 px-5 hover:bg-[#ec131e]/90 transition-colors shadow-sm">
+            <button
+              onClick={() => setopenAddMovieModal(true)}
+              className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec131e] text-white gap-2 text-sm font-bold tracking-wide min-w-0 px-5 hover:bg-[#ec131e]/90 transition-colors shadow-sm"
+            >
               <Add fontSize="small" />
               <span className="truncate">Thêm Phim Mới</span>
             </button>
@@ -84,26 +86,27 @@ export default function MovieManagement() {
             </button>
           </div>
         </div>
-
         {/* --- Main Content Area: Table & Pagination --- */}
         <div className="flex flex-col gap-4">
           {/* Component Bảng */}
           <MovieTable
             movies={moviesData?.data || []}
-            onEdit={() => {}}
             refetchMovies={refetchMovies}
-           
           />
 
-          {/* Component Phân Trang */}
           <CustomPagination
-            count={totalPages}
+            count={moviesData?.meta.total || 0}
+            itemsPerPage={moviesData?.meta.perPage || 0}
+            totalItems={moviesData?.meta.total || 0}
             page={page}
             onChange={() => handlePageChange(page)}
           />
         </div>
-        <AddMoviePopup open={openAddMovieModal} onClose={() => setopenAddMovieModal(false)} refetchMovies={refetchMovies} />
-       
+        <AddMoviePopup
+          open={openAddMovieModal}
+          onClose={() => setopenAddMovieModal(false)}
+          refetchMovies={refetchMovies}
+        />
       </div>
     </div>
   );

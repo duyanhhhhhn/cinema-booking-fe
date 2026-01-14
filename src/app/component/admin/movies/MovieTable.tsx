@@ -10,19 +10,20 @@ import {
   IconButton,
   Chip,
   Box,
+  Link,
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import { IMovie, useDeleteMovieMutation } from "@/types/data/movie";
 import DeletePopup from "../../popup/DeletePopup";
 import { useNotification } from "@/hooks/useNotification";
+import dayjs from "dayjs";
 
 interface MovieTableProps {
   movies: IMovie[];
-  onEdit: (_id: number) => void;
   refetchMovies: () => void; 
 }
 
-export default function MovieTable({ movies, onEdit, refetchMovies }: MovieTableProps) {
+export default function MovieTable({ movies, refetchMovies }: MovieTableProps) {
   const n = useNotification();
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
 
@@ -51,6 +52,7 @@ export default function MovieTable({ movies, onEdit, refetchMovies }: MovieTable
       });
     }
   };
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
 
   const renderStatusChip = (status: string) => {
     let color: "success" | "primary" | "default" = "default";
@@ -134,7 +136,7 @@ export default function MovieTable({ movies, onEdit, refetchMovies }: MovieTable
                     sx={{
                       width: 48,
                       height: 64,
-                      backgroundImage: `url(${movie.poster})`,
+                      backgroundImage: `url(${urlImage}${movie.posterUrl})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       borderRadius: 1,
@@ -142,21 +144,31 @@ export default function MovieTable({ movies, onEdit, refetchMovies }: MovieTable
                     }}
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 500 }}>{movie.name}</TableCell>
-                <TableCell>{movie.genre}</TableCell>
-                <TableCell>{movie.duration}</TableCell>
-                <TableCell>{movie.startDate}</TableCell>
-                <TableCell>{movie.endDate}</TableCell>
+                <TableCell sx={{ fontWeight: 500 }}>{movie.title}</TableCell>
+                <TableCell>
+                  {movie.genre ?
+                    <Chip
+                      label={movie.genre}
+                      size="small"
+                      variant="filled"
+                    />
+                    :""
+                  }
+                </TableCell>
+                <TableCell>{movie.durationMinutes} Phút</TableCell>
+                <TableCell>{dayjs(movie.createdAt).format("DD/MM/YYYY")}</TableCell>
+                <TableCell>{dayjs(movie.endDate).format("DD/MM/YYYY")}</TableCell>
                 <TableCell>{renderStatusChip(movie.status)}</TableCell>
                 <TableCell align="center">
                   <Box display="flex" justifyContent="center" gap={1}>
+                    <Link href={`/admin/movies/${movie.id}`}>
                     <IconButton
-                      onClick={() => onEdit(movie.id)}
                       size="small"
                       sx={{ color: "#52525b" }}
                     >
                       <Edit fontSize="small" />
                     </IconButton>
+                    </Link>
 
                     <IconButton
                       onClick={() => handleClickIconDelete(movie.id)}

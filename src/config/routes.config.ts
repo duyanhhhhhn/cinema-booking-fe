@@ -124,6 +124,12 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
     description: 'Quản lý phim',
   },
   {
+    path: '/admin/movies/[id]',
+    guard: 'admin',
+    fallbackUrl: '/',
+    description: 'Chi tiết & chỉnh sửa phim',
+  },
+  {
     path: '/admin/showtimes',
     guard: 'admin',
     fallbackUrl: '/',

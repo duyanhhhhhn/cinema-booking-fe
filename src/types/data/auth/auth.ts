@@ -28,7 +28,7 @@ export class Auth extends Model {
   }
 
   static logout() {
-    return this.api.get({
+    return this.api.post({
       url: "auth/logout",
     });
   }
@@ -131,9 +131,9 @@ export class Auth extends Model {
 
       const response = await this.api.post<IResponse<any>>({
         url: "/auth/refresh",
-        headers: {
-          Authorization: `Bearer ${refreshToken}`,
-        },
+        data: {
+          refreshToken: refreshToken
+        }
       });
 
       const data = response.data?.data || response.data;
