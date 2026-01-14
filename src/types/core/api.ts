@@ -160,24 +160,41 @@ export class Api {
                 }
               );
 
-              const responseData = refreshResponse.data?.data || refreshResponse.data;
-              const newToken = responseData?.accessToken;
-              const newRefreshToken = responseData?.refreshToken;
+              // Kiểm tra nhiều cấu trúc response có thể có
+              // Response có thể là: { data: { accessToken, refreshToken } } hoặc { accessToken, refreshToken } trực tiếp
+              const fullData = refreshResponse.data;
+              const nestedData = fullData?.data;
+              
+              // Tìm accessToken và refreshToken ở nhiều vị trí
+              const newToken = nestedData?.accessToken || fullData?.accessToken;
+              const newRefreshToken = nestedData?.refreshToken || fullData?.refreshToken;
+
+              console.log("Refresh token response:", {
+                fullResponse: fullData,
+                nestedData,
+                hasAccessToken: !!newToken,
+                hasRefreshToken: !!newRefreshToken,
+                accessTokenPreview: newToken ? newToken.substring(0, 20) + "..." : null,
+                refreshTokenPreview: newRefreshToken ? newRefreshToken.substring(0, 20) + "..." : null,
+              });
 
               if (newToken) {
-                // Lưu token mới và refreshToken mới (nếu có) bằng cách sử dụng handleLoginSuccess
-                // Import Auth class để sử dụng handleLoginSuccess
+                // Lưu token mới và refreshToken mới (nếu có)
                 if (typeof window !== "undefined") {
                   // Lưu accessToken
                   localStorage.setItem("accessToken", newToken);
+                  console.log("✅ AccessToken saved");
                   
-                  // Lưu refreshToken mới nếu có, nếu không giữ nguyên refreshToken cũ
+                  // Lưu refreshToken mới nếu có
                   if (newRefreshToken) {
                     localStorage.setItem("refreshToken", newRefreshToken);
+                    console.log("✅ RefreshToken saved");
+                  } else {
+                    console.warn("⚠️ No new refreshToken in response, keeping old one");
                   }
                   
                   // Cập nhật expiresIn
-                  const expiresIn = responseData?.expiresIn;
+                  const expiresIn = nestedData?.expiresIn || fullData?.expiresIn;
                   if (expiresIn) {
                     const expiresTime = {
                       value: expiresIn,
