@@ -185,14 +185,14 @@ export default function AccountProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[12px] font-medium text-slate-100">
-                    Ngày sinh
+                    Ngày đăng ký
                   </label>
                   <input
                     type="date"
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
-                    disabled={!editing}
+                    disabled
                     className={baseInputClass}
                   />
                 </div>
