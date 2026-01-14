@@ -1,10 +1,11 @@
 import React from "react";
 import { Pagination, Stack, Typography } from "@mui/material";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 
 export default function CustomPagination({
   count,
-  page,
+  page: pageProp,
   onChange,
   totalItems = 100,
   itemsPerPage = 3,
@@ -12,11 +13,19 @@ export default function CustomPagination({
   count: number;
   page: number;
   onChange: () => void;
-  totalItems?: number;
-  itemsPerPage?: number;
+  totalItems: number;
+  itemsPerPage: number;
 }) {
-  const startItem = (page - 1) * itemsPerPage + 1;
-  const endItem = Math.min(page * itemsPerPage, totalItems);
+  const { updateQuery, searchQuery } = useRouteQuery();
+  
+  // Đọc page từ query params, mặc định là 1
+  const pageFromQuery = searchQuery.get("page");
+  const currentPage = pageFromQuery 
+    ? parseInt(pageFromQuery, 10) 
+    : (pageProp || 1);
+  
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <Stack
@@ -34,13 +43,16 @@ export default function CustomPagination({
       </Typography>
 
       <Pagination
-        count={count}
-        page={page}
-        onChange={onChange}
+        count={Math.ceil(totalItems / itemsPerPage)}
+        page={currentPage}
+        onChange={(_, value) => {
+          updateQuery({ page: value.toString() });
+          onChange();
+        }}
         shape="rounded"
         sx={{
-          "& .MuiPaginationItem-root.Mui-selected": {
-            backgroundColor: "#ec131e", // Màu đỏ primary
+           "& .MuiPaginationItem-root.Mui-selected": {
+            backgroundColor: "#ec131e", 
             color: "white",
             "&:hover": {
               backgroundColor: "#c91019",

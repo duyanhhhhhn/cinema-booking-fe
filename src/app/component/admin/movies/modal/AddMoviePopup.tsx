@@ -1,12 +1,18 @@
-import React from "react";
+/* eslint-disable @next/next/no-img-element */
+import React, { useEffect, useState } from "react";
 import { Modal, Fade, Backdrop } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined"; 
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline"; 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { createMovieSchema } from "@/types/data/movie/schema/movie";
-import { initialData, MovieFormData, useCreateMovieMutation } from "@/types/data/movie";
+import {
+  initialData,
+  MovieFormData,
+  useCreateMovieMutation,
+} from "@/types/data/movie";
 import { useNotification } from "@/hooks/useNotification";
-
 
 export default function AddMovieModal({
   open,
@@ -16,31 +22,86 @@ export default function AddMovieModal({
   open: boolean;
   onClose: () => void;
   refetchMovies: () => void;
-    }) {
-    const n = useNotification(); 
+}) {
+  const n = useNotification();
+  const [previews, setPreviews] = useState<{
+    poster: string | null;
+    banner: string | null;
+  }>({
+    poster: null,
+    banner: null,
+  });
+
   const methods = useForm<any>({
     defaultValues: initialData,
     mode: "onChange",
     resolver: yupResolver(createMovieSchema()),
   });
-    const { mutate: createMovie } = useCreateMovieMutation();
-    const onSubmit =  async(data: MovieFormData) => {
-        const payload = {
-            ...data,
-            durationMinutes: Number(data.durationMinutes),
-        }
-        createMovie(payload, {
-            onSuccess: () => {
-                onClose();
-                n.success('Thêm phim thành công');
-                methods.reset();
-                refetchMovies();
-            },
-            onError: (error) => {
-                n.error(error.message);
-            }
-        });
+
+  const { mutate: createMovie } = useCreateMovieMutation();
+
+  
+  useEffect(() => {
+    if (!open) {
+      setTimeout(() => {
+        setPreviews({ poster: null, banner: null });
+      }, 0);
+      methods.reset();
+    }
+  }, [open, methods]);
+
+  
+  useEffect(() => {
+    return () => {
+      if (previews.poster) URL.revokeObjectURL(previews.poster);
+      if (previews.banner) URL.revokeObjectURL(previews.banner);
     };
+  }, [previews]);
+
+  const onSubmit = async (data: MovieFormData) => {
+    const payload = {
+      ...data,
+      durationMinutes: Number(data.durationMinutes),
+    };
+    createMovie(payload, {
+      onSuccess: () => {
+        onClose();
+        n.success("Thêm phim thành công");
+        methods.reset();
+        refetchMovies();
+      },
+      onError: (error) => {
+        n.error(error.message);
+      },
+    });
+  };
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: "posterFile" | "bannerFile"
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviews((prev) => ({
+        ...prev,
+        [fieldName === "posterFile" ? "poster" : "banner"]: url,
+      }));
+    }
+  };
+
+  const removeImage = (
+    e: React.MouseEvent,
+    fieldName: "posterFile" | "bannerFile"
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPreviews((prev) => ({
+      ...prev,
+      [fieldName === "posterFile" ? "poster" : "banner"]: null,
+    }));
+    methods.setValue(fieldName, null as any); 
+  };
 
   const inputClass =
     "w-full rounded-lg bg-white border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-[#ec131e] focus:ring-1 focus:ring-[#ec131e] focus:outline-none placeholder-zinc-400 transition-colors";
@@ -62,7 +123,6 @@ export default function AddMovieModal({
       className="flex items-center justify-center p-4 overflow-y-auto"
     >
       <Fade in={open}>
-        {/* Main Container: Đổi bg thành white */}
         <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 shadow-2xl flex flex-col max-h-[90vh] outline-none font-sans">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
@@ -75,7 +135,7 @@ export default function AddMovieModal({
             </button>
           </div>
 
-          {/* Form Body - Scrollable */}
+          {/* Form Body */}
           <div className="p-6 overflow-y-auto custom-scrollbar">
             <form
               id="add-movie-form"
@@ -92,6 +152,118 @@ export default function AddMovieModal({
                   placeholder="Nhập tên phim"
                   className={inputClass}
                 />
+              </div>
+
+              {/* URL Poster & Banner Section (Custom UI) */}
+              <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Poster Upload - Tỉ lệ dọc */}
+                <div>
+                  <label className={labelClass}>Poster (Dọc)</label>
+                  <div className="relative w-full h-64 border-2 border-dashed border-zinc-300 rounded-lg hover:bg-zinc-50 hover:border-[#ec131e] transition-all group cursor-pointer bg-zinc-50/50">
+                    {previews.poster ? (
+                      <div className="relative w-full h-full overflow-hidden rounded-lg">
+                        <img
+                          src={previews.poster}
+                          alt="Poster Preview"
+                          className="w-full h-full object-contain bg-zinc-900"
+                        />
+                        <button
+                          onClick={(e) => removeImage(e, "posterFile")}
+                          className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all"
+                          title="Xóa ảnh"
+                        >
+                          <DeleteOutlineIcon fontSize="small" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                        <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                          <CloudUploadIcon className="text-[#ec131e]" />
+                        </div>
+                        <span className="text-sm text-zinc-600 font-medium">
+                          Tải Poster lên
+                        </span>
+                        <span className="text-xs text-zinc-400 mt-1">
+                          JPEG, PNG, WEBP
+                        </span>
+
+                        {/* Hidden Input */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          {...methods.register("posterFile", {
+                            onChange: (e) => handleFileChange(e, "posterFile"),
+                          })}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Banner Upload - Tỉ lệ ngang */}
+                <div>
+                  <label className={labelClass}>Banner (Ngang)</label>
+                  <div className="relative w-full h-64 border-2 border-dashed border-zinc-300 rounded-lg hover:bg-zinc-50 hover:border-[#ec131e] transition-all group cursor-pointer bg-zinc-50/50">
+                    {previews.banner ? (
+                      <div className="relative w-full h-full overflow-hidden rounded-lg">
+                        <img
+                          src={previews.banner}
+                          alt="Banner Preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={(e) => removeImage(e, "bannerFile")}
+                          className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all"
+                          title="Xóa ảnh"
+                        >
+                          <DeleteOutlineIcon fontSize="small" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                        <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                          <CloudUploadIcon className="text-[#ec131e]" />
+                        </div>
+                        <span className="text-sm text-zinc-600 font-medium">
+                          Tải Banner lên
+                        </span>
+                        <span className="text-xs text-zinc-400 mt-1">
+                          JPEG, PNG, WEBP
+                        </span>
+
+                        {/* Hidden Input */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          {...methods.register("bannerFile", {
+                            onChange: (e) => handleFileChange(e, "bannerFile"),
+                          })}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Trailer URL - Đưa xuống dưới hoặc để riêng */}
+              <div className="col-span-1 md:col-span-2">
+                <label className={labelClass}>
+                  URL Trailer (Youtube/Video)
+                </label>
+                <div className="relative">
+                  <input
+                    name="trailerUrl"
+                    {...methods.register("trailerUrl")}
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className={`${inputClass} pl-10`}
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-zinc-400 text-lg">📺</span>
+                  </div>
+                </div>
               </div>
 
               {/* Short Description */}
@@ -118,7 +290,7 @@ export default function AddMovieModal({
                 />
               </div>
 
-              {/* Row 1 inputs */}
+              {/* Other inputs... */}
               <div>
                 <label className={labelClass}>Thời lượng (phút)</label>
                 <input
@@ -139,8 +311,6 @@ export default function AddMovieModal({
                   className={inputClass}
                 />
               </div>
-
-              {/* Row 2 inputs */}
               <div>
                 <label className={labelClass}>Ngôn ngữ</label>
                 <input
@@ -161,8 +331,6 @@ export default function AddMovieModal({
                   className={inputClass}
                 />
               </div>
-
-              {/* Row 3 inputs */}
               <div>
                 <label className={labelClass}>Đạo diễn</label>
                 <input
@@ -183,8 +351,6 @@ export default function AddMovieModal({
                   className={inputClass}
                 />
               </div>
-
-              {/* Dates - Bỏ color-scheme:dark để lịch hiện màu sáng */}
               <div>
                 <label className={labelClass}>Ngày khởi chiếu</label>
                 <input
@@ -204,38 +370,6 @@ export default function AddMovieModal({
                 />
               </div>
 
-              {/* URLs */}
-              <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className={labelClass}>URL Poster</label>
-                  <input
-                    name="posterUrl"
-                    {...methods.register("posterUrl")}
-                    type="file"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>URL Banner</label>
-                  <input
-                    name="bannerUrl"
-                    {...methods.register("bannerUrl")}
-                    type="file"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>URL Trailer</label>
-                  <input
-                    name="trailerUrl"
-                    {...methods.register("trailerUrl")}
-                    type="url"
-                    placeholder="https://..."
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
               {/* Status Select */}
               <div className="col-span-1 md:col-span-2">
                 <label className={labelClass}>Trạng thái</label>
@@ -249,7 +383,6 @@ export default function AddMovieModal({
                     <option value="NOW_SHOWING">Đang chiếu</option>
                     <option value="ENDED">Ngừng chiếu</option>
                   </select>
-                  {/* Custom Arrow for select - đổi màu icon sang tối */}
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
                     <svg
                       className="h-4 w-4 fill-current"
@@ -264,7 +397,7 @@ export default function AddMovieModal({
             </form>
           </div>
 
-          {/* Footer Actions - Nền xám nhạt */}
+          {/* Footer Actions */}
           <div className="flex items-center justify-end gap-3 border-t border-zinc-200 p-6 bg-zinc-50 shrink-0 rounded-b-xl">
             <button
               type="button"
