@@ -105,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializeAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
+      
 
       if (!token) {
         setUser(null);
@@ -293,12 +294,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const logout = async () => {
     try {
-      await Auth.logout();
+     await Auth.handleLogout();
+     setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      Auth.handleLogout();
-      setUser(null);
     }
   };
 

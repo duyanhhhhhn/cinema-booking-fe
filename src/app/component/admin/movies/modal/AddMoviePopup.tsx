@@ -63,7 +63,22 @@ export default function AddMovieModal({
       ...data,
       durationMinutes: Number(data.durationMinutes),
     };
-    createMovie(payload, {
+    const formData = new FormData();
+     Object.entries(payload).forEach(([key, value]) => {
+       if (key === "posterFile" && value instanceof FileList && value.length > 0) {
+         formData.append("posterFile", value[0]);
+       } else if (key === "bannerFile" && value instanceof FileList && value.length > 0) {
+         formData.append("bannerFile", value[0]);
+       } else if (value !== undefined && value !== null) {
+         if (typeof value === "object") {
+           formData.append(key, JSON.stringify(value));
+         } else {
+           formData.append(key, String(value));
+         }
+       }
+     });
+
+    createMovie(formData, {
       onSuccess: () => {
         onClose();
         n.success("Thêm phim thành công");

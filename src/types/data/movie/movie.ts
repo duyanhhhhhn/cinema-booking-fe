@@ -7,19 +7,21 @@ export interface IMovie {
   id: number
   title: string
   shortDescription: string
-  description?: string
+  description: string
   durationMinutes: number
   genre: string
-  language?: string
+  language: string
   format: string
   director: string
-  cast?: string
+  cast: string
+  posterFile: FileList
+  bannerFile: FileList
+  trailerUrl: string
   posterUrl: string
-  bannerUrl?: string
-  trailerUrl?: string
-  releaseDate?: string
-  endDate?: string
-  status: string
+  bannerUrl: string
+  releaseDate: string
+  endDate: string
+  status: "COMING_SOON" | "NOW_SHOWING" | "ENDED"
   createdAt: string
 }
 export interface MovieFormData {
@@ -34,6 +36,8 @@ export interface MovieFormData {
   cast: string
   posterFile: FileList
   bannerFile: FileList
+  posterUrl: string
+  bannerUrl: string
   trailerUrl: string
   releaseDate: string
   endDate: string
@@ -54,6 +58,8 @@ export const initialData: MovieFormData = {
   endDate: "",
   posterFile: null,
   bannerFile: null,
+  posterUrl: "",
+  bannerUrl: "",
   trailerUrl: "",
   status: "COMING_SOON",
 };
@@ -81,8 +87,8 @@ export class Movie extends Model {
       }
     }
   }
-  static createMovie(payload: MovieFormData) {
-    return this.api.upload<IResponse<IMovie>>({
+  static createMovie(payload: FormData) {
+    return this.api.post<IResponse<IMovie>>({
       url: '/movies/create-movies',
       data: payload,
     })
@@ -104,12 +110,19 @@ export class Movie extends Model {
       }
     }
   }
+  static updateMovie(id: number, payload: FormData) {
+    return this.api.put<IResponse<IMovie>>({
+      url: `/movies/edit-movie/${id}`,
+      data: payload,
+    })
+  }
+
 }
 Movie.setup();
 
 export function useCreateMovieMutation() {
-  return useMutation<IResponse<IMovie>, IHttpError, MovieFormData>({
-    mutationFn: (payload: MovieFormData) => {
+  return useMutation<IResponse<IMovie>, IHttpError, FormData>({
+    mutationFn: (payload: FormData) => {
       return Movie.createMovie(payload).then(r => r.data)
     }
   })
@@ -118,6 +131,13 @@ export function useDeleteMovieMutation() {
   return useMutation<IResponse<IMovie>, IHttpError, number>({
     mutationFn: (id: number) => {
       return Movie.deleteMovie(id).then(r => r.data)
+    }
+  })
+}
+export function useUpdateMovieMutation() {
+  return useMutation<IResponse<IMovie>, IHttpError, { id: number, payload: FormData }>({
+    mutationFn: ({ id, payload }: { id: number, payload: FormData }) => {
+      return Movie.updateMovie(id, payload).then(r => r.data)
     }
   })
 }
