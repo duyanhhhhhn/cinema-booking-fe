@@ -105,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializeAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
+      
 
       if (!token) {
         setUser(null);
@@ -200,6 +201,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, [initializeAuth]);
 
+  // Lắng nghe event khi token được refresh trong interceptor
+  useEffect(() => {
+    const handleTokenRefreshed = () => {
+      // Khi token được refresh, gọi lại getMe để cập nhật user state
+      const fetchUserAfterRefresh = async () => {
+        try {
+          const response = await Auth.getMe();
+          const userData = response.data?.data || response.data;
+
+          if (userData) {
+            setUser({
+              id: userData.id || userData.userId,
+              email: userData.email,
+              fullName: userData.fullName || userData.full_name || userData.name,
+              phone: userData.phone,
+              role: userData.role || UserRole.CLIENT,
+              avatar: userData.avatar,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch user after token refresh:", error);
+        }
+      };
+
+      fetchUserAfterRefresh();
+    };
+
+    window.addEventListener('tokenRefreshed', handleTokenRefreshed);
+    return () => {
+      window.removeEventListener('tokenRefreshed', handleTokenRefreshed);
+    };
+  }, []);
+
   /**
    * Login wrapper
    */
@@ -213,8 +247,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data?.accessToken) {
         Auth.handleLoginSuccess(data);
-        const userData = decodeToken(data.accessToken);
-        setUser(userData);
+        
+        // Gọi API /me để lấy thông tin user đầy đủ từ server
+        try {
+          const meResponse = await Auth.getMe();
+          const userData = meResponse.data?.data || meResponse.data;
+
+          if (userData) {
+            setUser({
+              id: userData.id || userData.userId,
+              email: userData.email,
+              fullName: userData.fullName || userData.full_name || userData.name,
+              phone: userData.phone,
+              role: userData.role || UserRole.CLIENT,
+              avatar: userData.avatar,
+            });
+          } else {
+            // Fallback: decode token nếu API /me không trả về data
+            const decodedUser = decodeToken(data.accessToken);
+            setUser(decodedUser);
+          }
+        } catch (meError: any) {
+          // Nếu API /me fail, fallback về decode token
+          console.warn("Failed to fetch user from /me, using token decode:", meError);
+          const decodedUser = decodeToken(data.accessToken);
+          setUser(decodedUser);
+        }
+        
         return { success: true };
       }
 
@@ -235,12 +294,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const logout = async () => {
     try {
-      await Auth.logout();
+     await Auth.handleLogout();
+     setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      Auth.handleLogout();
-      setUser(null);
     }
   };
 

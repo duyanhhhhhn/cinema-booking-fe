@@ -8,7 +8,7 @@ export default function HomePage() {
     const sapChieu = [];
     const render = [];
     const [movies, setMovies] = useState([]);
-     const {isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, logout } = useAuth();
     const [tab, setTab] = useState("dangChieu");
     const news = [];
     function change(key) {
@@ -194,17 +194,17 @@ export default function HomePage() {
                         </div>
                     </div>
                     {!isAuthenticated && (
-                    <div className="bg-[#1E1E1E]">
-                        <div className="max-w-7xl mx-auto py-16 sm:py-20 px-4 sm:px-10 flex flex-col items-center text-center gap-6">
-                            <h2 className="text-white text-3xl md:text-4xl font-bold">
-                                Sẵn Sàng Trải Nghiệm?
-                            </h2>
-                            <p className="text-[#E0E0E0]/70 text-lg">
-                                Đăng ký ngay để nhận ưu đãi đặc biệt và điểm thành viên.
-                            </p>
-                            <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em]">
-                                <span className="truncate">Đăng Ký Ngay</span>
-                            </button>
+                        <div className="bg-[#1E1E1E]">
+                            <div className="max-w-7xl mx-auto py-16 sm:py-20 px-4 sm:px-10 flex flex-col items-center text-center gap-6">
+                                <h2 className="text-white text-3xl md:text-4xl font-bold">
+                                    Sẵn Sàng Trải Nghiệm?
+                                </h2>
+                                <p className="text-[#E0E0E0]/70 text-lg">
+                                    Đăng ký ngay để nhận ưu đãi đặc biệt và điểm thành viên.
+                                </p>
+                                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] bg-red-700 hover:bg-red-600 transition-colors">
+                                    <span className="truncate">Đăng Ký Ngay</span>
+                                </button>
                             </div>
                         </div>
                     )}
