@@ -1,9 +1,18 @@
+import { Post } from "@/types/data/post/post";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+
 export default function NewsInfo() {
     const relateNews = [];
     const CommentSection = [];
     const CommentList = [];
     const ContentArea = [];
     const LoadCommentsButton = [];
+    const HeadLine = [];
+    const param = useParams();
+    const id = Number(param.id)
+    const data = useQuery(Post.getPostsInfo(id));
+    console.log("News Info Data:", data?.data);
     let numC = 6;
     let numTotalC = 10;
     for (let i = 0; i < numC; i++) {
@@ -135,6 +144,9 @@ export default function NewsInfo() {
             </p>
         </div>
     )
+    HeadLine.push(
+
+    )
     return (
         <>
             <div className="relative flex h-auto min-h-screen w-full flex-col">
@@ -165,9 +177,11 @@ export default function NewsInfo() {
                                 Review phim
                             </span>
                         </div>
+
                         {/* HeadlineText */}
                         <h1 className="text-3xl md:text-4xl font-bold leading-tight text-white dark:text-white tracking-tight text-left pb-3 pt-6">
-                            Tiêu đề
+                            {data?.data && data?.data.title}
+
                         </h1>
                         {/* MetaText */}
                         <p className="text-sm font-normal leading-normal text-gray-500 dark:text-gray-400 pb-6 pt-1">
@@ -179,7 +193,7 @@ export default function NewsInfo() {
                             data-alt=""
                             style={{
                                 backgroundImage:
-                                    'url("https://static2.vieon.vn/vieplay-image/carousel_web_v4_ntc/2021/03/19/hi1x9dmv_1920x1080-godzilla-carousel_1920_1080.jpg")'
+                                    `url(${data?.data && data?.data.coverUrl})`,
                             }}
                         />
                         {/*Content Area */}

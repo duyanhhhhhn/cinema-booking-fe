@@ -46,7 +46,7 @@ export interface MovieFormData {
 
 export const initialData: MovieFormData = {
   title: "",
-  shortDescription  : "",
+  shortDescription: "",
   description: "",
   durationMinutes: 0,
   genre: "",
@@ -69,11 +69,11 @@ const modelConfig = {
 }
 
 export class Movie extends Model {
-    static queryKeys = {
+  static queryKeys = {
     paginate: 'MOVIES_PAGINATE_QUERY',
     findOne: 'MOVIES_FIND_ONE_QUERY'
   }
-   static objects = ObjectsFactory.factory<IMovie>(modelConfig, this.queryKeys)
+  static objects = ObjectsFactory.factory<IMovie>(modelConfig, this.queryKeys)
 
   static getMovies() {
     return {

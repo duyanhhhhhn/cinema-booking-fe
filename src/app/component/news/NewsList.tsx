@@ -16,49 +16,14 @@ import {
   InputAdornment,
   colors,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { Post } from "@/types/data/post/post";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Sample data - replace with API call
-  const news = [
-    {
-      id: 1,
-      title: "Khuyến mãi cuối tuần - Giảm 20% tất cả vé",
-      category: "Khuyến mãi",
-      description: "Áp dụng cho tất cả các suất chiếu vào cuối tuần. Chương trình có hạn, nhanh tay đặt vé ngay!",
-      image: "/logo/logo.png",
-      date: "2024-01-20",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Phim mới: Avengers: Secret Wars ra mắt",
-      category: "Tin tức",
-      description: "Phim bom tấn Avengers: Secret Wars chính thức ra mắt tại các rạp CineMax. Đừng bỏ lỡ!",
-      image: "/logo/logo.png",
-      date: "2024-01-18",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "Review: The Last Kingdom - Tác phẩm điện ảnh xuất sắc",
-      category: "Review",
-      description: "Đánh giá chi tiết về bộ phim The Last Kingdom với những điểm nhấn đặc biệt và diễn xuất ấn tượng.",
-      image: "/logo/logo.png",
-      date: "2024-01-15",
-      featured: false,
-    },
-    {
-      id: 4,
-      title: "Combo gia đình - Ưu đãi đặc biệt tháng 1",
-      category: "Khuyến mãi",
-      description: "Mua combo gia đình với giá ưu đãi đặc biệt. Áp dụng cho khách hàng đặt vé online.",
-      image: "/logo/logo.png",
-      date: "2024-01-10",
-      featured: false,
-    },
-  ];
+  const news = [];
 
   const filteredNews = news.filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,36 +38,44 @@ export default function NewsList() {
     };
     return colorMap[category] || "bg-gray-500";
   };
+  const modelConfig = {
+    path: '/news',
+    modal: 'NewsList'
+  }
+  const { data, isLoading, error } = useQuery(Post.getPosts());
+  const data2 = useQuery(Post.getPostsInfo(1));
+  const posts = data?.data ?? [];
+  console.log("Posts array:", posts);
+  console.log("Single Post data:", data2?.data);
   const newsList = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < posts.length; i++) {
     newsList.push(
       <article key={i} style={{ borderColor: "#261c1c" }} className="group flex flex-col h-full bg-[#261c1c] rounded-xl border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1 cursor-pointer">
         <div className="relative h-56 overflow-hidden">
           <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider border border-white/10">
-            Type
+            {posts[i].category}
           </div>
           <div
             className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
             data-alt="Popcorn buckets and movie tickets on a red background"
             style={{
-              backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfcOMf9dvqF8Bb27K3EjwnObdskh8lDj2vz7It0Xv9d1jeOInheB4YA7jRE8kvAAtGhMNmcYOg_Y5cFDbXWzblSZtqQqGaJYrVp6EJslWNei7LtY5_NDFrSOukf3_AMZjpIupwXq9pWVHZd9zxcOdnA3iQZPY8PYqEaHp0q6dLdwpEiMHnMH_UvXaeGz8PfN1C6dsQNB0RJH7y4A-KQURVIAX-UAEawQwA1_NrLSbxLiY42Zdm56bUjPAbZue9ZU31FQpEtD_SJQae")'
+              backgroundImage: `url(${posts[i].coverUrl})`,
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60" />
         </div>
         <div className="flex flex-col flex-1 p-5 gap-3">
           <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-            Title
+            {posts[i].title}
           </h3>
           <p style={{ color: "#9c8486" }} className="text-text-muted text-sm line-clamp-2 leading-relaxed mb-auto">
             des
           </p>
           <div style={{ color: "#9c8486" }} className="flex items-center justify-between pt-4 border-t border-border-dark mt-2">
             <span className="text-xs text-text-muted font-medium">
-              created date
+              {posts[i].publishedAt}
             </span>
-            <a href="/news/1" className="text-xs font-bold text-red-500 flex items-center gap-1 group/btn">
+            <a href={`/news/${posts[i].id}`} className="text-xs font-bold text-red-500 flex items-center gap-1 group/btn">
               Info
             </a>
           </div>
@@ -176,7 +149,7 @@ export default function NewsList() {
                 <div className="relative w-full sm:w-64 bg-[#261c1c]">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-white">
                     <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                      <svg className="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" /></svg>
+                      <svg className="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" /></svg>
                     </div>
                   </div>
                   <input
@@ -198,27 +171,6 @@ export default function NewsList() {
                   </select>
                 </div>
               </div>
-            </div>
-            {/* Categories Chips */}
-            <div className="flex flex-wrap gap-3">
-              <button className="px-5 py-2 rounded-lg bg-red-500 text-white text-sm font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
-                Tất cả
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-orange-900 text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Khuyến mãi
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Review Phim
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Sự kiện
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Góc Điện Ảnh
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Tuyển dụng
-              </button>
             </div>
           </section>
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
