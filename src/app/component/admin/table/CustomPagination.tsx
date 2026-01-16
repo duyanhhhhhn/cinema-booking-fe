@@ -1,18 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pagination, Stack, Typography } from "@mui/material";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 
 export default function CustomPagination({
-  count,
-  page: pageProp,
-  onChange,
   totalItems = 100,
   itemsPerPage = 3,
 }: {
-  count: number;
   page: number;
-  onChange: () => void;
   totalItems: number;
   itemsPerPage: number;
 }) {
@@ -20,9 +15,12 @@ export default function CustomPagination({
   
   // Đọc page từ query params, mặc định là 1
   const pageFromQuery = searchQuery.get("page");
-  const currentPage = pageFromQuery 
-    ? parseInt(pageFromQuery, 10) 
-    : (pageProp || 1);
+  const [page, setPage] = useState(1);
+  const handlePageChange = (value: number) => {
+    setPage(value);
+    updateQuery({ page: value.toString() });
+  };
+  const currentPage = pageFromQuery ? parseInt(pageFromQuery, 10) : page || 1;
   
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -46,8 +44,7 @@ export default function CustomPagination({
         count={Math.ceil(totalItems / itemsPerPage)}
         page={currentPage}
         onChange={(_, value) => {
-          updateQuery({ page: value.toString() });
-          onChange();
+          handlePageChange(value);
         }}
         shape="rounded"
         sx={{

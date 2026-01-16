@@ -95,11 +95,9 @@ export default function MovieManagement() {
           />
 
           <CustomPagination
-            count={moviesData?.meta.total || 0}
             itemsPerPage={moviesData?.meta.perPage || 0}
             totalItems={moviesData?.meta.total || 0}
             page={page}
-            onChange={() => handlePageChange(page)}
           />
         </div>
         <AddMoviePopup
