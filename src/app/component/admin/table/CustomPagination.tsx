@@ -7,7 +7,6 @@ export default function CustomPagination({
   totalItems = 100,
   itemsPerPage = 3,
 }: {
-  page: number;
   totalItems: number;
   itemsPerPage: number;
 }) {

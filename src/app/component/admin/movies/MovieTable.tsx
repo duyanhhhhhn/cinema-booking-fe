@@ -146,28 +146,26 @@ export default function MovieTable({ movies, refetchMovies }: MovieTableProps) {
                 </TableCell>
                 <TableCell sx={{ fontWeight: 500 }}>{movie.title}</TableCell>
                 <TableCell>
-                  {movie.genre ?
-                    <Chip
-                      label={movie.genre}
-                      size="small"
-                      variant="filled"
-                    />
-                    :""
-                  }
+                  {movie.genre ? (
+                    <Chip label={movie.genre} size="small" variant="filled" />
+                  ) : (
+                    ""
+                  )}
                 </TableCell>
                 <TableCell>{movie.durationMinutes} Phút</TableCell>
-                <TableCell>{dayjs(movie.createdAt).format("DD/MM/YYYY")}</TableCell>
-                <TableCell>{dayjs(movie.endDate).format("DD/MM/YYYY")}</TableCell>
+                <TableCell>
+                  {dayjs(movie.createdAt).format("DD/MM/YYYY")}
+                </TableCell>
+                <TableCell>
+                  {dayjs(movie.endDate).format("DD/MM/YYYY")}
+                </TableCell>
                 <TableCell>{renderStatusChip(movie.status)}</TableCell>
                 <TableCell align="center">
                   <Box display="flex" justifyContent="center" gap={1}>
                     <Link href={`/admin/movies/${movie.id}`}>
-                    <IconButton
-                      size="small"
-                      sx={{ color: "#52525b" }}
-                    >
-                      <Edit fontSize="small" />
-                    </IconButton>
+                      <IconButton size="small" sx={{ color: "#52525b" }}>
+                        <Edit fontSize="small" />
+                      </IconButton>
                     </Link>
 
                     <IconButton
