@@ -35,7 +35,6 @@ export default function NewsList() {
     modal: 'NewsList'
   }
   const { data, isLoading, error } = useQuery(Post.getPosts());
-  console.log("News Data:", data);
   const firstId = 1;
   const data2 = useQuery(Post.getPostsInfo(firstId));
   var first;
@@ -49,6 +48,31 @@ export default function NewsList() {
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const searchPosts = useMemo(() => {
+    if (!posts.length) return [];
+    if (searchTerm === "") return posts;
+    return posts.filter((post) =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [posts, searchTerm]);
+  const sortedPosts = useMemo(() => {
+    if (!searchPosts.length) return [];
+
+    const sorted = [...searchPosts];
+
+    return sortKey === 'newest'
+      ? sorted.sort(
+        (a, b) =>
+          new Date(b.publishedAt).getTime() -
+          new Date(a.publishedAt).getTime()
+      )
+      : sorted.sort(
+        (a, b) =>
+          new Date(a.publishedAt).getTime() -
+          new Date(b.publishedAt).getTime()
+      );
+  }, [searchPosts, sortKey]);
   const paginate = [];
   paginate.push(
     <ul key={"paging"} className="flex -space-x-px items-center gap-2 px-8 py-3 rounded-lg text-white font-bold hover:bg-primary hover:border-primary transition-all duration-300 group shadow-lg">
@@ -74,24 +98,7 @@ export default function NewsList() {
         <a href="#" className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-e-base text-sm px-3 h-9 focus:outline-none">Next</a>
       </li>}
     </ul>
-  )
-  const sortedPosts = useMemo(() => {
-    if (!posts.length) return [];
-
-    const sorted = [...posts];
-
-    return sortKey === 'newest'
-      ? sorted.sort(
-        (a, b) =>
-          new Date(b.publishedAt).getTime() -
-          new Date(a.publishedAt).getTime()
-      )
-      : sorted.sort(
-        (a, b) =>
-          new Date(a.publishedAt).getTime() -
-          new Date(b.publishedAt).getTime()
-      );
-  }, [posts, sortKey]);
+  );
   return (
     <>
       <>
@@ -163,6 +170,7 @@ export default function NewsList() {
                   <input
                     className="block w-full rounded-lg border border-border-dark py-2.5 pl-10 pr-3 text-sm text-white focus:ring-1 placeholder-text-muted transition-colors"
                     placeholder="Tìm bài viết..."
+                    onChange={e => setSearchTerm(e.target.value)}
                     type="text"
                   />
                 </div>
