@@ -1,6 +1,8 @@
 "use client"
 
 import { useAuth } from "@/contexts/AuthContext";
+import { Post } from "@/types/data/post/post";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 export default function HomePage() {
@@ -10,6 +12,9 @@ export default function HomePage() {
     const [movies, setMovies] = useState([]);
     const { isAuthenticated, logout } = useAuth();
     const [tab, setTab] = useState("dangChieu");
+    const data = useQuery(Post.getPosts());
+    const posts = data?.data?.data || [];
+    console.log("Posts on HomePage:", posts);
     const news = [];
     function change(key) {
         let movie = [];
@@ -22,31 +27,29 @@ export default function HomePage() {
         setMovies(movie);
         setTab(key);
     }
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 0; i <= 2; i++) {
         news.push(
             <div key={"news-section" + i} className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
                 <a href={`/news/${i}`}
                     className="w-full bg-center bg-no-repeat aspect-video bg-cover"
-                    data-alt="Three friends smiling and eating popcorn in a cinema."
                     style={{
                         backgroundImage:
-                            'url("https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3")'
+                            `url(${posts[i]?.coverUrl})`
                     }}>
                 </a>
                 <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
                     <div>
                         <span className="inline-block bg-[#FFC107] text-black text-xs font-bold px-2 py-1 rounded-full mb-2">
-                            KHUYẾN MÃI
+                            {posts[i]?.category}
                         </span>
                         <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
-                            Thứ Ba Vui Vẻ - Đồng giá vé 2D
+                            {posts[i]?.title}
                         </p>
                         <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                            Giảm giá vé đặc biệt chỉ trong hôm nay cho tất cả các suất
-                            chiếu phim 2D.
+                            {posts[i]?.content}
                         </p>
                     </div>
-                    <a className="text-primary text-sm font-bold hover:underline"
+                    <a className="text-white text-sm font-bold hover:underline"
                         href="#">
                         Xem chi tiết
                     </a>
