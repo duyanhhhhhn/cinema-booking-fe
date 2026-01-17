@@ -53,7 +53,8 @@ export default function NewsList() {
     if (searchTerm === "") return posts;
     return posts.filter((post) =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase())
+      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [posts, searchTerm]);
   const sortedPosts = useMemo(() => {
