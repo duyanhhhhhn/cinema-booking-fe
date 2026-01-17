@@ -1,155 +1,156 @@
-"use client";
+'use client';
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
-const baseInputClass =
-  "w-full rounded-xl border border-[#3a2225] bg-[#1b0d10] px-4 py-3 text-sm text-slate-50 placeholder:text-[#b3a6aa] focus:outline-none focus:ring-2 focus:ring-[#f97373]/80 focus:border-[#f97373]/80 transition";
+import AccountSidebar from "@/app/component/account-sidebar/AccountSidebar";
+import { ChangePassword } from "@/types/data/user/changePassword";
+
+interface FormData {
+  otp: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
 
 export default function ChangePasswordPage() {
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmNewPassword, setConfirmNewPassword] = useState("");
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+  const [otpSent, setOtpSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [sendingOtp, setSendingOtp] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+  const form = useForm<FormData>({
+    defaultValues: { otp: "", newPassword: "", confirmNewPassword: "" },
+  });
 
-        if (newPassword !== confirmNewPassword) {
-            setError("Mật khẩu mới không khớp");
-            return;
-        }
-        if (newPassword.length < 6) {
-            setError("Mật khẩu mới phải có ít nhất 6 ký tự");
-            return;
-        }
-    };
+  /** ====================== SEND OTP ====================== */
+  const { mutate: sendOtp } = useMutation({
+    mutationFn: () => ChangePassword.sendOtp(),
+    onSuccess: () => {
+      toast.success("OTP đã được gửi tới email!");
+      setOtpSent(true);
+      setResendCountdown(60);
+    },
+    onError: () => toast.error("Gửi OTP thất bại, vui lòng thử lại"),
+  });
 
-    return (
-        <div className="px-4 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
-            <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-                <main className="flex-1 px-4 py-8 sm:px-10">
-                    <div className="flex flex-wrap gap-2 mb-8">
-                        <a className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal" href="#">Trang chủ</a>
-                        <span className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal">/</span>
-                        <a className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal" href="#">Tài khoản của tôi</a>
-                        <span className="text-gray-600 dark:text-gray-400 text-base font-medium leading-normal">/</span>
-                        <span className="text-black dark:text-white text-base font-medium leading-normal">Đổi mật khẩu</span>
-                    </div>
+  const handleSendOtp = () => {
+    setSendingOtp(true);
+    sendOtp(undefined, { onSettled: () => setSendingOtp(false) });
+  };
 
-                    <div className="mb-10">
-                        <div className="flex flex-wrap justify-between gap-3">
-                            <div className="flex min-w-72 flex-col gap-3">
-                                <p className="text-black dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
-                                    Đổi Mật khẩu
-                                </p>
-                                <p className="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal">
-                                    Để bảo vệ tài khoản của bạn, vui lòng không chia sẻ mật khẩu cho người khác.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+  /** ====================== COUNTDOWN ====================== */
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => setResendCountdown((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
 
-                    <div className="bg-white dark:bg-black/20 p-6 sm:p-8 rounded-xl border border-black/10 dark:border-white/10">
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                            <div className="flex flex-col w-full gap-6">
-                                {/* Mật khẩu hiện tại */}
-                                <label className="flex flex-col w-full">
-                                    <p className="text-black dark:text-white text-base font-medium leading-normal pb-2">
-                                        Mật khẩu hiện tại
-                                    </p>
-                                    <div className="flex w-full items-stretch rounded-lg">
-                                        <input
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            placeholder="Nhập mật khẩu hiện tại của bạn"
-                                            className="form-input w-full text-black dark:text-white border border-black/20 dark:border-white/20 bg-transparent focus:outline-0 focus:ring-2 focus:ring-primary/50 h-14 px-[15px]"
-                                            required
-                                        />
-                                        <div
-                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            className="text-gray-500 dark:text-gray-400 flex items-center justify-center px-[15px] border border-black/20 dark:border-white/20 rounded-r-lg cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {showCurrentPassword ? "visibility" : "visibility_off"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
+  /** ====================== CHANGE PASSWORD ====================== */
+  const { mutate: changePassword, isLoading: isChanging } = useMutation({
+    mutationFn: (data: { otp: string; newPassword: string }) =>
+      ChangePassword.verify(data),
+    onSuccess: () => {
+      toast.success("Đổi mật khẩu thành công!");
+      form.reset();
+      setOtpSent(false);
+    },
+    onError: () => toast.error("Đổi mật khẩu thất bại, vui lòng thử lại"),
+  });
 
-                                {/* Mật khẩu mới */}
-                                <label className="flex flex-col w-full">
-                                    <p className="text-black dark:text-white text-base font-medium leading-normal pb-2">
-                                        Mật khẩu mới
-                                    </p>
-                                    <div className="flex w-full items-stretch rounded-lg">
-                                        <input
-                                            type={showNewPassword ? "text" : "password"}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
-                                            className="form-input w-full text-black dark:text-white border border-black/20 dark:border-white/20 bg-transparent focus:outline-0 focus:ring-2 focus:ring-primary/50 h-14 px-[15px]"
-                                            required
-                                        />
-                                        <div
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="text-gray-500 dark:text-gray-400 flex items-center justify-center px-[15px] border border-black/20 dark:border-white/20 rounded-r-lg cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {showNewPassword ? "visibility" : "visibility_off"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
+  const onSubmit = (data: FormData) => {
+    if (!otpSent) return toast.error("Vui lòng gửi OTP trước khi đổi mật khẩu");
+    if (data.newPassword !== data.confirmNewPassword)
+      return toast.error("Mật khẩu mới không khớp");
+    if (data.newPassword.length < 6)
+      return toast.error("Mật khẩu phải có ít nhất 6 ký tự");
 
-                                {/* Xác nhận mật khẩu */}
-                                <label className="flex flex-col w-full">
-                                    <p className="text-black dark:text-white text-base font-medium leading-normal pb-2">
-                                        Xác nhận mật khẩu mới
-                                    </p>
-                                    <div className="flex w-full items-stretch rounded-lg">
-                                        <input
-                                            type={showConfirmNewPassword ? "text" : "password"}
-                                            value={confirmNewPassword}
-                                            onChange={(e) => setConfirmNewPassword(e.target.value)}
-                                            placeholder="Nhập lại mật khẩu mới của bạn"
-                                            className="form-input w-full text-black dark:text-white border border-black/20 dark:border-white/20 bg-transparent focus:outline-0 focus:ring-2 focus:ring-primary/50 h-14 px-[15px]"
-                                            required
-                                        />
-                                        <div
-                                            onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                                            className="text-gray-500 dark:text-gray-400 flex items-center justify-center px-[15px] border border-black/20 dark:border-white/20 rounded-r-lg cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined">
-                                                {showConfirmNewPassword ? "visibility" : "visibility_off"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
+    changePassword({ otp: data.otp, newPassword: data.newPassword });
+  };
 
-                            {error && <p className="text-red-500 text-sm">{error}</p>}
+  const inputClass =
+    "w-full rounded-md border border-[#3a2225] bg-[#14080a] px-3 py-2 text-slate-100";
 
-                            <div className="flex justify-end pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex items-center justify-center rounded-lg h-12 bg-primary text-white gap-2 text-base font-bold px-8 py-3 w-full sm:w-auto disabled:opacity-50"
-                                >
-                                    {loading ? "Đang đổi mật khẩu..." : "Lưu Thay đổi"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </main>
-            </div>
-        </div>
-    );
+  /** ====================== RENDER ====================== */
+  return (
+    <main className="min-h-screen bg-[#120608] flex justify-center">
+      <div className="w-full max-w-7xl flex gap-6">
+        <AccountSidebar />
+
+        <section className="flex-1">
+          <div className="rounded-xl border border-[#3a2225] bg-[#1f1012] px-6 py-6 shadow text-slate-100">
+            <h1 className="text-xl font-semibold mb-4">Đổi mật khẩu</h1>
+
+            {!otpSent && (
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={sendingOtp}
+                className="rounded-md bg-[#e31b23] px-6 py-2 text-white hover:bg-[#f04349]"
+              >
+                {sendingOtp ? "Đang gửi OTP..." : "Gửi mã xác nhận đến email"}
+              </button>
+            )}
+
+            {otpSent && (
+              <div className="mb-4 space-y-2">
+                <div>
+                  <label className="block text-sm mb-1">OTP</label>
+                  <input
+                    {...form.register("otp")}
+                    className={inputClass}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={sendingOtp || resendCountdown > 0}
+                  className={`text-sm ${
+                    resendCountdown > 0
+                      ? "text-gray-500 cursor-not-allowed"
+                      : "text-[#e31b23] hover:underline"
+                  }`}
+                >
+                  {resendCountdown > 0
+                    ? `Gửi lại OTP (${resendCountdown}s)`
+                    : sendingOtp
+                    ? "Đang gửi lại..."
+                    : "Gửi lại OTP"}
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1">Mật khẩu mới</label>
+                <input
+                  type="password"
+                  {...form.register("newPassword")}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">Xác nhận mật khẩu mới</label>
+                <input
+                  type="password"
+                  {...form.register("confirmNewPassword")}
+                  className={inputClass}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isChanging}
+                className="rounded-md bg-[#e31b23] px-6 py-2 text-white hover:bg-[#f04349]"
+              >
+                {isChanging ? "Đang xử lý..." : "Đổi mật khẩu"}
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
