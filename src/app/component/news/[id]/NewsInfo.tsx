@@ -12,9 +12,10 @@ export default function NewsInfo() {
     const param = useParams();
     const id = Number(param.id)
     const data = useQuery(Post.getPostsInfo(id));
-    console.log("News Info Data:", data?.data);
     let numC = 6;
     let numTotalC = 10;
+    const date = new Date(data?.data && data?.data.publishedAt).toLocaleString();
+    console.log("Published At:", date);
     for (let i = 0; i < numC; i++) {
         CommentList.push(
             <div key={i} className="flex items-start gap-4">
@@ -115,37 +116,40 @@ export default function NewsInfo() {
             </div>
         )
     }
-    ContentArea.push(
-        <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
-            <p>
-                Line 1
-            </p>
-            <p>
-                Line 2
-            </p>
-            <blockquote className="border-l-4 border-primary pl-4 italic text-gray-600 dark:text-gray-400">
-                hightlight
-            </blockquote>
-            <p>
-                Line 3
-            </p>
-            <figure>
-                <img
-                    alt="text"
-                    className="rounded-lg w-full"
-                    src="https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3"
-                />
-                <figcaption className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    Image
-                </figcaption>
-            </figure>
-            <p>
-                Line 4
-            </p>
-        </div>
-    )
-    HeadLine.push(
 
+    // ContentArea.push(
+    //     <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
+    //         <p>
+    //             Line 1
+    //         </p>
+    //         <p>
+    //             Line 2
+    //         </p>
+    //         <blockquote className="border-l-4 border-primary pl-4 italic text-gray-600 dark:text-gray-400">
+    //             hightlight
+    //         </blockquote>
+    //         <p>
+    //             Line 3
+    //         </p>
+    //         <figure>
+    //             <img
+    //                 alt="text"
+    //                 className="rounded-lg w-full"
+    //                 src="https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3"
+    //             />
+    //             <figcaption className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+    //                 Image
+    //             </figcaption>
+    //         </figure>
+    //         <p>
+    //             Line 4
+    //         </p>
+    //     </div>
+    // )
+    ContentArea.push(
+        <div className="text-white">
+            {data?.data && data?.data.content}
+        </div>
     )
     return (
         <>
@@ -174,7 +178,7 @@ export default function NewsInfo() {
                                 /
                             </span>
                             <span className="text-sm font-medium leading-normal text-gray-300 dark:text-gray-200">
-                                Review phim
+                                {data?.data && data?.data.category}
                             </span>
                         </div>
 
@@ -185,7 +189,7 @@ export default function NewsInfo() {
                         </h1>
                         {/* MetaText */}
                         <p className="text-sm font-normal leading-normal text-gray-500 dark:text-gray-400 pb-6 pt-1">
-                            Đăng bởi User vào ngày
+                            Đăng bởi User vào {date}
                         </p>
                         {/* HeaderImage */}
                         <div

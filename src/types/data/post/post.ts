@@ -44,6 +44,16 @@ const modelConfig = {
     path: '/news',
     modal: 'NewsList'
 }
+export interface IPaginateResponseMod<T> {
+    message: string;
+    data: T[];
+    meta: {
+        page: number;
+        total: number;
+        perPage: number;
+        totalPages: number;
+    };
+}
 export class Post extends Model {
     static queryKeys = {
         paginate: 'POSTS_PAGINATE_QUERY',
@@ -55,7 +65,7 @@ export class Post extends Model {
             queryKey: [this.queryKeys.paginate],
             queryFn: () => {
                 return this.api
-                    .get<IPaginateResponse<IPost>>({
+                    .get<IPaginateResponseMod<IPost>>({
                         url: '/posts/paging?page=1&size=10',
                     })
                     .then(r => r.data)
