@@ -132,7 +132,7 @@ export default function NewsList() {
                     {first?.title}
                   </h1>
                   <p className="text-gray-400 text-lg font-normal leading-relaxed line-clamp-3">
-                    {first?.content}
+                    {first?.excerpt}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
@@ -214,7 +214,7 @@ export default function NewsList() {
                     {post?.title}
                   </h3>
                   <p style={{ color: "#9c8486" }} className="text-text-muted text-sm line-clamp-2 leading-relaxed mb-auto">
-                    des
+                    {post?.excerpt}
                   </p>
                   <div style={{ color: "#9c8486" }} className="flex items-center justify-between pt-4 border-t border-border-dark mt-2">
                     <span className="text-xs text-text-muted font-medium">
