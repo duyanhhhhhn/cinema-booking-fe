@@ -12,7 +12,7 @@ import { Profile } from '@/types/data/user/user';
 import AccountSidebar from '@/app/component/account-sidebar/AccountSidebar';
 
 const baseInputClass =
-  'w-full rounded-md border border-[#3a2225] bg-[#14080a] px-3 py-2.5 text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition disabled:cursor-not-allowed disabled:opacity-70';
+  'w-full rounded-md border border-[#3a2225] bg-[#14080a] px-3 py-2.5 text-sm text-white placeholder:text-white0 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition disabled:cursor-not-allowed disabled:opacity-70';
 
 export default function AccountProfilePage() {
   const { user } = useAuth();
@@ -79,7 +79,7 @@ export default function AccountProfilePage() {
           {/* HEADER */}
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-slate-50">
+              <h1 className="text-lg font-semibold text-white">
                 Thông tin tài khoản
               </h1>
               <p className="mt-1 text-xs text-slate-300/80">
@@ -109,10 +109,10 @@ export default function AccountProfilePage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={editProfileMutation.isLoading}
+                  disabled={editProfileMutation.isPending}
                   className="rounded-md bg-[#e31b23] px-4 py-1.5 text-xs text-white hover:bg-[#f04349] disabled:opacity-70"
                 >
-                  {editProfileMutation.isLoading
+                  {editProfileMutation.isPending
                     ? 'Đang lưu...'
                     : 'Lưu thay đổi'}
                 </button>
@@ -125,7 +125,7 @@ export default function AccountProfilePage() {
           {/* FORM */}
           <div className="space-y-4 text-sm">
             <div>
-              <label className="block text-xs font-medium mb-1">
+              <label className="block text-xs font-medium mb-1 text-white">
                 Họ và Tên
               </label>
               <input
@@ -137,7 +137,7 @@ export default function AccountProfilePage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label className="block text-xs font-medium mb-1 text-white">
                   Email
                 </label>
                 <input
@@ -148,7 +148,7 @@ export default function AccountProfilePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label className="block text-xs font-medium mb-1 text-white">
                   Số điện thoại
                 </label>
                 <input
@@ -161,7 +161,7 @@ export default function AccountProfilePage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label className="block text-xs font-medium mb-1 text-white ">
                   Ngày đăng ký
                 </label>
                 <input
