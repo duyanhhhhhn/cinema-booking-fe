@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MoviePublic } from "@/types/data/movie-public";
 import { Post } from "@/types/data/post/post";
+import { CreditCard, LocationOn, Phone } from "@mui/icons-material";
 
 type MovieStatus = "NOW_SHOWING" | "COMING_SOON" | "ENDED" | string;
 
@@ -230,7 +231,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16 w-full">
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
-                    <span className="material-symbols-outlined text-3xl">confirmation_number</span>
+                    <Phone className="text-3xl"/>
                   </div>
                   <h3 className="text-white text-xl font-bold">Đặt Vé Nhanh Chóng</h3>
                   <p className="text-[#E0E0E0]/70">
@@ -239,7 +240,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
-                    <span className="material-symbols-outlined text-3xl">place</span>
+                    <LocationOn className="text-3xl"/>
                   </div>
                   <h3 className="text-white text-xl font-bold">Nhiều Rạp Chiếu</h3>
                   <p className="text-[#E0E0E0]/70">
@@ -248,7 +249,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
-                    <span className="material-symbols-outlined text-3xl">credit_card</span>
+                    <CreditCard className="text-3xl"/>
                   </div>
                   <h3 className="text-white text-xl font-bold">Thanh Toán An Toàn</h3>
                   <p className="text-[#E0E0E0]/70">Đa dạng phương thức thanh toán với bảo mật tuyệt đối.</p>
