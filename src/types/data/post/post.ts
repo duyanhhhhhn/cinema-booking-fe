@@ -66,7 +66,7 @@ export class Post extends Model {
             queryFn: () => {
                 return this.api
                     .get<IPaginateResponseMod<IPost>>({
-                        url: '/posts/paging?page=1&size=10',
+                        url: '/posts?page=1&size=10',
                     })
                     .then(r => r.data)
             }

@@ -1,11 +1,12 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MoviePublic } from "@/types/data/movie-public";
 import { Post } from "@/types/data/post/post";
 import { CreditCard, LocationOn, Phone } from "@mui/icons-material";
+import { Banner } from "@/types/data/home/banner";
 
 type MovieStatus = "NOW_SHOWING" | "COMING_SOON" | "ENDED" | string;
 
@@ -67,7 +68,143 @@ export default function HomePage() {
   const moviesForTab = tab === "dangChieu" ? nowShowing : comingSoon;
   const data1 = useQuery(Post.getPosts());
   const posts = data1?.data?.data || [];
-  console.log("Posts on HomePage:", posts);
+  const data2 = useQuery(Banner.getBanner("HOME", 3));
+  const banners = data2?.data?.data || [];
+  console.log("data2:", data2);
+  console.log("Banners on HomePage:", banners);
+  const slides = [];
+  const fullslide = [];
+  const old = [];
+  old.push(
+    <div className="relative w-full aspect-[16/7] rounded-xl overflow-hidden mb-8 shadow-lg shadow-black/20">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        data-alt="A brightly lit cinema hall with red seats, viewed from the back."
+        style={{
+          backgroundImage:
+            'url("https://wallpapers.com/images/hd/cinema-theater-screen-red-interior-mdii641t9soyox58.jpg")',
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+      <div className="absolute bottom-0 left-0 p-6 md:p-10">
+        <h1 className="text-white text-3xl md:text-5xl font-bold mb-2">Phim Bom Tấn Của Tuần</h1>
+        <p className="text-[#E0E0E0] md:text-lg max-w-xl mb-4">
+          Trải nghiệm những thước phim hành động mãn nhãn và kỹ xảo đỉnh cao trên màn ảnh rộng.
+        </p>
+        <button className="flex min-w-[84px] max-w-[480px] bg-red-600 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-red-700 transition-colors">
+          <span className="truncate">Đặt Vé Ngay</span>
+        </button>
+      </div>
+      <div className="absolute bottom-4 right-4 flex items-center gap-2">
+        <button className="size-2 rounded-full bg-white" />
+        <button className="size-2 rounded-full bg-white/50" />
+        <button className="size-2 rounded-full bg-white/50" />
+      </div>
+    </div>
+  )
+  for (let i = 0; i < 3; i++) {
+    slides.push(
+      <div key={"slide" + i} className="hidden duration-700 ease-in-out" data-carousel-item=""
+        style={{ background: `url("${banners[i]?.imageUrl}")` }}>
+        <img
+          src={banners[i]?.imageUrl}
+          className="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
+          alt="..."
+        />
+      </div>
+    )
+  }
+  fullslide.push(
+    <div key={"fullslide"} id="default-carousel" className="relative w-full" data-carousel="slide">
+      {/* Carousel wrapper */}
+      <div className="relative h-56 overflow-hidden rounded-base md:h-96">
+        {slides}
+        <div className="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+          <button
+            type="button"
+            className="w-3 h-3 rounded-base"
+            aria-current="true"
+            aria-label="Slide 1"
+            data-carousel-slide-to={0}
+          />
+          <button
+            type="button"
+            className="w-3 h-3 rounded-base"
+            aria-current="false"
+            aria-label="Slide 2"
+            data-carousel-slide-to={1}
+          />
+          <button
+            type="button"
+            className="w-3 h-3 rounded-base"
+            aria-current="false"
+            aria-label="Slide 3"
+            data-carousel-slide-to={2}
+          />
+          <button
+            type="button"
+            className="w-3 h-3 rounded-base"
+            aria-current="false"
+            aria-label="Slide 4"
+            data-carousel-slide-to={3}
+          />
+        </div>
+        {/* Slider controls */}
+        <button
+          type="button"
+          className="absolute top-0 start-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+          data-carousel-prev=""
+        >
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-base bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+            <svg
+              className="w-5 h-5 text-white rtl:rotate-180"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width={24}
+              height={24}
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="m15 19-7-7 7-7"
+              />
+            </svg>
+            <span className="sr-only">Previous</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="absolute top-0 end-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+          data-carousel-next=""
+        >
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-base bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+            <svg
+              className="w-5 h-5 text-white rtl:rotate-180"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width={24}
+              height={24}
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="m9 5 7 7-7 7"
+              />
+            </svg>
+            <span className="sr-only">Next</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  );
   const news = [];
   for (let i = 0; i <= 2; i++) {
     news.push(
@@ -109,31 +246,7 @@ export default function HomePage() {
         <div className="layout-container flex h-full grow flex-col">
           <main className="flex flex-1 justify-center py-5 sm:py-8">
             <div className="layout-content-container flex flex-col max-w-7xl flex-1 px-4 sm:px-10">
-              <div className="relative w-full aspect-[16/7] rounded-xl overflow-hidden mb-8 shadow-lg shadow-black/20">
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  data-alt="A brightly lit cinema hall with red seats, viewed from the back."
-                  style={{
-                    backgroundImage:
-                      'url("https://wallpapers.com/images/hd/cinema-theater-screen-red-interior-mdii641t9soyox58.jpg")',
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-                <div className="absolute bottom-0 left-0 p-6 md:p-10">
-                  <h1 className="text-white text-3xl md:text-5xl font-bold mb-2">Phim Bom Tấn Của Tuần</h1>
-                  <p className="text-[#E0E0E0] md:text-lg max-w-xl mb-4">
-                    Trải nghiệm những thước phim hành động mãn nhãn và kỹ xảo đỉnh cao trên màn ảnh rộng.
-                  </p>
-                  <button className="flex min-w-[84px] max-w-[480px] bg-red-600 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-red-700 transition-colors">
-                    <span className="truncate">Đặt Vé Ngay</span>
-                  </button>
-                </div>
-                <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                  <button className="size-2 rounded-full bg-white" />
-                  <button className="size-2 rounded-full bg-white/50" />
-                  <button className="size-2 rounded-full bg-white/50" />
-                </div>
-              </div>
+              {fullslide}
 
               <div className="pb-3 mb-4">
                 <div className="flex border-b border-white/10 gap-8">
