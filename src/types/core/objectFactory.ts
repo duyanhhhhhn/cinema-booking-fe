@@ -7,6 +7,9 @@ import { useMutation } from '@tanstack/react-query'
  * Implement common crud methods for a model
  */
 export class ObjectsFactory<T> {
+  list(params: Record<string, unknown>): IResponse<import("../data/movie-public/index").IMoviePublic[]> | Promise<IResponse<import("../data/movie-public/index").IMoviePublic[]>> {
+    throw new Error("Method not implemented.")
+  }
   service: Api
 
   path = ''
