@@ -52,7 +52,7 @@ export default function HomePage() {
     return "bg-white/10 text-white/90 ring-1 ring-white/10";
   };
 
-  const { data, isLoading, isError } = useQuery(MoviePublic.getAllMovieStatus({ page: 1, perPage: 60 }));
+  const { data, isLoading, isError } = useQuery(MoviePublic.getAllMovieStatus());
 
   const allMovies: IMovieCard[] = (data?.data ?? []) as unknown as IMovieCard[];
 

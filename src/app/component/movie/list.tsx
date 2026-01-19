@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MoviePublic } from "@/types/data/movie-public";
+import { Movie } from "@mui/icons-material";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function CinemaList() {
-  const [page, setPage] = useState(1);
-  const perPage = 12;
-
-  const { data, isLoading, isError } = useQuery(
-    MoviePublic.getAllMovieStatus({ page, perPage })
-  );
-
+   const { searchQuery } = useRouteQuery();
+const params = useMemo(()=> {
+  return {
+    page : searchQuery.get("page") || 1,
+    perPage: searchQuery.get("perPage") || 10
+  }
+},[])
+ const dataMovie = useQuery({
+  ...MoviePublic.objects.paginateQueryFactory(params),
+ })
+ console.log("dataMovie",dataMovie?.data);
   const IMAGE_BASE = (process.env.NEXT_PUBLIC_IMAGE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
   const resolvePosterUrl = (posterUrl?: string | null) => {
@@ -36,35 +42,32 @@ export default function CinemaList() {
     }
   };
 
-  const movies = data?.data ?? [];
-  const meta = data?.meta;
-  const totalPages = meta ? Math.max(1, Math.ceil(meta.total / meta.perPage)) : 1;
 
-  const moviesSorted = movies
-    .map((m, idx) => ({ m, idx }))
-    .sort((x, y) => {
-      const rank = (s?: string | null) => {
-        switch (s) {
-          case "NOW_SHOWING":
-            return 0;
-          case "COMING_SOON":
-            return 1;
-          case "ENDED":
-            return 2;
-          default:
-            return 3;
-        }
-      };
-      const d = rank(x.m.status) - rank(y.m.status);
-      return d !== 0 ? d : x.idx - y.idx;
-    })
-    .map((x) => x.m);
+  // const moviesSorted = movies
+  //   .map((m, idx) => ({ m, idx }))
+  //   .sort((x, y) => {
+  //     const rank = (s?: string | null) => {
+  //       switch (s) {
+  //         case "NOW_SHOWING":
+  //           return 0;
+  //         case "COMING_SOON":
+  //           return 1;
+  //         case "ENDED":
+  //           return 2;
+  //         default:
+  //           return 3;
+  //       }
+  //     };
+  //     const d = rank(x.m.status) - rank(y.m.status);
+  //     return d !== 0 ? d : x.idx - y.idx;
+  //   })
+  //   .map((x) => x.m);
 
-  const prevPage = () => setPage((p) => Math.max(1, p - 1));
-  const nextPage = () => setPage((p) => Math.min(totalPages, p + 1));
+  // const prevPage = () => setPage((p) => Math.max(1, p - 1));
+  // const nextPage = () => setPage((p) => Math.min(totalPages, p + 1));
 
-  if (isLoading) return <div className="text-white p-6">Loading...</div>;
-  if (isError) return <div className="text-white p-6">Failed to load movies</div>;
+  // if (isLoading) return <div className="text-white p-6">Loading...</div>;
+  // if (isError) return <div className="text-white p-6">Failed to load movies</div>;
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#000000D3]">
@@ -77,12 +80,12 @@ export default function CinemaList() {
                   Danh sách Phim
                 </p>
                 <p className="text-white/60 text-sm font-medium">
-                  Trang {meta?.page ?? page} / {totalPages}
+                  {/* Trang {meta?.page ?? page} / {totalPages} */}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center gap-7 px-2 sm:px-4">
-                {moviesSorted.map((m) => (
+                {dataMovie?.data?.data.map((m) => (
                   <div key={m.id} className="w-full max-w-[300px]">
                     <a className="block rounded-3xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10 hover:border-white/20">
                       <div className="w-full rounded-2xl bg-white/10 overflow-hidden">
@@ -125,7 +128,7 @@ export default function CinemaList() {
                 ))}
               </div>
 
-              <div className="px-2 sm:px-4">
+              {/* <div className="px-2 sm:px-4">
                 <div className="flex justify-center items-center gap-3 mt-8">
                   <button
                     type="button"
@@ -153,7 +156,7 @@ export default function CinemaList() {
                 <p className="mt-3 text-center text-white/50 text-sm">
                   Tổng: {meta?.total ?? 0} phim • Mỗi trang: {meta?.perPage ?? perPage}
                 </p>
-              </div>
+              </div> */}
             </main>
           </div>
         </div>
