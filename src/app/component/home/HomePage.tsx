@@ -1,21 +1,24 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MoviePublic } from "@/types/data/movie-public";
+import { useRouter } from "next/navigation";
 
 type MovieStatus = "NOW_SHOWING" | "COMING_SOON" | "ENDED" | string;
 
 type IMovieCard = {
-  id: number;
+  id?: number;
   title: string;
   genre?: string | null;
   posterUrl?: string | null;
+  durationMinutes?: number | null;
   status?: MovieStatus | null;
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState<"dangChieu" | "sapChieu">("dangChieu");
 
@@ -52,17 +55,59 @@ export default function HomePage() {
     return "bg-white/10 text-white/90 ring-1 ring-white/10";
   };
 
-  const { data, isLoading, isError } = useQuery(MoviePublic.getAllMovieStatus());
+  const getMovieByStatus = useQuery({
+    ...MoviePublic.getAllMovieStatusCard(),
+  });
+  console.log("getMovieByStatus", getMovieByStatus?.data);
+  const movie = getMovieByStatus?.data;
 
-  const allMovies: IMovieCard[] = (data?.data ?? []) as unknown as IMovieCard[];
+  const isLoading = getMovieByStatus.isLoading;
+  const isError = getMovieByStatus.isError;
 
-  const { nowShowing, comingSoon } = useMemo(() => {
-    const ns = allMovies.filter((m) => m.status === "NOW_SHOWING");
-    const cs = allMovies.filter((m) => m.status === "COMING_SOON");
-    return { nowShowing: ns, comingSoon: cs };
+  const normalizeStatus = (s?: any) =>
+    String(s ?? "")
+      .trim()
+      .toUpperCase()
+      .replace(/-/g, "_");
+
+  const allMovies: IMovieCard[] = useMemo(() => {
+    const dataRaw = (movie as any)?.data;
+    if (Array.isArray(dataRaw)) return dataRaw as unknown as IMovieCard[];
+    return [];
+  }, [movie]);
+
+  const { nowShowingAll, comingSoonAll } = useMemo(() => {
+    const ns = allMovies.filter((m: any) => normalizeStatus(m?.status) === "NOW_SHOWING");
+    const cs = allMovies.filter((m: any) => {
+      const st = normalizeStatus(m?.status);
+      return st === "COMING_SOON" || st === "UPCOMING";
+    });
+    return { nowShowingAll: ns, comingSoonAll: cs };
   }, [allMovies]);
 
-  const moviesForTab = tab === "dangChieu" ? nowShowing : comingSoon;
+  const MAX_SHOW = 15;
+
+  const listForTab = useMemo(() => {
+    const list = tab === "dangChieu" ? nowShowingAll : comingSoonAll;
+    return list.slice(0, MAX_SHOW);
+  }, [tab, nowShowingAll, comingSoonAll]);
+
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToDir = (dir: "left" | "right") => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-card='1']");
+    const step = card ? card.offsetWidth + 20 : 320;
+    el.scrollBy({ left: dir === "left" ? -step * 2 : step * 2, behavior: "smooth" });
+  };
+
+  const onTabChange = (next: "dangChieu" | "sapChieu") => {
+    setTab(next);
+    requestAnimationFrame(() => {
+      viewportRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    });
+  };
 
   const news = [];
   for (let i = 1; i <= 3; i++) {
@@ -146,7 +191,7 @@ export default function HomePage() {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      setTab("dangChieu");
+                      onTabChange("dangChieu");
                     }}
                   >
                     <p className="text-sm font-bold leading-normal tracking-[0.015em]">Phim Đang Chiếu</p>
@@ -160,7 +205,7 @@ export default function HomePage() {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      setTab("sapChieu");
+                      onTabChange("sapChieu");
                     }}
                   >
                     <p className="text-sm font-bold leading-normal tracking-[0.015em]">Phim Sắp Chiếu</p>
@@ -172,50 +217,153 @@ export default function HomePage() {
               {isError && <div className="text-white/70 py-6">Failed to load movies</div>}
 
               {!isLoading && !isError && (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 sm:gap-6">
-                  {moviesForTab.slice(0, 6).map((m) => (
-                    <div key={m.id} className="flex flex-col gap-3 pb-3 group">
-                      <a href={`movies/${m.id}`}>
-                        <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-xl overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-[1.03] transition-transform duration-300 ring-1 ring-white/10 bg-[#1E1E1E]">
-                          <div
-                            className="absolute inset-0 bg-cover bg-center"
-                            data-alt={m.title}
-                            style={{
-                              backgroundImage: `url("${resolvePosterUrl(m.posterUrl)}")`,
-                            }}
+                <>
+                  <div className="relative">
+                    <div className="absolute -top-2 right-0 z-10 hidden sm:flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => scrollToDir("left")}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/35 text-white/85 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:bg-black/55 hover:border-white/20 active:scale-[0.98]"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M15 18l-6-6 6-6"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                            <button className="w-full text-center bg-red-600 text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                              Mua Vé
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="mt-1">
-                          <p className="text-white text-base font-semibold leading-normal line-clamp-1">{m.title}</p>
-                          <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                            {m.genre ?? "Chưa rõ thể loại"}
-                          </p>
-
-                          <div className="mt-2">
-                            <span
-                              className={[
-                                "inline-flex items-center rounded-full px-3 py-1 text-sm font-bold tracking-wide",
-                                statusPillClass(m.status),
-                              ].join(" ")}
-                            >
-                              {renderStatus(m.status)}
-                            </span>
-                          </div>
-                        </div>
-                      </a>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollToDir("right")}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/35 text-white/85 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:bg-black/55 hover:border-white/20 active:scale-[0.98]"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M9 6l6 6-6 6"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
                     </div>
-                  ))}
 
-                  {moviesForTab.length === 0 && (
-                    <div className="text-white/60 py-4">Chưa có phim cho mục này.</div>
-                  )}
-                </div>
+                    <div
+                      ref={viewportRef}
+                      className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth pb-2"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                        scrollSnapType: "x mandatory",
+                      }}
+                    >
+                      <style>{`
+                        .hide-scrollbar::-webkit-scrollbar{ display:none; }
+                      `}</style>
+
+                      {listForTab.map((m, idx) => (
+                        <div
+                          key={(m as any)?.id ?? `${m.title}-${idx}`}
+                          data-card={idx === 0 ? "1" : "0"}
+                          className="w-[220px] sm:w-[240px] flex-shrink-0"
+                          style={{ scrollSnapAlign: "start" }}
+                        >
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => {
+                              const id = (m as any)?.id;
+                              if (!id) return;
+                              router.push(`/movies/${id}`);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key !== "Enter" && e.key !== " ") return;
+                              const id = (m as any)?.id;
+                              if (!id) return;
+                              router.push(`/movies/${id}`);
+                            }}
+                            className="block cursor-pointer"
+                          >
+                            <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-2xl overflow-hidden relative shadow-lg shadow-black/30 transform hover:scale-[1.02] transition-transform duration-300 ring-1 ring-white/10 bg-[#1E1E1E]">
+                              <div
+                                className="absolute inset-0 bg-cover bg-center"
+                                data-alt={m.title}
+                                style={{
+                                  backgroundImage: `url("${resolvePosterUrl(m.posterUrl ?? null)}")`,
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
+                                <button className="w-full text-center bg-red-600 text-white font-bold py-2 rounded-md text-sm opacity-0 hover:opacity-100 translate-y-4 hover:translate-y-0 transition-all duration-300">
+                                  Mua Vé
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="mt-3">
+                              <p className="text-white text-base font-semibold leading-normal line-clamp-1">{m.title}</p>
+                              <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
+                                {m.genre ?? "Chưa rõ thể loại"}
+                                {typeof m.durationMinutes === "number" ? ` • ${m.durationMinutes} phút` : ""}
+                              </p>
+
+                              <div className="mt-2">
+                                <span
+                                  className={[
+                                    "inline-flex items-center rounded-full px-3 py-1 text-sm font-bold tracking-wide",
+                                    statusPillClass(m.status ?? null),
+                                  ].join(" ")}
+                                >
+                                  {renderStatus(m.status ?? null)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {listForTab.length === 0 && <div className="text-white/60 py-4">Chưa có phim cho mục này.</div>}
+
+                    {listForTab.length > 0 && (
+                      <div className="mt-5 flex items-center justify-end gap-2 sm:hidden">
+                        <button
+                          type="button"
+                          onClick={() => scrollToDir("left")}
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/35 text-white/85 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:bg-black/55 hover:border-white/20 active:scale-[0.98]"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M15 18l-6-6 6-6"
+                              stroke="currentColor"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => scrollToDir("right")}
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/35 text-white/85 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:bg-black/55 hover:border-white/20 active:scale-[0.98]"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M9 6l6 6-6 6"
+                              stroke="currentColor"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
               <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-10">

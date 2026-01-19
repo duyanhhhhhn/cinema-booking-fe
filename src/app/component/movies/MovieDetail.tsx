@@ -9,10 +9,14 @@ import { MoviePublic } from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
 import { useParams } from "next/navigation";
 
-export default function MovieDetail() {
+interface MovieDetailProps {
+  movieId: string;
+}
+
+export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [tabValue, setTabValue] = useState<number>(0);
   const [trailerOpen, setTrailerOpen] = useState<boolean>(false);
-  const {id} = useParams()
+  const { id } = useParams()
 
   const [reviewPage, setReviewPage] = useState(1);
 
@@ -65,7 +69,7 @@ export default function MovieDetail() {
   return (
     <main className="">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${movie?.bannerUrl}")` }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/banner/placeholder.jpg")}")` }} />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-red-950/40 backdrop-blur-md" />
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-32">
@@ -73,8 +77,7 @@ export default function MovieDetail() {
             <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/70">
               <img
                 alt={`${movie?.title} Poster`}
-                src={movie?.posterUrl ?? "/poster/placeholder.jpg"}
-                className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
+                  src={resolveUrl(movie?.posterUrl, "/poster/placeholder.jpg")}                className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
                 onError={(e) => {
                   const img = e.currentTarget as HTMLImageElement;
                   if (img.dataset.fallback === "1") return;
