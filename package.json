@@ -24,6 +24,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.69.0",
+    "react-hot-toast": "^2.6.0",
     "react-toastify": "^11.0.5",
     "yup": "^1.7.1"
   },
@@ -32,6 +33,7 @@
     "@types/node": "24.9.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.2",
+    "baseline-browser-mapping": "^2.9.14",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4.1.17",

@@ -14,8 +14,12 @@ export interface IRegisterPayload {
   confirmPassword: string;
   otp: string;
 }
-
-
+export interface IUser {
+  fullName: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+}
 export class Auth extends Model {
   static login(payload: ILoginPayload) {
     return this.api.post<
@@ -114,17 +118,12 @@ export class Auth extends Model {
     const now = Date.now();
 
     if (now > item.expiresAt) {
-      // Token hết hạn - KHÔNG tự logout, để AuthContext xử lý refresh
       return null;
     }
 
     return item.value;
   }
 
-  /**
-   * Refresh access token (Client-side)
-   * Dùng trong React components khi token hết hạn
-   */
   static async refreshAccessToken(): Promise<boolean> {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
