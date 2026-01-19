@@ -14,8 +14,12 @@ export interface IRegisterPayload {
   confirmPassword: string;
   otp: string;
 }
-
-
+export interface IUser {
+  fullName: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+}
 export class Auth extends Model {
   static login(payload: ILoginPayload) {
     return this.api.post<

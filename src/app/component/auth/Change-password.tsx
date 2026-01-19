@@ -1,174 +1,156 @@
-"use client";
+'use client';
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
-const baseInputClass =
-  "w-full rounded-xl border border-[#3a2225] bg-[#1b0d10] px-4 py-3 text-sm text-slate-50 placeholder:text-[#b3a6aa] focus:outline-none focus:ring-2 focus:ring-[#f97373]/80 focus:border-[#f97373]/80 transition";
+import AccountSidebar from "@/app/component/account-sidebar/AccountSidebar";
+import { ChangePassword } from "@/types/data/user/changePassword";
+
+interface FormData {
+  otp: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
 
 export default function ChangePasswordPage() {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [otpSent, setOtpSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [sendingOtp, setSendingOtp] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
+  const form = useForm<FormData>({
+    defaultValues: { otp: "", newPassword: "", confirmNewPassword: "" },
+  });
 
-    if (newPassword !== confirmNewPassword) {
-      setError("Mật khẩu mới không khớp");
-      return;
-    }
-    if (newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự");
-      return;
-    }
+  /** ====================== SEND OTP ====================== */
+  const { mutate: sendOtp } = useMutation({
+    mutationFn: () => ChangePassword.sendOtp(),
+    onSuccess: () => {
+      toast.success("OTP đã được gửi tới email!");
+      setOtpSent(true);
+      setResendCountdown(60);
+    },
+    onError: () => toast.error("Gửi OTP thất bại, vui lòng thử lại"),
+  });
 
-    // TODO: call API đổi mật khẩu
+  const handleSendOtp = () => {
+    setSendingOtp(true);
+    sendOtp(undefined, { onSettled: () => setSendingOtp(false) });
   };
 
+  /** ====================== COUNTDOWN ====================== */
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => setResendCountdown((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  /** ====================== CHANGE PASSWORD ====================== */
+  const { mutate: changePassword, isLoading: isChanging } = useMutation({
+    mutationFn: (data: { otp: string; newPassword: string }) =>
+      ChangePassword.verify(data),
+    onSuccess: () => {
+      toast.success("Đổi mật khẩu thành công!");
+      form.reset();
+      setOtpSent(false);
+    },
+    onError: () => toast.error("Đổi mật khẩu thất bại, vui lòng thử lại"),
+  });
+
+  const onSubmit = (data: FormData) => {
+    if (!otpSent) return toast.error("Vui lòng gửi OTP trước khi đổi mật khẩu");
+    if (data.newPassword !== data.confirmNewPassword)
+      return toast.error("Mật khẩu mới không khớp");
+    if (data.newPassword.length < 6)
+      return toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+
+    changePassword({ otp: data.otp, newPassword: data.newPassword });
+  };
+
+  const inputClass =
+    "w-full rounded-md border border-[#3a2225] bg-[#14080a] px-3 py-2 text-slate-100";
+
+  /** ====================== RENDER ====================== */
   return (
-    <div className="flex-1 flex justify-center px-4 sm:px-8 lg:px-24 py-10">
-      <div className="w-full max-w-6xl">
-        <main className="pt-2">
-          {/* Breadcrumb */}
-          <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-[#9b8e93]">
-            <a href="#" className="hover:text-slate-50 transition">
-              Trang chủ
-            </a>
-            <span>/</span>
-            <a href="#" className="hover:text-slate-50 transition">
-              Tài khoản của tôi
-            </a>
-            <span>/</span>
-            <span className="text-slate-50">Đổi mật khẩu</span>
-          </div>
+    <main className="min-h-screen bg-[#120608] flex justify-center">
+      <div className="w-full max-w-7xl flex gap-6">
+        <AccountSidebar />
 
-          {/* Heading */}
-          <div className="mb-6">
-            <h1 className="text-3xl sm:text-[32px] font-black leading-tight tracking-tight text-slate-50">
-              Đổi Mật khẩu
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm sm:text-base text-[#b0a5a8]">
-              Để bảo vệ tài khoản của bạn, vui lòng không chia sẻ mật khẩu cho
-              người khác.
-            </p>
-          </div>
+        <section className="flex-1">
+          <div className="rounded-xl border border-[#3a2225] bg-[#1f1012] px-6 py-6 shadow text-slate-100">
+            <h1 className="text-xl font-semibold mb-4">Đổi mật khẩu</h1>
 
-          {/* Card form – căn giữa và rộng hơn */}
-          <div className="w-full max-w-[960px] mx-auto mt-10">
-            <div className="rounded-2xl border border-[#2b171a] bg-[#12090b] px-4 py-6 sm:px-8 sm:py-8 shadow-[0_0_0_1px_rgba(0,0,0,0.45)]">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Mật khẩu hiện tại */}
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-slate-50">
-                    Mật khẩu hiện tại
-                  </span>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Nhập mật khẩu hiện tại của bạn"
-                      className={`${baseInputClass} pr-12`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowCurrentPassword((prev) => !prev)
-                      }
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#a89a9e] hover:text-slate-50 transition"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">
-                        {showCurrentPassword ? "visibility" : "visibility_off"}
-                      </span>
-                    </button>
-                  </div>
-                </label>
+            {!otpSent && (
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={sendingOtp}
+                className="rounded-md bg-[#e31b23] px-6 py-2 text-white hover:bg-[#f04349]"
+              >
+                {sendingOtp ? "Đang gửi OTP..." : "Gửi mã xác nhận đến email"}
+              </button>
+            )}
 
-                {/* Mật khẩu mới */}
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-slate-50">
-                    Mật khẩu mới
-                  </span>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
-                      className={`${baseInputClass} pr-12`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword((prev) => !prev)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#a89a9e] hover:text-slate-50 transition"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">
-                        {showNewPassword ? "visibility" : "visibility_off"}
-                      </span>
-                    </button>
-                  </div>
-                </label>
-
-                {/* Xác nhận mật khẩu mới */}
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-slate-50">
-                    Xác nhận mật khẩu mới
-                  </span>
-                  <div className="relative">
-                    <input
-                      type={showConfirmNewPassword ? "text" : "password"}
-                      value={confirmNewPassword}
-                      onChange={(e) =>
-                        setConfirmNewPassword(e.target.value)
-                      }
-                      placeholder="Nhập lại mật khẩu mới của bạn"
-                      className={`${baseInputClass} pr-12`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmNewPassword((prev) => !prev)
-                      }
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#a89a9e] hover:text-slate-50 transition"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">
-                        {showConfirmNewPassword
-                          ? "visibility"
-                          : "visibility_off"}
-                      </span>
-                    </button>
-                  </div>
-                </label>
-
-                {error && (
-                  <p className="text-sm text-[#f97373] pt-1">{error}</p>
-                )}
-
-                <div className="flex justify-end pt-6">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="inline-flex items-center justify-center rounded-lg bg-[#f04438] px-8 py-3 text-sm sm:text-base font-semibold text-white shadow-[0_8px_24px_rgba(240,68,56,0.45)] hover:bg-[#f25544] focus:outline-none focus:ring-2 focus:ring-[#f97373] focus:ring-offset-2 focus:ring-offset-[#12090b] transition disabled:opacity-60"
-                  >
-                    {loading ? "Đang đổi mật khẩu..." : "Lưu Thay đổi"}
-                  </button>
+            {otpSent && (
+              <div className="mb-4 space-y-2">
+                <div>
+                  <label className="block text-sm mb-1">OTP</label>
+                  <input
+                    {...form.register("otp")}
+                    className={inputClass}
+                  />
                 </div>
-              </form>
-            </div>
+
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={sendingOtp || resendCountdown > 0}
+                  className={`text-sm ${
+                    resendCountdown > 0
+                      ? "text-gray-500 cursor-not-allowed"
+                      : "text-[#e31b23] hover:underline"
+                  }`}
+                >
+                  {resendCountdown > 0
+                    ? `Gửi lại OTP (${resendCountdown}s)`
+                    : sendingOtp
+                    ? "Đang gửi lại..."
+                    : "Gửi lại OTP"}
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1">Mật khẩu mới</label>
+                <input
+                  type="password"
+                  {...form.register("newPassword")}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">Xác nhận mật khẩu mới</label>
+                <input
+                  type="password"
+                  {...form.register("confirmNewPassword")}
+                  className={inputClass}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isChanging}
+                className="rounded-md bg-[#e31b23] px-6 py-2 text-white hover:bg-[#f04349]"
+              >
+                {isChanging ? "Đang xử lý..." : "Đổi mật khẩu"}
+              </button>
+            </form>
           </div>
-        </main>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

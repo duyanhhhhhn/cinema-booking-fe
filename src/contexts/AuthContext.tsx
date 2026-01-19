@@ -28,6 +28,7 @@ export interface User {
   phone?: string;
   role: Role;
   avatar?: string;
+  createdAt: string;
 }
 
 /**
@@ -85,6 +86,7 @@ function decodeToken(token: string): User | null {
       phone: decoded.phone,
       role: decoded.role || UserRole.CLIENT,
       avatar: decoded.avatar,
+      createdAt: decoded.createdAt || decoded.iat,
     };
   } catch (error) {
     console.error("Failed to decode token:", error);
@@ -140,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: userData.phone,
             role: userData.role || UserRole.CLIENT,
             avatar: userData.avatar,
+            createdAt: userData.createdAt || userData.iat,
           });
         } else {
           // Fallback: decode token nếu API thất bại
@@ -168,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   phone: retryData.phone,
                   role: retryData.role || UserRole.CLIENT,
                   avatar: retryData.avatar,
+                  createdAt: retryData.createdAt || retryData.iat,
                 });
                 return;
               }
@@ -218,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
               avatar: userData.avatar,
+              createdAt: userData.createdAt || userData.iat,
             });
           }
         } catch (error) {
@@ -261,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
               avatar: userData.avatar,
+              createdAt: userData.createdAt || userData.iat,
             });
           } else {
             // Fallback: decode token nếu API /me không trả về data
