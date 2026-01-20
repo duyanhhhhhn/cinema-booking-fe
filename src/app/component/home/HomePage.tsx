@@ -156,17 +156,6 @@ export default function HomePage() {
           )
         })}
       </div>
-      <style jsx>{`
-        ${banners
-          .map(
-            (_, i) => `
-          .peer\\/slide${i}:checked ~ div {
-            transform: translateX(-${i * (100 / banners.length)}%);
-          }
-        `
-          )
-          .join("")}
-      `}</style>
     </div>
   );
   return (
