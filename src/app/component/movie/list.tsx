@@ -7,12 +7,32 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 import { useRouter } from "next/navigation";
 import { Pagination, Stack, Typography } from "@mui/material";
 
+const GENRES = [
+  "ACTION",
+  "COMEDY",
+  "ROMANCE",
+  "DRAMA",
+  "HORROR",
+  "THRILLER",
+  "SCI_FI",
+  "FANTASY",
+  "ANIMATION",
+  "ADVENTURE",
+  "CRIME",
+  "WAR",
+  "FAMILY",
+  "MUSIC",
+  "DOCUMENTARY",
+  "MYSTERY",
+] as const;
+
 export default function CinemaList() {
   const router = useRouter();
   const { searchQuery, updateQuery } = useRouteQuery();
   const [loading, setLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState(false);
 
+  // ===== keep old params logic, just add title + genre from query =====
   const params = useMemo(() => {
     const pageRaw = Number(searchQuery.get("page") ?? 1);
     const perPageRaw = Number(searchQuery.get("perPage") ?? 12);
@@ -24,8 +44,15 @@ export default function CinemaList() {
         ? Math.floor(perPageRaw)
         : 12;
 
-    return { page, perPage };
+    const title = (searchQuery.get("title") ?? "").trim();
+    const genre = (searchQuery.get("genre") ?? "").trim();
+
+    return { page, perPage, title, genre };
   }, [searchQuery]);
+
+  // ===== local inputs for filter UI (simple) =====
+  const [titleInput, setTitleInput] = useState(params.title);
+  const [genreInput, setGenreInput] = useState(params.genre);
 
   const dataMovie = useQuery({
     ...MoviePublic.objects.paginateQueryFactory(params),
@@ -78,6 +105,20 @@ export default function CinemaList() {
   const MIN_LOADING_TIME = 350;
   const MIN_LOADING_PAGE_TIME = 700;
 
+  const applyFilter = (nextTitle: string, nextGenre: string) => {
+    updateQuery({
+      page: "1",
+      title: nextTitle.trim() ? nextTitle.trim() : null,
+      genre: nextGenre.trim() ? nextGenre.trim() : null,
+    });
+  };
+
+  const resetFilter = () => {
+    setTitleInput("");
+    setGenreInput("");
+    updateQuery({ page: "1", title: null, genre: null });
+  };
+
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#000000D3]">
       {loading && (
@@ -100,14 +141,79 @@ export default function CinemaList() {
       <div className="layout-container flex h-full grow flex-col">
         <div className="flex flex-1 justify-center px-4 py-6 sm:px-8 md:px-16 lg:px-24 xl:px-40">
           <div className="layout-content-container flex w-full max-w-[1320px] flex-1 flex-col">
-            <main className="flex flex-col gap-8 py-6 md:py-10">
+            <main className="flex flex-col gap-6 py-6 md:py-10">
+              {/* Title */}
               <div className="flex flex-wrap items-center justify-between gap-4 px-2 sm:px-4">
                 <p className="text-white text-3xl md:text-4xl font-extrabold tracking-tight">
                   Danh sách Phim
                 </p>
-                <p className="text-white/60 text-sm font-medium"></p>
               </div>
 
+              {/* Filter (same width as grid: px-2 sm:px-4) */}
+              <div className="px-2 sm:px-4">
+                <div className="w-full rounded-3xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <input
+                      value={titleInput}
+                      onChange={(e) => setTitleInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") applyFilter(titleInput, genreInput);
+                      }}
+                      placeholder="Tìm theo tên phim..."
+                      className="w-full flex-1 rounded-2xl border border-white/12 bg-black/30 px-4 py-3 text-white outline-none focus:border-red-400/60 focus:ring-2 focus:ring-red-500/30"
+                    />
+
+                    <select
+                      value={genreInput}
+                      onChange={(e) => {
+                        const g = e.target.value;
+                        setGenreInput(g);
+                        applyFilter(titleInput, g);
+                      }}
+                      className="w-full sm:w-[260px] rounded-2xl border border-white/12 bg-black/30 px-4 py-3 text-white outline-none focus:border-red-400/60 focus:ring-2 focus:ring-red-500/30"
+                    >
+                      <option value="">Tất cả thể loại</option>
+                      {GENRES.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="flex gap-2 sm:gap-3">
+                      <button
+                        type="button"
+                        onClick={() => applyFilter(titleInput, genreInput)}
+                        className="w-full sm:w-auto rounded-2xl bg-red-600 px-5 py-3 text-sm font-extrabold text-white hover:bg-red-700"
+                      >
+                        Tìm
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={resetFilter}
+                        className="w-full sm:w-auto rounded-2xl border border-white/14 bg-white/5 px-5 py-3 text-sm font-extrabold text-white/85 hover:bg-white/10"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* optional: show current applied filter (very light) */}
+                  <div className="mt-3 text-xs font-semibold text-white/55">
+                    Đang lọc:{" "}
+                    <span className="text-white/80">
+                      {params.title ? `"${params.title}"` : "tất cả tiêu đề"}
+                    </span>{" "}
+                    •{" "}
+                    <span className="text-white/80">
+                      {params.genre ? params.genre : "tất cả thể loại"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 justify-items-center gap-7 px-2 sm:px-4">
                 {dataMovie.data?.data?.map((m: any) => (
                   <div key={m.id} className="w-full max-w-[300px]">
@@ -172,6 +278,7 @@ export default function CinemaList() {
                 ))}
               </div>
 
+              {/* Pagination */}
               <div className="px-2 sm:px-4">
                 <Stack
                   direction="row"
@@ -226,9 +333,7 @@ export default function CinemaList() {
                         backgroundColor: "#c91019",
                       },
                       "& .MuiPaginationItem-previousNext, & .MuiPaginationItem-firstLast":
-                        {
-                          fontWeight: 900,
-                        },
+                        { fontWeight: 900 },
                     }}
                   />
                 </Stack>
