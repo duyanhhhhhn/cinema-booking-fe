@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { use, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MoviePublic } from "@/types/data/movie-public";
-import { Post } from "@/types/data/post/post";
+import { IPost, Post } from "@/types/data/post/post";
 import { CreditCard, LocationOn, Phone } from "@mui/icons-material";
 import { Banner } from "@/types/data/home/banner";
 
@@ -66,12 +66,12 @@ export default function HomePage() {
   }, [allMovies]);
 
   const moviesForTab = tab === "dangChieu" ? nowShowing : comingSoon;
-  const data1 = useQuery(Post.getPosts());
+  const data1 = useQuery(Post.getPosts(1, 3));
   const posts = data1?.data?.data || [];
-  const data2 = useQuery(Banner.getBanner("HOME", 3));
-  const banners = data2?.data?.data || [];
-  console.log("data2:", data2);
-  console.log("Banners on HomePage:", banners);
+  const dataBanner = useQuery({
+    ...Banner.objects.paginateQueryFactory()
+  })
+  const banners = dataBanner?.data?.data || [];
   const slides = [];
   const fullslide = [];
   const old = [];
@@ -205,38 +205,6 @@ export default function HomePage() {
       </div>
     </div>
   );
-  const news = [];
-  for (let i = 0; i <= 2; i++) {
-    news.push(
-      <div key={"news-section" + i} className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
-        <a href={`/news/${i}`}
-          className="w-full bg-center bg-no-repeat aspect-video bg-cover"
-          style={{
-            backgroundImage:
-              `url(${posts[i]?.coverUrl})`
-          }}>
-        </a>
-        <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
-          <div>
-            <span className="inline-block bg-[#FFC107] text-black text-xs font-bold px-2 py-1 rounded-full mb-2">
-              {posts[i]?.category}
-            </span>
-            <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
-              {posts[i]?.title}
-            </p>
-            <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-              {posts[i]?.excerpt}
-            </p>
-          </div>
-          <a className="text-white text-sm font-bold hover:underline"
-            href={`/news/${posts[i]?.id}`}>
-            Xem chi tiết
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <>
       <div
@@ -334,7 +302,38 @@ export default function HomePage() {
               <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-10">
                 Tin Tức &amp; Ưu Đãi
               </h2>
-              <div className="grid md:grid-cols-3 gap-6">{news}</div>
+              <div className="grid md:grid-cols-3 gap-6">
+                {
+                  posts.map((post: IPost) => (
+                    <div key={"news-section" + post?.id} className="flex flex-col gap-4 rounded-lg bg-[#1E1E1E] shadow-lg shadow-black/30 overflow-hidden group">
+                      <a href={`/news/${post?.id}`}
+                        className="w-full bg-center bg-no-repeat aspect-video bg-cover"
+                        style={{
+                          backgroundImage:
+                            `url(${post?.coverUrl})`
+                        }}>
+                      </a>
+                      <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+                        <div>
+                          <span className="inline-block bg-[#FFC107] text-black text-xs font-bold px-2 py-1 rounded-full mb-2">
+                            {post?.category}
+                          </span>
+                          <p className="text-white text-lg font-medium leading-normal mb-1 group-hover:text-primary transition-colors">
+                            {post?.title}
+                          </p>
+                          <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
+                            {post?.excerpt}
+                          </p>
+                        </div>
+                        <a className="text-white text-sm font-bold hover:underline"
+                          href={`/news/${post?.id}`}>
+                          Xem chi tiết
+                        </a>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
             </div>
           </main>
 
@@ -344,7 +343,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16 w-full">
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
-                    <Phone className="text-3xl"/>
+                    <Phone className="text-3xl" />
                   </div>
                   <h3 className="text-white text-xl font-bold">Đặt Vé Nhanh Chóng</h3>
                   <p className="text-[#E0E0E0]/70">
@@ -353,7 +352,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
-                    <LocationOn className="text-3xl"/>
+                    <LocationOn className="text-3xl" />
                   </div>
                   <h3 className="text-white text-xl font-bold">Nhiều Rạp Chiếu</h3>
                   <p className="text-[#E0E0E0]/70">
@@ -362,7 +361,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
-                    <CreditCard className="text-3xl"/>
+                    <CreditCard className="text-3xl" />
                   </div>
                   <h3 className="text-white text-xl font-bold">Thanh Toán An Toàn</h3>
                   <p className="text-[#E0E0E0]/70">Đa dạng phương thức thanh toán với bảo mật tuyệt đối.</p>

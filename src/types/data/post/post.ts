@@ -44,29 +44,23 @@ const modelConfig = {
     path: '/news',
     modal: 'NewsList'
 }
-export interface IPaginateResponseMod<T> {
-    message: string;
-    data: T[];
-    meta: {
-        page: number;
-        total: number;
-        perPage: number;
-        totalPages: number;
-    };
-}
 export class Post extends Model {
     static queryKeys = {
         paginate: 'POSTS_PAGINATE_QUERY',
         findOne: 'POSTS_FIND_ONE_QUERY'
     }
     static objects = ObjectsFactory.factory<IPost>(modelConfig, this.queryKeys)
-    static getPosts() {
+    static getPosts(page = 1, size = 10) {
         return {
             queryKey: [this.queryKeys.paginate],
             queryFn: () => {
                 return this.api
-                    .get<IPaginateResponseMod<IPost>>({
-                        url: '/posts?page=1&size=10',
+                    .get<IPaginateResponse<IPost>>({
+                        url: '/public/posts',
+                        params: {
+                            page: page,
+                            size: size
+                        }
                     })
                     .then(r => r.data)
             }
@@ -78,7 +72,7 @@ export class Post extends Model {
             queryFn: () => {
                 return this.api
                     .get<IPost>({
-                        url: `/posts/${id}`,
+                        url: `/public/posts/${id}`,
                     })
                     .then(r => r.data)
             }

@@ -31,22 +31,20 @@ const modelConfig = {
 export class Banner extends Model {
     static queryKeys = {
         paginate: 'BANNERS_PAGINATE_QUERY',
-        findOne: 'BANNERS_FIND_ONE_QUERY'
+        findOne: 'BANNERS_FIND_ONE_QUERY',
+        all: 'BANNERS_ALL_QUERY'
     }
     static objects = ObjectsFactory.factory<IBanner>(modelConfig, this.queryKeys)
-    static getBanner(position = "HOME", count = 3) {
+    static getBanner() {
         return {
-            queryKey: [this.queryKeys.paginate, position, count],
+            queryKey: [this.queryKeys.all],
             queryFn: () => {
-                return this.api.get<IResponse<IBanner>>({
-                    url: `/banner/get`,
-                    params: {
-                        position,
-                        count
-                    }
-                }).then(r => r.data)
+                return this.api.get<IResponse<IBanner[]>>({
+                    url: '/public/banner',
+                }).then(res => res.data);
             }
         }
     }
+
 }
 Banner.setup();

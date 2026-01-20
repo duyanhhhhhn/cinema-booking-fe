@@ -6,6 +6,6 @@ export const metadata = {
 };
 
 export default function NewsPage() {
-  return <NewsList />;
+  return <NewsList />
 }
 
