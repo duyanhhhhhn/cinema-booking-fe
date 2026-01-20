@@ -221,6 +221,9 @@ export default function NewsInfo() {
                                 Bài viết liên quan
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {Array.isArray(datar) && datar.length === 0 && <div key={"none"} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                                    No relate News
+                                </div>}
                                 {datar.map(relates => {
                                     return <div key={"relate" + relates.id} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
                                         <a href="#">
