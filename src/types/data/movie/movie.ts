@@ -101,7 +101,7 @@ export const initialData: MovieFormData = {
 };
 const modelConfig = {
   path: "/movies",
-  modal: "movies",
+  model: "movies",
 };
 
 export class Movie extends Model {
@@ -113,7 +113,7 @@ export class Movie extends Model {
 
   static getMovies() {
     return {
-      queryKey: ["CONVERSIONRATES_PAGINATE_QUERY"],
+      queryKey: ["GET_MOVIES_QUERY"],
       queryFn: () => {
         return this.api
           .get<IPaginateResponse<IMovie>>({
