@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import React, { useEffect, useState } from "react";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -14,16 +15,26 @@ import LinkIcon from "@mui/icons-material/Link";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useForm } from "react-hook-form";
-import { IMovie, Movie } from "@/types/data/movie";
+import { Movie, MovieFormData, useUpdateMovieMutation } from "@/types/data/movie";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import dayjs from "dayjs";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { useNotification } from "@/hooks/useNotification";
 
 export default function MovieDetailPage() {
   const { id } = useParams();
   const { data: movieData, refetch: refetchMovie } = useQuery({
     ...Movie.getMoviesDetail(Number(id)),
+  });
+  const n = useNotification();
+  const { mutate: updateMovie } = useUpdateMovieMutation();
+  const [previews, setPreviews] = useState<{
+    poster: string | null;
+    banner: string | null;
+  }>({
+    poster: null,
+    banner: null,
   });
 
   // Hàm chuyển đổi YouTube URL thành embed URL
@@ -51,7 +62,7 @@ export default function MovieDetailPage() {
     return null;
   };
 
-  const method = useForm<IMovie>({
+  const method = useForm<MovieFormData>({
     defaultValues: {
       title: "",
       director: "",
@@ -63,11 +74,13 @@ export default function MovieDetailPage() {
       status: "COMING_SOON",
       releaseDate: "",
       endDate: "",
-      posterUrl: "",
-      shortDescription: "",
-      bannerUrl: "",
-      description: "",
       trailerUrl: "",
+      shortDescription: "",
+      description: "",
+      posterFile: null,
+      bannerFile: null,
+      posterUrl: "",
+      bannerUrl: "",
     },
     mode: "onChange",
   });
@@ -88,16 +101,55 @@ export default function MovieDetailPage() {
       endDate: movieData?.data.endDate 
         ? dayjs(movieData.data.endDate).format("YYYY-MM-DD")
         : "",
-      posterUrl: movieData?.data.posterUrl,
-      bannerUrl: movieData?.data.bannerUrl,
+      posterFile: null,
+      bannerFile: null,
+      posterUrl: movieData?.data.posterUrl || "",
+      bannerUrl: movieData?.data.bannerUrl || "",
       trailerUrl: movieData?.data.trailerUrl,
       description: movieData?.data.description,
     });
   }, [id, method, movieData]);
-  const onSubmit = (data: IMovie) => {
-    console.log(data);
+  const onSubmit = (data: MovieFormData) => {
+    const payload = {
+      ...data,
+    };
+    const formData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (
+        key === "posterFile" &&
+        value instanceof FileList &&
+        value.length > 0
+      ) {
+        formData.append("posterFile", value[0]);
+      } else if (
+        key === "bannerFile" &&
+        value instanceof FileList &&
+        value.length > 0
+      ) {
+        formData.append("bannerFile", value[0]);
+      } else if (value !== undefined && value !== null) {
+        if (typeof value === "object") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+   formData.delete("posterUrl");
+   formData.delete("bannerUrl");
+    updateMovie(
+      { id: Number(id), payload: formData },
+      {
+        onSuccess: () => {
+          n.success("Cập nhật phim thành công");
+          refetchMovie();
+        },
+        onError: (error) => {
+          n.error(error.message);
+        },
+      }
+    );
   };
-  console.log(movieData?.data.releaseDate)
   
   const trailerUrl = method.watch("trailerUrl") || movieData?.data.trailerUrl;
   const embedUrl = getYouTubeEmbedUrl(trailerUrl);
@@ -108,6 +160,44 @@ export default function MovieDetailPage() {
 
   const labelClass =
     "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1";
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: "posterFile" | "bannerFile"
+  ) => {
+    const file = e.target.files;
+    if (file) {
+      const url = URL.createObjectURL(file[0]);
+      setPreviews((prev) => ({
+        ...prev,
+        [fieldName === "posterFile" ? "poster" : "banner"]: url,
+      }));
+      // Lưu file vào form
+      method.setValue(fieldName, file);
+    }
+  };
+
+  const removeImage = (
+    e: React.MouseEvent,
+    fieldName: "posterFile" | "bannerFile"
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPreviews((prev) => ({
+      ...prev,
+      [fieldName === "posterFile" ? "poster" : "banner"]: null,
+    }));
+    (method.setValue as any)(fieldName, null);
+  };
+
+  // Cleanup preview URLs
+  useEffect(() => {
+    return () => {
+      if (previews.poster) URL.revokeObjectURL(previews.poster);
+      if (previews.banner) URL.revokeObjectURL(previews.banner);
+    };
+  }, [previews]);
+ 
 
   // State giả lập
   return (
@@ -143,19 +233,20 @@ export default function MovieDetailPage() {
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">
                   Tên phim:{" "}
                   <span className="text-red-600">
-                    {method.getValues("title")}
+                    {movieData?.data.title}
                   </span>
                 </h2>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={() => method.reset()}
                 className="cursor-pointer px-8 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all bg-white"
               >
                 Hủy bỏ
               </button>
-              <button className="cursor-pointer px-8 py-3 rounded-xl bg-red-600 text-white font-bold shadow-lg shadow-red-500/30 hover:bg-red-700 hover:scale-[1.02] transition-all">
+              <button type="submit" className="cursor-pointer px-8 py-3 rounded-xl bg-red-600 text-white font-bold shadow-lg shadow-red-500/30 hover:bg-red-700 hover:scale-[1.02] transition-all">
                 Lưu thay đổi
               </button>
             </div>
@@ -227,7 +318,6 @@ export default function MovieDetailPage() {
                     <div className="relative">
                       <select
                         className={`${inputClass} appearance-none cursor-pointer font-medium ${
-                          // eslint-disable-next-line react-hooks/incompatible-library
                           method.watch("status") === "NOW_SHOWING"
                             ? "text-green-600"
                             : method.watch("status") === "COMING_SOON"
@@ -301,24 +391,46 @@ export default function MovieDetailPage() {
                     </span>
                     Poster Phim
                   </h3>
-                  <button className="text-xs font-bold text-red-600 hover:underline">
-                    Chỉnh sửa
-                  </button>
                 </div>
                 <div className="relative group aspect-2/3 w-full max-w-[280px] mx-auto rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 hover:border-red-500 transition-all cursor-pointer bg-gray-50">
-                  <img
-                    alt="Poster"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    src={urlPoster + movieData?.data.posterUrl}
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
-                    <span className="text-white mb-2">
-                      <CloudUploadIcon fontSize="large" />
-                    </span>
-                    <span className="text-sm font-bold text-white uppercase tracking-tighter">
-                      Tải ảnh mới
-                    </span>
-                  </div>
+                  {previews.poster ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        alt="Poster Preview"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        src={previews.poster}
+                      />
+                      <button
+                        onClick={(e) => removeImage(e, "posterFile")}
+                        className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all"
+                        title="Xóa ảnh"
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                      <img
+                        alt="Poster"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        src={urlPoster + movieData?.data.posterUrl}
+                        />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
+                        <span className="text-white mb-2">
+                          <CloudUploadIcon fontSize="large" />
+                        </span>
+                        <span className="text-sm font-bold text-white uppercase tracking-tighter">
+                          Tải ảnh mới
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileChange(e, "posterFile")}
+                      />
+                    </label>
+                  )}
                 </div>
                 <p className="text-[11px] text-gray-400 text-center mt-4 italic">
                   Định dạng 2:3 (1000x1500px), JPG/PNG
@@ -334,24 +446,46 @@ export default function MovieDetailPage() {
                     </span>
                     Banner Ngang
                   </h3>
-                  <button className="text-xs font-bold text-red-600 hover:underline">
-                    Chỉnh sửa
-                  </button>
                 </div>
                 <div className="relative group aspect-video w-full rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 hover:border-red-500 transition-all cursor-pointer bg-gray-50">
-                  <img
-                    alt="Banner"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    src={urlPoster + movieData?.data.bannerUrl}
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
-                    <span className="text-white mb-1">
-                      <CloudUploadIcon fontSize="large" />
-                    </span>
-                    <span className="text-xs font-bold text-white uppercase">
-                      Tải banner mới
-                    </span>
-                  </div>
+                  {previews.banner ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        alt="Banner Preview"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={previews.banner}
+                      />
+                      <button
+                        onClick={(e) => removeImage(e, "bannerFile")}
+                        className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all"
+                        title="Xóa ảnh"
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                      <img
+                        alt="Banner"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={urlPoster + movieData?.data.bannerUrl}
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
+                        <span className="text-white mb-1">
+                          <CloudUploadIcon fontSize="large" />
+                        </span>
+                        <span className="text-xs font-bold text-white uppercase">
+                          Tải banner mới
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileChange(e, "bannerFile")}
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
 

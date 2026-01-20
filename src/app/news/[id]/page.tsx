@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { Box, Card, CardContent, Typography, Chip, Divider } from "@mui/material";
 import Image from "next/image";
-import NewsInfo from "@/app/component/news/NewsInfo";
+import NewsInfo from "@/app/component/news/[id]/NewsInfo";
 
 export default function NewsDetailPage() {
   const params = useParams();

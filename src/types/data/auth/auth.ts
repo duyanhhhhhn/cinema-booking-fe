@@ -111,28 +111,28 @@ export class Auth extends Model {
   static checkValidToken() {
     const token = localStorage.getItem("expiresIn");
 
+
     if (!token) return null;
 
     const item = JSON.parse(token);
     const now = Date.now();
 
     if (now > item.expiresAt) {
-      // Token hết hạn - KHÔNG tự logout, để AuthContext xử lý refresh
       return null;
     }
 
     return item.value;
   }
 
-  /**
-   * Refresh access token (Client-side)
-   * Dùng trong React components khi token hết hạn
-   */
   static async refreshAccessToken(): Promise<boolean> {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) return false;
+      if (!refreshToken) {
+        console.warn("No refreshToken found");
+        return false;
+      }
 
+      console.log("🔄 Attempting to refresh token...");
       const response = await this.api.post<IResponse<any>>({
         url: "/auth/refresh",
         data: {
@@ -140,17 +140,38 @@ export class Auth extends Model {
         }
       });
 
-      const data = response.data?.data || response.data;
+      // Kiểm tra nhiều cấu trúc response
+      const fullData = response.data;
+      const nestedData = fullData?.data;
+      const data = nestedData || fullData || response.data;
+      
+      console.log("Refresh response structure:", {
+        hasData: !!data,
+        hasAccessToken: !!data?.accessToken,
+        hasRefreshToken: !!data?.refreshToken,
+        keys: data ? Object.keys(data) : [],
+      });
       
       if (data?.accessToken) {
+        console.log("✅ Refresh token successful, saving...");
         this.handleLoginSuccess(data);
         return true;
       }
       
+      console.warn("⚠️ No accessToken in refresh response");
       return false;
-    } catch (error) {
-      console.error("Failed to refresh token:", error);
-      this.handleLogout();
+    } catch (error: any) {
+      console.error("❌ Failed to refresh token:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+      });
+      
+      // Chỉ logout nếu lỗi 401/403, không logout cho lỗi network
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        this.handleLogout();
+      }
       return false;
     }
   }

@@ -147,7 +147,8 @@ export class Api {
                 return Promise.reject(error);
               }
 
-              // Gọi API refresh token
+              // Gọi API refresh token (không cần Authorization header vì đã được xử lý trong request interceptor)
+              console.log("🔄 Attempting to refresh token...");
               const refreshResponse = await axios.post(
                 `${baseUrl || appConfig.apiEndpoint}/auth/refresh`,
                 {
@@ -155,29 +156,62 @@ export class Api {
                 },
                 {
                   headers: {
-                    Authorization: `Bearer ${refreshToken}`,
+                    // Không gửi Authorization header cho refresh endpoint
+                    Authorization: undefined,
                   },
                 }
               );
 
-              const responseData = refreshResponse.data?.data || refreshResponse.data;
-              const newToken = responseData?.accessToken;
-              const newRefreshToken = responseData?.refreshToken;
+              console.log("Refresh response structure:", typeof refreshResponse.data);
+              console.log("Full refresh response:", JSON.stringify(refreshResponse.data, null, 2));
+
+              // Kiểm tra nhiều cấu trúc response có thể có
+              // Response có thể là: 
+              // - { data: { accessToken, refreshToken } }
+              // - { accessToken, refreshToken } trực tiếp
+              // - { message: "...", data: { accessToken, refreshToken } }
+              const fullData = refreshResponse.data;
+              const nestedData = fullData?.data;
+              
+              // Tìm accessToken và refreshToken ở nhiều vị trí
+              const newToken = 
+                nestedData?.accessToken || 
+                fullData?.accessToken || 
+                nestedData?.token ||
+                fullData?.token;
+              
+              const newRefreshToken = 
+                nestedData?.refreshToken || 
+                fullData?.refreshToken ||
+                nestedData?.refresh_token ||
+                fullData?.refresh_token;
+
+              console.log("🔄 Refresh token response parsed:", {
+                fullDataKeys: fullData ? Object.keys(fullData) : [],
+                nestedDataKeys: nestedData ? Object.keys(nestedData) : [],
+                hasAccessToken: !!newToken,
+                hasRefreshToken: !!newRefreshToken,
+                accessTokenPreview: newToken ? newToken.substring(0, 20) + "..." : null,
+                refreshTokenPreview: newRefreshToken ? newRefreshToken.substring(0, 20) + "..." : null,
+              });
 
               if (newToken) {
-                // Lưu token mới và refreshToken mới (nếu có) bằng cách sử dụng handleLoginSuccess
-                // Import Auth class để sử dụng handleLoginSuccess
+                // Lưu token mới và refreshToken mới (nếu có)
                 if (typeof window !== "undefined") {
                   // Lưu accessToken
                   localStorage.setItem("accessToken", newToken);
+                  console.log("✅ AccessToken saved");
                   
-                  // Lưu refreshToken mới nếu có, nếu không giữ nguyên refreshToken cũ
+                  // LUÔN LUÔN lưu refreshToken mới nếu có, nếu không giữ nguyên refreshToken cũ
                   if (newRefreshToken) {
                     localStorage.setItem("refreshToken", newRefreshToken);
+                    console.log("✅ RefreshToken saved:", newRefreshToken.substring(0, 30) + "...");
+                  } else {
+                    console.warn("⚠️ No new refreshToken in response, keeping old one");
                   }
                   
                   // Cập nhật expiresIn
-                  const expiresIn = responseData?.expiresIn;
+                  const expiresIn = nestedData?.expiresIn || fullData?.expiresIn;
                   if (expiresIn) {
                     const expiresTime = {
                       value: expiresIn,
@@ -208,7 +242,7 @@ export class Api {
                         };
                         localStorage.setItem("expiresIn", JSON.stringify(expiresTime));
                       }
-                    } catch (e) {
+                    } catch {
                       // Fallback: 24 giờ
                       const expiresTime = {
                         value: 24 * 60 * 60,
@@ -227,13 +261,25 @@ export class Api {
                 return this.http(originalRequest);
               }
             }
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError);
-            // Refresh failed, logout
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("accessToken");
-              localStorage.removeItem("expiresIn");
-              localStorage.removeItem("refreshToken");
+          } catch (refreshError: any) {
+            console.error("❌ Token refresh failed:", refreshError);
+            console.error("Refresh error details:", {
+              message: refreshError?.message,
+              response: refreshError?.response?.data,
+              status: refreshError?.response?.status,
+            });
+            
+            // Chỉ logout nếu lỗi 401/403 (unauthorized/forbidden)
+            // Các lỗi khác (network, 500, etc.) không nên logout ngay
+            if (refreshError?.response?.status === 401 || refreshError?.response?.status === 403) {
+              console.warn("Refresh token expired or invalid, logging out...");
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("expiresIn");
+                localStorage.removeItem("refreshToken");
+                // Dispatch event để AuthContext biết cần logout
+                window.dispatchEvent(new Event('tokenRefreshFailed'));
+              }
             }
             return Promise.reject(refreshError);
           }

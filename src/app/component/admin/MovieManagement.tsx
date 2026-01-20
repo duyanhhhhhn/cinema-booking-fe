@@ -11,7 +11,6 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 export default function MovieManagement() {
   const [openAddMovieModal, setopenAddMovieModal] = useState(false);
   const { searchQuery } = useRouteQuery();
-  const [page, setPage] = useState(Number(searchQuery.get("page") || 1));
 
   const queryParams = useMemo(() => {
     return {
@@ -19,9 +18,6 @@ export default function MovieManagement() {
       perPage: searchQuery.get("perPage") || 10,
     };
   }, [searchQuery]);
-   const handlePageChange = (value: number) => {
-     setPage(value);
-   };
   const { data: moviesData,refetch: refetchMovies } = useQuery({
     ...Movie.objects.paginateQueryFactory(queryParams),
   });
@@ -94,12 +90,9 @@ export default function MovieManagement() {
             refetchMovies={refetchMovies}
           />
 
-          <CustomPagination
-            count={moviesData?.meta.total || 0}
+        <CustomPagination
             itemsPerPage={moviesData?.meta.perPage || 0}
             totalItems={moviesData?.meta.total || 0}
-            page={page}
-            onChange={() => handlePageChange(page)}
           />
         </div>
         <AddMoviePopup

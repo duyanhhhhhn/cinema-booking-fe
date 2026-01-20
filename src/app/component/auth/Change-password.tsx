@@ -47,7 +47,7 @@ export default function ChangePasswordPage() {
   }, [resendCountdown]);
 
   /** ====================== CHANGE PASSWORD ====================== */
-  const { mutate: changePassword, isLoading: isChanging } = useMutation({
+  const { mutate: changePassword, isPending: isChanging } = useMutation({
     mutationFn: (data: { otp: string; newPassword: string }) =>
       ChangePassword.verify(data),
     onSuccess: () => {
@@ -73,35 +73,48 @@ export default function ChangePasswordPage() {
 
   /** ====================== RENDER ====================== */
   return (
-    <main className="min-h-screen bg-[#120608] flex justify-center">
+    <main className="min-h-screen bg-[#120608] p-6 flex justify-center">
       <div className="w-full max-w-7xl flex gap-6">
         <AccountSidebar />
 
         <section className="flex-1">
           <div className="rounded-xl border border-[#3a2225] bg-[#1f1012] px-6 py-6 shadow text-slate-100">
+            <div className="flex justify-between items-center">
+
             <h1 className="text-xl font-semibold mb-4">Đổi mật khẩu</h1>
 
-            {!otpSent && (
-              <button
-                type="button"
-                onClick={handleSendOtp}
-                disabled={sendingOtp}
-                className="rounded-md bg-[#e31b23] px-6 py-2 text-white hover:bg-[#f04349]"
-              >
-                {sendingOtp ? "Đang gửi OTP..." : "Gửi mã xác nhận đến email"}
-              </button>
-            )}
+          <button
+          type="button"
+          onClick={handleSendOtp}
+          disabled={sendingOtp || resendCountdown > 0}
+          className={`
+            rounded-md px-6 py-2 text-sm transition
+            ${
+              sendingOtp || resendCountdown > 0
+                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                : "bg-[#e31b23] text-white hover:bg-[#f04349]"
+            }
+          `}
+        >
+          {sendingOtp
+            ? "Đang gửi OTP..."
+            : otpSent && resendCountdown > 0
+            ? `Gửi lại OTP (${resendCountdown}s)`
+            : otpSent
+            ? "Gửi lại OTP"
+            : "Gửi mã xác nhận đến email"}
+        </button>
+            </div>
 
-            {otpSent && (
               <div className="mb-4 space-y-2">
                 <div>
-                  <label className="block text-sm mb-1">OTP</label>
+                  <label className="block text-sm mb-1">Mã Xác nhận</label>
                   <input
                     {...form.register("otp")}
                     className={inputClass}
                   />
                 </div>
-
+{/* 
                 <button
                   type="button"
                   onClick={handleSendOtp}
@@ -112,14 +125,13 @@ export default function ChangePasswordPage() {
                       : "text-[#e31b23] hover:underline"
                   }`}
                 >
-                  {resendCountdown > 0
+                  {otpSent && resendCountdown > 0
                     ? `Gửi lại OTP (${resendCountdown}s)`
                     : sendingOtp
                     ? "Đang gửi lại..."
-                    : "Gửi lại OTP"}
-                </button>
+                    : otpSent ? "Gửi lại OTP" : "Gửi mã xác nhận"}
+                </button> */}
               </div>
-            )}
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div>
