@@ -79,82 +79,77 @@ export default function HomePage() {
   })
   const banners = dataBanner?.data?.data || [];
   const fullslide = [];
-  const old = [];
-  old.push(
-    <div className="relative w-full aspect-[16/7] rounded-xl overflow-hidden mb-8 shadow-lg shadow-black/20">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        data-alt="A brightly lit cinema hall with red seats, viewed from the back."
-        style={{
-          backgroundImage:
-            'url("https://wallpapers.com/images/hd/cinema-theater-screen-red-interior-mdii641t9soyox58.jpg")',
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-      <div className="absolute bottom-0 left-0 p-6 md:p-10">
-        <h1 className="text-white text-3xl md:text-5xl font-bold mb-2">Phim Bom Tấn Của Tuần</h1>
-        <p className="text-[#E0E0E0] md:text-lg max-w-xl mb-4">
-          Trải nghiệm những thước phim hành động mãn nhãn và kỹ xảo đỉnh cao trên màn ảnh rộng.
-        </p>
-        <button className="flex min-w-[84px] max-w-[480px] bg-red-600 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-red-700 transition-colors">
-          <span className="truncate">Đặt Vé Ngay</span>
-        </button>
-      </div>
-      <div className="absolute bottom-4 right-4 flex items-center gap-2">
-        <button className="size-2 rounded-full bg-white" />
-        <button className="size-2 rounded-full bg-white/50" />
-        <button className="size-2 rounded-full bg-white/50" />
-      </div>
-    </div>
-  )
+  const [index, setIndex] = useState(0)
+  const total = banners.length;
+
+  if (!total) return null;
+
+  const next = () => setIndex((prev) => (prev + 1) % total);
+  const prev = () => setIndex((prev) => (prev - 1 + total) % total);
 
   fullslide.push(
-    <div key={"fullslide"} id="default-carousel" className="w-full relative inset-0 bg-cover bg-center" data-carousel="slide">
-      <div className="relative w-full max-w-5xl mx-auto overflow-hidden rounded-lg">
-        {/* RADIO CONTROLS */}
-        {banners.map((_, i) => {
-          return <input key={`radio=${i}`}
-            type="radio" name="carousel"
-            id={`slide${i}`} className={`hidden peer/slide${i}`} />
-        })}
+    <div key={"slide"} className="relative w-full overflow-hidden">
 
-        {/* SLIDES */}
-        <div className="flex transition-transform duration-700 ease-in-out"
-          style={{ width: `${banners.length * 100}%` }}>
-          {
-            banners.map(banner => {
-              return (
-                <div className="w-full flex-shrink-0 object-cover" key={"bg" + banner.id}><img
-                  src={`${banner.imageUrl}`}
-                  className="w-full flex-shrink-0 object-cover"
-                  style={{ width: `${100 / banners.length}%` }}
-                />
-                  <div className="absolute bottom-0 left-0 p-6 md:p-10 mb-4">
-                    <h1 className="text-white text-3xl md:text-5xl font-bold mb-2">Phim Bom Tấn Của Tuần</h1>
-                    <p className="text-[#E0E0E0] md:text-lg max-w-xl mb-4">
-                      Trải nghiệm những thước phim hành động mãn nhãn và kỹ xảo đỉnh cao trên màn ảnh rộng.
-                    </p>
-                    <button className="flex min-w-[84px] max-w-[480px] bg-red-600 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-red-700 transition-colors">
-                      <span className="truncate">Đặt Vé Ngay</span>
-                    </button>
-                  </div>
-                </div>
-              )
-            })
-          }
-        </div>
-        {/* PREV / NEXT */}
-        {banners.map((_, i) => {
-          const prev = i === 0 ? banners.length - 1 : i - 1;
-          const next = i === banners.length - 1 ? 0 : i + 1;
-          return (
-            <div key={`arrow${i}`} className="absolute inset-0 flex items-center justify-between px-4">
-              <label htmlFor={`slide${prev}`} className={`peer-checked/slide${i}:block cursor-pointer bg-black/40 p-2 rounded-full text-white`}>❮</label>
+      {/* SLIDES */}
+      <div
+        className="flex transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {banners.map((banner, i) => (
+          <div key={i} className="relative w-full flex-shrink-0">
+            <img
+              src={banner.imageUrl}
+              className="w-full h-[500px] object-cover"
+              alt=""
+            />
 
-              <label htmlFor={`slide${next}`} className={`peer-checked/slide${i}:block cursor-pointer bg-black/40 p-2 rounded-full text-white`}>❯</label>
+            {/* TEXT */}
+            <div className="absolute bottom-10 left-10 text-white max-w-xl">
+              <h1 className="text-4xl font-bold mb-2">
+                Phim Bom Tấn Của Tuần
+              </h1>
+              <p className="mb-4">
+                Trải nghiệm những thước phim hành động mãn nhãn
+              </p>
+              <button className="bg-red-600 px-6 py-3 rounded-lg font-bold">
+                Đặt Vé Ngay
+              </button>
             </div>
-          )
-        })}
+          </div>
+        ))}
+      </div>
+
+      {/* PREV */}
+      <button
+        onClick={prev}
+        className="absolute left-4 top-1/2 -translate-y-1/2
+                   bg-black/50 p-3 rounded-full text-white z-10
+                   hover:bg-black/70 transition"
+      >
+        ❮
+      </button>
+
+      {/* NEXT */}
+      <button
+        onClick={next}
+        className="absolute right-4 top-1/2 -translate-y-1/2
+                   bg-black/50 p-3 rounded-full text-white z-10
+                   hover:bg-black/70 transition"
+      >
+        ❯
+      </button>
+
+      {/* INDICATORS */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+        {banners.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setIndex(i)}
+            className={`w-3 h-3 rounded-full transition
+              ${i === index ? "bg-red-500" : "bg-white/50"}
+            `}
+          />
+        ))}
       </div>
     </div>
   );
