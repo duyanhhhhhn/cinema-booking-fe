@@ -31,12 +31,13 @@ export default function NewsList() {
     };
     return colorMap[category] || "bg-gray-500";
   };
-  const modelConfig = {
-    path: '/news',
-    modal: 'NewsList'
-  }
-  const { data, isLoading, error } = useQuery(Post.getPosts(1, 12));
-  console.log("News data:", data);
+  const queryParam = useMemo(() => {
+    return {
+      page: 1,
+      perPage: 12
+    }
+  }, [])
+  const { data, refetch } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam), });
   const firstId = 1;
   const data2 = useQuery(Post.getPostsInfo(firstId));
   var first;

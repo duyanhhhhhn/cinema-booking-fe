@@ -41,25 +41,37 @@ export const initialPostData: PostFormData = {
     published_at: "",
 }
 const modelConfig = {
-    path: '/news',
+    path: '/public/posts',
     modal: 'NewsList'
 }
 export class Post extends Model {
     static queryKeys = {
         paginate: 'POSTS_PAGINATE_QUERY',
-        findOne: 'POSTS_FIND_ONE_QUERY'
+        findOne: 'POSTS_FIND_ONE_QUERY',
+        getRelate: 'POSTS_FIND_RELATE'
     }
     static objects = ObjectsFactory.factory<IPost>(modelConfig, this.queryKeys)
-    static getPosts(page = 1, size = 10) {
+    static getPosts() {
         return {
             queryKey: [this.queryKeys.paginate],
             queryFn: () => {
                 return this.api
                     .get<IPaginateResponse<IPost>>({
                         url: '/public/posts',
+                    })
+                    .then(r => r.data)
+            }
+        }
+    }
+    static getRelate(size, id) {
+        return {
+            queryKey: [this.queryKeys.getRelate],
+            queryFn: () => {
+                return this.api
+                    .get<IPaginateResponse<IPost>>({
+                        url: `/public/posts/${id}/relate`,
                         params: {
-                            page: page,
-                            size: size
+                            perPage: size,
                         }
                     })
                     .then(r => r.data)

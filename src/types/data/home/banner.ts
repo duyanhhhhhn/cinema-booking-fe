@@ -25,7 +25,7 @@ export const initialBannerData: BannerFormData = {
     position: "HOME"
 };
 const modelConfig = {
-    path: '/banner',
+    path: '/public/banner',
     modal: 'BannerList'
 }
 export class Banner extends Model {

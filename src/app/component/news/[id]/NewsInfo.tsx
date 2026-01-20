@@ -1,9 +1,9 @@
 import { Post } from "@/types/data/post/post";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { useMemo } from "react";
 
 export default function NewsInfo() {
-    const relateNews = [];
     const CommentSection = [];
     const CommentList = [];
     const ContentArea = [];
@@ -11,6 +11,17 @@ export default function NewsInfo() {
     const HeadLine = [];
     const param = useParams();
     const id = Number(param.id)
+    const size = 12
+    const queryParam = useMemo(() => {
+        return {
+            page: 1,
+            perPage: 12
+        }
+    }, [])
+    const relate = useQuery(Post.getRelate(size, id));
+    console.log(relate);
+    const datar = relate?.data?.data || [];
+    console.log(datar);
     const data = useQuery(Post.getPostsInfo(id));
     let numC = 6;
     let numTotalC = 10;
@@ -85,37 +96,6 @@ export default function NewsInfo() {
             </div>
         )
     }
-    for (let i = 1; i <= 3; i++) {
-        relateNews.push(
-            <div key={"a" + i} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                <a href="#">
-                    <img
-                        className="w-full h-40 object-cover"
-                        data-alt=""
-                        src="https://heritagevietnamairlines.cdn.vccloud.vn/wp-content/uploads/2025/02/Godzilla_-King-of-the-Monsters-2019-1024x683.png"
-                    />
-                </a>
-                <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
-                        <a
-                            className="hover:text-primary dark:hover:text-primary"
-                            href="#"
-                        >
-                            Phim 1
-                        </a>
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        Thông tin 1
-                    </p>
-                    <div className="mt-auto pt-3">
-                        <span className="text-xs text-gray-500 dark:text-gray-500">
-                            Ngày 1
-                        </span>
-                    </div>
-                </div>
-            </div>
-        )
-    }
 
     // ContentArea.push(
     //     <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
@@ -147,7 +127,7 @@ export default function NewsInfo() {
     //     </div>
     // )
     ContentArea.push(
-        <div className="text-white">
+        <div key={"content"} className="text-white">
             {data?.data && data?.data.content}
         </div>
     )
@@ -241,7 +221,35 @@ export default function NewsInfo() {
                                 Bài viết liên quan
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {relateNews}
+                                {datar.map(relates => {
+                                    return <div key={"relate" + relates.id} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                                        <a href="#">
+                                            <img
+                                                className="w-full h-40 object-cover"
+                                                data-alt=""
+                                                src={`${relates.coverUrl}`}
+                                            />
+                                        </a>
+                                        <div className="p-4 flex flex-col flex-grow">
+                                            <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
+                                                <a
+                                                    className="hover:text-primary dark:hover:text-primary"
+                                                    href="#"
+                                                >
+                                                    {relates.title}
+                                                </a>
+                                            </h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                {relates.excerpt}
+                                            </p>
+                                            <div className="mt-auto pt-3">
+                                                <span className="text-xs text-gray-500 dark:text-gray-500">
+                                                    {relates.publishedAt}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                })}
                             </div>
                         </div>
                         {/* Comments Section */}
