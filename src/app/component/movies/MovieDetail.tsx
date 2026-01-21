@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PlayCircleOutline, ConfirmationNumber } from "@mui/icons-material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 import { MoviePublic } from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 
 interface MovieDetailProps {
   movieId: string;
@@ -16,7 +16,9 @@ interface MovieDetailProps {
 export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [tabValue, setTabValue] = useState<number>(0);
   const [trailerOpen, setTrailerOpen] = useState<boolean>(false);
-  const { id } = useParams()
+  const { id } = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [reviewPage, setReviewPage] = useState(1);
 
@@ -24,38 +26,103 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     "rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.9)] backdrop-blur-xl";
   const glassCardSoft =
     "rounded-2xl border border-white/5 bg-black/40 shadow-[0_14px_35px_rgba(0,0,0,0.85)] backdrop-blur-lg";
-  // Fetch movie details
+
+  // ===== movie detail =====
   const dataMovieDetail = useQuery({
     ...MoviePublic.getMovieById(Number(id)),
-  })
-  console.log("dataMovieDetail",dataMovieDetail?.data);
+  });
   const movie = dataMovieDetail.data?.data;
 
-  // Fetch movie reviews
+  // ===== reviews list =====
   const dataMovieReviews = useQuery({
     ...MovieReview.getAllReviewByMovieId(Number(id)),
   });
-  console.log("dataMovieReviews",dataMovieReviews?.data);
   const reviews = dataMovieReviews.data?.data;
-  
-  // Fetch movie count summary rating
+
+  // ===== rating summary =====
   const dataMovieCountRating = useQuery({
     ...MovieReview.getCountRatingByMovieId(Number(id)),
   });
-  console.log("dataMovieCountRating",dataMovieCountRating?.data);
   const reviews_rating = dataMovieCountRating.data?.data;
 
-  console.log("reviews status:", dataMovieReviews.status, dataMovieReviews.fetchStatus, dataMovieReviews.error);
-  console.log("rating status:", dataMovieCountRating.status, dataMovieCountRating.fetchStatus, dataMovieCountRating.error);
+  // ===== userId (simple) =====
+  const [userId, setUserId] = useState<number | null>(null);
 
+  useEffect(() => {
+    try {
+      const raw =
+        localStorage.getItem("userId") ||
+        localStorage.getItem("user_id") ||
+        localStorage.getItem("auth.userId");
+      const n = raw ? Number(raw) : NaN;
+      setUserId(Number.isFinite(n) && n > 0 ? Math.floor(n) : null);
+    } catch {
+      setUserId(null);
+    }
+  }, []);
 
-  // Cast to array by string
-  const cast_list =
-  (movie?.cast ?? "")
+  // ===== create review form =====
+  const [ratingInput, setRatingInput] = useState<number>(5);
+  const [commentInput, setCommentInput] = useState<string>("");
+
+  // show warning only after submit attempt
+  const [needLogin, setNeedLogin] = useState(false);
+  const [formError, setFormError] = useState<string>("");
+
+  const goLogin = () => {
+    const next = pathname || `/movies/${id}`;
+    router.push(`/login?next=${encodeURIComponent(next)}`);
+  };
+
+  const createCommentMutation = useMutation({
+    mutationFn: async () => {
+      if (!userId) {
+        const e: any = new Error("NEED_LOGIN");
+        e.code = "NEED_LOGIN";
+        throw e;
+      }
+      // dùng đúng factory bạn đang có (giữ style)
+      return MovieReview.createComment(userId, Number(id), ratingInput, commentInput).queryFn();
+    },
+    onSuccess: async () => {
+      setFormError("");
+      setNeedLogin(false);
+      setCommentInput("");
+      setRatingInput(5);
+      await Promise.all([dataMovieReviews.refetch(), dataMovieCountRating.refetch()]);
+    },
+    onError: (err: any) => {
+      if (err?.message === "NEED_LOGIN" || err?.code === "NEED_LOGIN") {
+        setNeedLogin(true);
+        setFormError("");
+        return;
+      }
+      setFormError(err?.message || "Gửi đánh giá thất bại. Vui lòng thử lại.");
+    },
+  });
+
+  const onSubmitReview = () => {
+    setFormError("");
+
+    const c = commentInput.trim();
+    if (!c) {
+      setFormError("Vui lòng nhập nội dung bình luận.");
+      return;
+    }
+    if (!Number.isFinite(ratingInput) || ratingInput < 1 || ratingInput > 5) {
+      setFormError("Rating không hợp lệ.");
+      return;
+    }
+
+    createCommentMutation.mutate();
+  };
+
+  // ===== Cast list =====
+  const cast_list = (movie?.cast ?? "")
     .split(",")
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
-  
+
   const IMAGE_BASE = (process.env.NEXT_PUBLIC_IMAGE_URL ?? "").replace(/\/+$/, "");
 
   const resolveUrl = (raw?: string | null, fallback?: string) => {
@@ -69,7 +136,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   return (
     <main className="">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/banner/placeholder.jpg")}")` }} />
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/banner/placeholder.jpg")}")`,
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-red-950/40 backdrop-blur-md" />
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-32">
@@ -77,7 +149,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/70">
               <img
                 alt={`${movie?.title} Poster`}
-                  src={resolveUrl(movie?.posterUrl, "/poster/placeholder.jpg")}                className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
+                src={resolveUrl(movie?.posterUrl, "/poster/placeholder.jpg")}
+                className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
                 onError={(e) => {
                   const img = e.currentTarget as HTMLImageElement;
                   if (img.dataset.fallback === "1") return;
@@ -96,7 +169,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <div className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm shadow backdrop-blur-md">
-                <span className="material-symbols-outlined text-base align-middle text-yellow-400">star</span>
+                <span className="material-symbols-outlined text-base align-middle text-yellow-400">
+                  star
+                </span>
                 <span className="font-semibold">{reviews_rating?.avgRating}</span>
                 <span className="text-xs text-slate-300">/ 5</span>
               </div>
@@ -109,15 +184,15 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 {movie?.durationMinutes} phút
               </div>
             </div>
-              <ul className="flex flex-wrap gap-2">
-                {movie?.genre && (
-                  <li
-                    className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-slate-100 backdrop-blur-md"
-                  >
-                    {movie?.genre}
-                  </li>
-                )}
-              </ul>
+
+            <ul className="flex flex-wrap gap-2">
+              {movie?.genre && (
+                <li className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-slate-100 backdrop-blur-md">
+                  {movie?.genre}
+                </li>
+              )}
+            </ul>
+
             <div className="mt-2 flex flex-wrap gap-3">
               <a
                 href={movie?.trailerUrl}
@@ -142,6 +217,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col gap-10 lg:flex-row">
             <div className="flex-1 space-y-10">
+              {/* ===== INFO ===== */}
               <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">Thông Tin Phim</h2>
 
@@ -203,6 +279,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
+              {/* ===== SHOWTIME ===== */}
               <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">Lịch Chiếu</h2>
 
@@ -238,67 +315,128 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
                 </div>
               </section>
-                      {/* ====== REVIEW SECTION ====== */}
-<section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
-  <h2 className="mb-5 text-xl font-semibold md:text-2xl">
-    Đánh giá & Bình luận
-  </h2>
 
-          {/* Summary */}
-          <div className="mb-6 flex items-center gap-4">
-            <div className="flex items-center gap-1 rounded-full bg-black/40 px-4 py-2 text-sm backdrop-blur-md">
-              <span className="material-symbols-outlined text-yellow-400">star</span>
-              <span className="font-semibold text-slate-100">
-                {reviews_rating?.avgRating ?? 0}
-              </span>
-              <span className="text-slate-300">/ 5</span>
-            </div>
+              {/* ====== REVIEW SECTION (FIXED UX) ====== */}
+              <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
+                <h2 className="mb-5 text-xl font-semibold md:text-2xl">Đánh giá & Bình luận</h2>
 
-            <span className="text-sm text-slate-300">
-              {reviews_rating?.avgRating} đánh giá
-            </span>
-          </div>
+                {/* Summary */}
+                <div className="mb-6 flex items-center gap-4">
+                  <div className="flex items-center gap-1 rounded-full bg-black/40 px-4 py-2 text-sm backdrop-blur-md">
+                    <span className="material-symbols-outlined text-yellow-400">star</span>
+                    <span className="font-semibold text-slate-100">{reviews_rating?.avgRating ?? 0}</span>
+                    <span className="text-slate-300">/ 5</span>
+                  </div>
 
-          {/* Review list */}
-          {(reviews?.length ?? 0) === 0 ? (
-            <p className="text-sm text-slate-400">
-              Chưa có đánh giá nào cho phim này.
-            </p>
-          ) : (
-            <ul className="space-y-4">
-              {reviews.map((review) => (
-                <li
-                  key={review.id}
-                  className="rounded-xl border border-white/10 bg-black/40 p-4 backdrop-blur-md"
-                >
-                  {/* Header */}
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-100">
-                      Người dùng #{review.userId}
-                    </span>
+                  <span className="text-sm text-slate-300">{reviews?.length ?? 0} đánh giá</span>
+                </div>
 
-                    <div className="flex items-center gap-1 text-xs text-yellow-400">
-                      <span className="material-symbols-outlined text-sm">star</span>
-                      <span>{review.rating}</span>
-                      <span className="text-slate-300">/5</span>
+                {/* Form (always show) */}
+                <div className="mb-6 rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-200">Rating</span>
+                      <select
+                        value={ratingInput}
+                        onChange={(e) => setRatingInput(Number(e.target.value))}
+                        className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+                      >
+                        {[5, 4, 3, 2, 1].map((v) => (
+                          <option key={v} value={v}>
+                            {v} / 5
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="sm:ml-auto flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCommentInput("");
+                          setRatingInput(5);
+                          setFormError("");
+                          setNeedLogin(false);
+                        }}
+                        className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/85 hover:bg-white/10"
+                      >
+                        Xóa
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={createCommentMutation.isPending}
+                        onClick={onSubmitReview}
+                        className="rounded-xl bg-red-500 px-4 py-2 text-sm font-extrabold text-slate-950 hover:bg-red-400 disabled:opacity-60"
+                      >
+                        {createCommentMutation.isPending ? "Đang gửi..." : "Gửi"}
+                      </button>
                     </div>
                   </div>
 
-                  {/* Comment */}
-                  <p className="text-sm text-slate-200">
-                    {review.comment}
-                  </p>
+                  <textarea
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value)}
+                    rows={3}
+                    placeholder="Chia sẻ cảm nhận của bạn về bộ phim..."
+                    className="mt-3 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40"
+                  />
 
-                  {/* Date */}
-                  <p className="mt-2 text-xs text-slate-400">
-                    {new Date(review.createdAt).toLocaleDateString("vi-VN")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                  {/* Warning only after user clicks submit */}
+                  {needLogin ? (
+                    <div className="mt-3 flex flex-col gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3">
+                      <p className="text-sm font-semibold text-red-200">
+                        Bạn cần đăng nhập để thực hiện chức năng đánh giá.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={goLogin}
+                        className="w-fit rounded-lg bg-red-500 px-4 py-2 text-sm font-extrabold text-slate-950 hover:bg-red-400"
+                      >
+                        Đăng nhập
+                      </button>
+                    </div>
+                  ) : null}
 
+                  {formError ? (
+                    <p className="mt-3 text-sm font-semibold text-red-300">{formError}</p>
+                  ) : null}
+                </div>
+
+                {/* Review list */}
+                {(reviews?.length ?? 0) === 0 ? (
+                  <p className="text-sm text-slate-400">Chưa có đánh giá nào cho phim này.</p>
+                ) : (
+                  <ul className="space-y-4">
+                    {reviews.map((review: any) => (
+                      <li
+                        key={review.id}
+                        className="rounded-xl border border-white/10 bg-black/40 p-4 backdrop-blur-md"
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-slate-100">
+                            Người dùng #{review.userId}
+                          </span>
+
+                          <div className="flex items-center gap-1 text-xs text-yellow-400">
+                            <span className="material-symbols-outlined text-sm">star</span>
+                            <span>{review.rating}</span>
+                            <span className="text-slate-300">/5</span>
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-slate-200">{review.comment}</p>
+
+                        <p className="mt-2 text-xs text-slate-400">
+                          {review.createdAt
+                            ? new Date(review.createdAt).toLocaleDateString("vi-VN")
+                            : ""}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
 
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
@@ -318,6 +456,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </button>
                 </div>
               </section>
+
               <section className={`${glassCard} p-4`}>
                 <h2 className="mb-4 text-base font-semibold md:text-lg">Phim Hot</h2>
 
@@ -332,7 +471,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-black/40 p-2 text-left shadow-[0_10px_28px_rgba(0,0,0,0.75)] backdrop-blur-lg transition hover:border-red-400/60 hover:bg-red-900/40"
                     >
                       <div className="h-16 w-12 overflow-hidden rounded-lg bg-slate-700">
-                        <img src={item?.poster} alt={item?.title} className="h-full w-full object-cover" />
+                        <img src={item?.poster as any} alt={item?.title} className="h-full w-full object-cover" />
                       </div>
 
                       <div className="flex flex-1 flex-col">

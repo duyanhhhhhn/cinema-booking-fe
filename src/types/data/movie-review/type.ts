@@ -12,3 +12,10 @@ export interface IRatingSummary {
     avgRating: number;
     ratingCount: number;
 }
+
+export interface ICreateReview {
+    userId: number;
+    movieId: number;
+    rating: number;
+    comment: string;
+}
