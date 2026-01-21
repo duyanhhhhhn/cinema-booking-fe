@@ -1,7 +1,7 @@
 import { Post } from "@/types/data/post/post";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function NewsInfo() {
     const CommentSection = [];
@@ -12,16 +12,24 @@ export default function NewsInfo() {
     const param = useParams();
     const id = Number(param.id)
     const size = 12
+
     const queryParam = useMemo(() => {
         return {
             page: 1,
             perPage: 12
         }
-    }, [])
+    }, []);
     const relate = useQuery(Post.getRelate(size, id));
-    console.log(relate);
     const datar = relate?.data?.data || [];
-    console.log(datar);
+    const relateNews = []
+    for (let i = 0; i < datar.length; i += 2) {
+        let push = [];
+        for (let j = i; j < 3; j++) {
+            push.push(datar[j]);
+        }
+        relateNews.push(push);
+    }
+    console.log(relateNews);
     const data = useQuery(Post.getPostsInfo(id));
     let numC = 6;
     let numTotalC = 10;
@@ -89,13 +97,98 @@ export default function NewsInfo() {
     )
     if (numTotalC >= numC) {
         LoadCommentsButton.push(
-            <div className="mt-4 flex justify-center items-center">
+            <div key={"btn"} className="mt-4 flex justify-center items-center">
                 <button className="bg-red-500 rounded-lg w-75 py-3 hover:text-gray-200 hover:bg-red-600 hover:border-white">
                     <span className="truncate text-white">Tải thêm bình luận</span>
                 </button>
             </div>
         )
     }
+    const [index, setIndex] = useState(0)
+    const total = relateNews.length;
+
+    if (!total) return null;
+    const next = () => setIndex((prev) => (prev + 1) % total);
+    const prev = () => setIndex((prev) => (prev - 1 + total) % total);
+    const relateNew = [];
+    relateNew.push(
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.isArray(datar) && datar.length === 0 && <div key={"none"} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                No relate News
+            </div>}
+            {
+                relateNews.map(news => {
+                    let i = 1;
+                    return news.map(item => {
+                        return <div key={"relate" + item.id} className="flex flex-col bg-white transition-transform duration-700 ease-in-out rounded-lg overflow-hidden">
+                            <div
+                                style={{ transform: `translateX(-${index * 500}%)` }}>
+                                <a href="#">
+                                    <img
+                                        className="w-full h-40 object-cover"
+                                        data-alt=""
+                                        src={`${item.coverUrl}`}
+                                    />
+                                </a>
+                                <div className="p-4 flex flex-col flex-grow">
+                                    <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
+                                        <a
+                                            className="hover:text-primary dark:hover:text-primary"
+                                            href="#"
+                                        >
+                                            {item.title}
+                                        </a>
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                        {item.excerpt}
+                                    </p>
+                                    <div className="mt-auto pt-3">
+                                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                                            {item.publishedAt}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    })
+                })
+            }
+
+            {/* PREV */}
+            <button
+                onClick={prev}
+                className="absolute left-4 top-1/2 -translate-y-1/2
+                   bg-black/50 p-3 rounded-full text-white z-10
+                   hover:bg-black/70 transition"
+            >
+                ❮
+            </button>
+
+            {/* NEXT */}
+            <button
+                onClick={next}
+                className="absolute right-4 top-1/2 -translate-y-1/2
+                   bg-black/50 p-3 rounded-full text-white z-10
+                   hover:bg-black/70 transition"
+            >
+                ❯
+            </button>
+
+            {/* INDICATORS */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+                {datar.map((_, i) => (
+                    <button
+                        key={i}
+                        onClick={() => setIndex(i)}
+                        className={`w-3 h-3 rounded-full transition
+              ${i === index ? "bg-red-500" : "bg-white/50"}
+            `}
+                    />
+                ))}
+            </div>
+        </div>
+    )
 
     // ContentArea.push(
     //     <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
@@ -220,40 +313,7 @@ export default function NewsInfo() {
                             <h2 className="text-2xl font-bold text-white">
                                 Bài viết liên quan
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {Array.isArray(datar) && datar.length === 0 && <div key={"none"} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                                    No relate News
-                                </div>}
-                                {datar.map(relates => {
-                                    return <div key={"relate" + relates.id} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                                        <a href="#">
-                                            <img
-                                                className="w-full h-40 object-cover"
-                                                data-alt=""
-                                                src={`${relates.coverUrl}`}
-                                            />
-                                        </a>
-                                        <div className="p-4 flex flex-col flex-grow">
-                                            <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
-                                                <a
-                                                    className="hover:text-primary dark:hover:text-primary"
-                                                    href="#"
-                                                >
-                                                    {relates.title}
-                                                </a>
-                                            </h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                                {relates.excerpt}
-                                            </p>
-                                            <div className="mt-auto pt-3">
-                                                <span className="text-xs text-gray-500 dark:text-gray-500">
-                                                    {relates.publishedAt}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                })}
-                            </div>
+                            {relateNew}
                         </div>
                         {/* Comments Section */}
                         {CommentSection}
