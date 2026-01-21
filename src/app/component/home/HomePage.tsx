@@ -69,7 +69,8 @@ export default function HomePage() {
   const queryKey = useMemo(() => {
     return {
       page: 1,
-      perPage: 3
+      perPage: 3,
+      id: 0
     }
   }, [])
   const data1 = useQuery({ ...Post.objects.paginateQueryFactory(queryKey), });

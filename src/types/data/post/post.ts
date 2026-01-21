@@ -63,21 +63,6 @@ export class Post extends Model {
             }
         }
     }
-    static getRelate(size, id) {
-        return {
-            queryKey: [this.queryKeys.getRelate],
-            queryFn: () => {
-                return this.api
-                    .get<IPaginateResponse<IPost>>({
-                        url: `/public/posts/${id}/relate`,
-                        params: {
-                            perPage: size,
-                        }
-                    })
-                    .then(r => r.data)
-            }
-        }
-    }
     static getPostsInfo(id) {
         return {
             queryKey: [this.queryKeys.findOne],

@@ -34,7 +34,8 @@ export default function NewsList() {
   const queryParam = useMemo(() => {
     return {
       page: 1,
-      perPage: 12
+      perPage: 12,
+      id: 0
     }
   }, [])
   const { data, refetch } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam), });
@@ -51,6 +52,7 @@ export default function NewsList() {
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  console.log(posts)
   const searchPosts = useMemo(() => {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;

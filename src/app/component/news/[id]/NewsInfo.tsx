@@ -16,11 +16,13 @@ export default function NewsInfo() {
     const queryParam = useMemo(() => {
         return {
             page: 1,
-            perPage: 12
+            perPage: 12,
+            id: id
         }
     }, []);
-    const relate = useQuery(Post.getRelate(size, id));
+    const relate = useQuery(Post.objects.paginateQueryFactory(queryParam));
     const datar = relate?.data?.data || [];
+    console.log(datar);
     const relateNews = []
     for (let i = 0; i < datar.length; i += 2) {
         let push = [];
@@ -112,7 +114,7 @@ export default function NewsInfo() {
     const prev = () => setIndex((prev) => (prev - 1 + total) % total);
     const relateNew = [];
     relateNew.push(
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div key={"relate"} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.isArray(datar) && datar.length === 0 && <div key={"none"} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
                 No relate News
             </div>}
