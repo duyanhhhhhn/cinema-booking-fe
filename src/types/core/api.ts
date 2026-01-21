@@ -132,7 +132,8 @@ export class Api {
             originalRequest.url?.includes("/auth/login") ||
             originalRequest.url?.includes("/auth/refresh")
           ) {
-            return Promise.reject(error);
+            // return Promise.reject(error);
+            return this.handleError(error);
           }
 
           try {

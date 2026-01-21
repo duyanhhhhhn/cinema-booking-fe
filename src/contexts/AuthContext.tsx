@@ -27,7 +27,7 @@ export interface User {
   fullName?: string;
   phone?: string;
   role: Role;
-  avatar?: string;
+  avatar: string;
   createdAt: string;
 }
 
@@ -57,6 +57,7 @@ interface AuthContextType {
 
   // Loading states from mutations
   isLoggingIn: boolean;
+
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,7 +86,7 @@ function decodeToken(token: string): User | null {
       fullName: decoded.fullName || decoded.full_name || decoded.name,
       phone: decoded.phone,
       role: decoded.role || UserRole.CLIENT,
-      avatar: decoded.avatar,
+      avatar: decoded.avatarUrl,
       createdAt: decoded.createdAt || decoded.iat,
     };
   } catch (error) {
@@ -99,8 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Sử dụng useLoginMutation có sẵn
-  const loginMutation = useLoginMutation();
-
+  const loginMutation = useLoginMutation();  
   /**
    * Khởi tạo auth state từ localStorage
    */
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fullName: userData.fullName || userData.full_name || userData.name,
             phone: userData.phone,
             role: userData.role || UserRole.CLIENT,
-            avatar: userData.avatar,
+            avatar: userData.avatarUrl,
             createdAt: userData.createdAt || userData.iat,
           });
         } else {
@@ -221,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               fullName: userData.fullName || userData.full_name || userData.name,
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
-              avatar: userData.avatar,
+              avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
             });
           }
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               fullName: userData.fullName || userData.full_name || userData.name,
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
-              avatar: userData.avatar,
+              avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
             });
           } else {
@@ -314,6 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await initializeAuth();
   };
 
+ 
   // Computed values
   const isAuthenticated = !!user;
   const userIsAdmin = user ? isAdmin(user.role) : false;
