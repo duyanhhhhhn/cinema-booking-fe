@@ -48,6 +48,7 @@ export default function Header() {
     if (!name) return "U";
     return name.charAt(0).toUpperCase();
   };
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
 
   return (
     <header className="bg-[#1a1a1a] border-b border-gray-800 sticky top-0 z-50">
@@ -111,7 +112,7 @@ export default function Header() {
                       bgcolor: "#dc2626",
                       fontSize: "1rem",
                     }}
-                    src={user.avatar}
+                    src={urlImage + user.avatar}
                   >
                     {getInitials(user.fullName || user.email)}
                   </Avatar>
