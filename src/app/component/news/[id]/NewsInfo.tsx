@@ -16,7 +16,7 @@ export default function NewsInfo() {
     const queryParam = useMemo(() => {
         return {
             page: 1,
-            perPage: 12,
+            perPage: 6,
             id: id
         }
     }, []);
@@ -119,41 +119,38 @@ export default function NewsInfo() {
                 No relate News
             </div>}
             {
-                relateNews.map(news => {
-                    let i = 1;
-                    return news.map(item => {
-                        return <div key={"relate" + item.id} className="flex flex-col bg-white transition-transform duration-700 ease-in-out rounded-lg overflow-hidden">
-                            <div
-                                style={{ transform: `translateX(-${index * 500}%)` }}>
-                                <a href="#">
-                                    <img
-                                        className="w-full h-40 object-cover"
-                                        data-alt=""
-                                        src={`${item.coverUrl}`}
-                                    />
-                                </a>
-                                <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
-                                        <a
-                                            className="hover:text-primary dark:hover:text-primary"
-                                            href="#"
-                                        >
-                                            {item.title}
-                                        </a>
-                                    </h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                        {item.excerpt}
-                                    </p>
-                                    <div className="mt-auto pt-3">
-                                        <span className="text-xs text-gray-500 dark:text-gray-500">
-                                            {item.publishedAt}
-                                        </span>
-                                    </div>
+                datar.map(item => {
+                    return <div key={"relate" + item.id} className="flex flex-col bg-white transition-transform duration-700 ease-in-out rounded-lg overflow-hidden">
+                        <div
+                            style={{ transform: `translateX(-${index * 500}%)` }}>
+                            <a href={`/news/${item.id}`}>
+                                <img
+                                    className="w-full h-40 object-cover"
+                                    data-alt=""
+                                    src={`${item.coverUrl}`}
+                                />
+                            </a>
+                            <div className="p-4 flex flex-col flex-grow">
+                                <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
+                                    <a
+                                        className="hover:text-primary dark:hover:text-primary"
+                                        href="#"
+                                    >
+                                        {item.title}
+                                    </a>
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                    {item.excerpt}
+                                </p>
+                                <div className="mt-auto pt-3">
+                                    <span className="text-xs text-gray-500 dark:text-gray-500">
+                                        {item.publishedAt}
+                                    </span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                    })
                 })
             }
 

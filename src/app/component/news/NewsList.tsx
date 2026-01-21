@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import {
   Box,
   Card,
@@ -18,8 +16,8 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { IPost, Post } from "@/types/data/post/post";
-import { set } from "react-hook-form";
 import CustomPagination from "../admin/table/CustomPagination";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,14 +29,15 @@ export default function NewsList() {
     };
     return colorMap[category] || "bg-gray-500";
   };
+  const { searchQuery } = useRouteQuery();
   const queryParam = useMemo(() => {
     return {
-      page: 1,
-      perPage: 12,
+      page: searchQuery.get("page") || 1,
+      perPage: searchQuery.get("perPage") || 6,
       id: 0
     }
-  }, [])
-  const { data, refetch } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam), });
+  }, [searchQuery])
+  const { data, refetch: refetchPost } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam) });
   const firstId = 1;
   const data2 = useQuery(Post.getPostsInfo(firstId));
   var first;
@@ -53,6 +52,7 @@ export default function NewsList() {
     item.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
   console.log(posts)
+  console.log(data?.meta);
   const searchPosts = useMemo(() => {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;
@@ -208,7 +208,7 @@ export default function NewsList() {
             })}
           </section>
           {/* Pagination */}
-          <div className="flex justify-center pt-8 pb-12 text-white">
+          <div className="flex justify-center pt-8 pb-12 text-white bg-gray-400">
             <CustomPagination
               totalItems={data?.meta?.total || 0}
               itemsPerPage={data?.meta?.perPage || 0}
