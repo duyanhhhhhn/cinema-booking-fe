@@ -32,8 +32,8 @@ export default function LoginPage() {
         setError(result.error || "Đăng nhập thất bại");
       }
     } catch (err: any) {
-      setError(err?.message || "Có lỗi xảy ra, vui lòng thử lại");
-    }
+  setError(err.message);
+}
   };
 
   return (
