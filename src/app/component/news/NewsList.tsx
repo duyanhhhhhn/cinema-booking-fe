@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -16,55 +16,12 @@ import {
   InputAdornment,
   colors,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { IPost, Post } from "@/types/data/post/post";
+import { set } from "react-hook-form";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Sample data - replace with API call
-  const news = [
-    {
-      id: 1,
-      title: "Khuyến mãi cuối tuần - Giảm 20% tất cả vé",
-      category: "Khuyến mãi",
-      description: "Áp dụng cho tất cả các suất chiếu vào cuối tuần. Chương trình có hạn, nhanh tay đặt vé ngay!",
-      image: "/logo/logo.png",
-      date: "2024-01-20",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Phim mới: Avengers: Secret Wars ra mắt",
-      category: "Tin tức",
-      description: "Phim bom tấn Avengers: Secret Wars chính thức ra mắt tại các rạp CineMax. Đừng bỏ lỡ!",
-      image: "/logo/logo.png",
-      date: "2024-01-18",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "Review: The Last Kingdom - Tác phẩm điện ảnh xuất sắc",
-      category: "Review",
-      description: "Đánh giá chi tiết về bộ phim The Last Kingdom với những điểm nhấn đặc biệt và diễn xuất ấn tượng.",
-      image: "/logo/logo.png",
-      date: "2024-01-15",
-      featured: false,
-    },
-    {
-      id: 4,
-      title: "Combo gia đình - Ưu đãi đặc biệt tháng 1",
-      category: "Khuyến mãi",
-      description: "Mua combo gia đình với giá ưu đãi đặc biệt. Áp dụng cho khách hàng đặt vé online.",
-      image: "/logo/logo.png",
-      date: "2024-01-10",
-      featured: false,
-    },
-  ];
-
-  const filteredNews = news.filter((item) =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const getCategoryColor = (category) => {
     const colorMap = {
       "Khuyến mãi": "bg-red-500",
@@ -73,44 +30,76 @@ export default function NewsList() {
     };
     return colorMap[category] || "bg-gray-500";
   };
-  const newsList = [];
-  for (let i = 0; i < 6; i++) {
-    newsList.push(
-      <article key={i} style={{ borderColor: "#261c1c" }} className="group flex flex-col h-full bg-[#261c1c] rounded-xl border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1 cursor-pointer">
-        <div className="relative h-56 overflow-hidden">
-          <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider border border-white/10">
-            Type
-          </div>
-          <div
-            className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-            data-alt="Popcorn buckets and movie tickets on a red background"
-            style={{
-              backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfcOMf9dvqF8Bb27K3EjwnObdskh8lDj2vz7It0Xv9d1jeOInheB4YA7jRE8kvAAtGhMNmcYOg_Y5cFDbXWzblSZtqQqGaJYrVp6EJslWNei7LtY5_NDFrSOukf3_AMZjpIupwXq9pWVHZd9zxcOdnA3iQZPY8PYqEaHp0q6dLdwpEiMHnMH_UvXaeGz8PfN1C6dsQNB0RJH7y4A-KQURVIAX-UAEawQwA1_NrLSbxLiY42Zdm56bUjPAbZue9ZU31FQpEtD_SJQae")'
-            }}
-          ></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60" />
-        </div>
-        <div className="flex flex-col flex-1 p-5 gap-3">
-          <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-            Title
-          </h3>
-          <p style={{ color: "#9c8486" }} className="text-text-muted text-sm line-clamp-2 leading-relaxed mb-auto">
-            des
-          </p>
-          <div style={{ color: "#9c8486" }} className="flex items-center justify-between pt-4 border-t border-border-dark mt-2">
-            <span className="text-xs text-text-muted font-medium">
-              created date
-            </span>
-            <a href="/news/1" className="text-xs font-bold text-red-500 flex items-center gap-1 group/btn">
-              Info
-            </a>
-          </div>
-        </div>
-      </article>
-    )
+  const modelConfig = {
+    path: '/news',
+    modal: 'NewsList'
   }
+  const { data, isLoading, error } = useQuery(Post.getPosts());
+  const firstId = 1;
+  const data2 = useQuery(Post.getPostsInfo(firstId));
+  var first;
+  if (data2 != null && data2?.data != undefined) {
+    first = data2?.data;
+  }
+  const firstDate = new Date(first?.publishedAt).toLocaleDateString();
+  const posts = data?.data ?? [];
+  const [sortKey, setSortKey] = useState<'newest' | 'oldest'>('newest');
+  const filteredNews = posts.filter((item) =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const searchPosts = useMemo(() => {
+    if (!posts.length) return [];
+    if (searchTerm === "") return posts;
+    return posts.filter((post) =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [posts, searchTerm]);
+  const sortedPosts = useMemo(() => {
+    if (!searchPosts.length) return [];
 
+    const sorted = [...searchPosts];
+
+    return sortKey === 'newest'
+      ? sorted.sort(
+        (a, b) =>
+          new Date(b.publishedAt).getTime() -
+          new Date(a.publishedAt).getTime()
+      )
+      : sorted.sort(
+        (a, b) =>
+          new Date(a.publishedAt).getTime() -
+          new Date(b.publishedAt).getTime()
+      );
+  }, [searchPosts, sortKey]);
+  const paginate = [];
+  paginate.push(
+    <ul key={"paging"} className="flex -space-x-px items-center gap-2 px-8 py-3 rounded-lg text-white font-bold hover:bg-primary hover:border-primary transition-all duration-300 group shadow-lg">
+      {data?.meta?.page > data?.meta?.totalPages && <li>
+        <a href="#" className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-s-base text-sm px-3 h-9 focus:outline-none">Previous</a>
+      </li>}
+      <li>
+        <a href={`/news/${data?.meta?.page}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page}</a>
+      </li>
+      {data?.meta?.page + 1 <= data?.meta?.totalPages && <li>
+        <a href={`/news/${data?.meta?.page + 1}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 1}</a>
+      </li>}
+      {data?.meta?.page + 2 <= data?.meta?.totalPages && <li>
+        <a href={`/news/${data?.meta?.page + 2}`} className="flex items-center justify-center text-fg-brand bg-neutral-tertiary-medium box-border border border-default-medium hover:text-fg-brand font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 2}</a>
+      </li>}
+      {data?.meta?.page + 3 <= data?.meta?.totalPages && <li>
+        <a href={`/news/${data?.meta?.page + 3}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 3}</a>
+      </li>}
+      {data?.meta?.page + 4 <= data?.meta?.totalPages && <li>
+        <a href={`/news/${data?.meta?.page + 4}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 4}</a>
+      </li>}
+      {data?.meta?.page + 5 < data?.meta?.totalPages && <li>
+        <a href="#" className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-e-base text-sm px-3 h-9 focus:outline-none">Next</a>
+      </li>}
+    </ul>
+  );
   return (
     <>
       <>
@@ -126,34 +115,34 @@ export default function NewsList() {
                   data-alt="Cinematic shot of a desert landscape from a new movie"
                   style={{
                     backgroundImage:
-                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCMscBGmmVnlcVX2O3CBrXlFfSIUnKQzMFHgTNzQo_0cROn_LAdytJbgF-tjFN84BG9mohS1zV6rX-rJhoEk0v88HtAj4eCxMG7_cKK3X0P3SovX5yz1UcNLbNXdWFAYYKDWMNJQ87hmYOE-L4ERMgYierqem2RxC18WvAV8xa78HANV-vEccOGAzgyercHGQqWFUiStFJ2UD0ZDjwtPCpnsVRjITnYd9cEplEaFo6biXfmqkTTh9fqrzU_1CA-NwAZ98eDQhVg15V_")'
+                      `url(${first?.coverUrl})`,
                   }}
                 ></div>
                 {/* Badge for mobile */}
                 <span className="absolute top-4 left-4 z-20 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  cate
+                  {first?.category}
                 </span>
               </div>
               <div className="flex flex-col justify-center p-6 lg:p-12 gap-6 relative">
                 <div className="flex flex-col gap-4">
                   <span className="hidden lg:inline-block w-fit bg-red-900 outline text-red-600 outline-solid outline-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                    cate
+                    {first?.category}
                   </span>
                   <h1 className="text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight group-hover:text-primary transition-colors">
-                    Title
+                    {first?.title}
                   </h1>
                   <p className="text-gray-400 text-lg font-normal leading-relaxed line-clamp-3">
-                    ex content
+                    {first?.excerpt}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
                   <div className="flex items-center gap-1">
-                    <span>created date</span>
+                    <span>{firstDate}</span>
                   </div>
                   <div className="w-1 h-1 rounded-full bg-text-gray-500" />
                 </div>
                 <div className="mt-2">
-                  <a href="/news/1" className="inline-flex items-center gap-2 text-red-700 font-bold hover:text-white hover:bg-primary px-5 py-2.5 rounded-lg border border-primary transition-all duration-300">
+                  <a href={`/news/${firstId}`} className="inline-flex items-center gap-2 text-red-700 font-bold hover:text-white hover:bg-primary px-5 py-2.5 rounded-lg border border-primary transition-all duration-300">
                     <span>Đọc chi tiết</span>
                   </a>
                 </div>
@@ -176,12 +165,13 @@ export default function NewsList() {
                 <div className="relative w-full sm:w-64 bg-[#261c1c]">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-white">
                     <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                      <svg className="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" /></svg>
+                      <svg className="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" /></svg>
                     </div>
                   </div>
                   <input
                     className="block w-full rounded-lg border border-border-dark py-2.5 pl-10 pr-3 text-sm text-white focus:ring-1 placeholder-text-muted transition-colors"
                     placeholder="Tìm bài viết..."
+                    onChange={e => setSearchTerm(e.target.value)}
                     type="text"
                   />
                 </div>
@@ -191,44 +181,57 @@ export default function NewsList() {
                     <span className="material-symbols-outlined text-[20px]">
                     </span>
                   </div>
-                  <select className="block w-full bg-[#261c1c] rounded-lg border py-2.5 pl-10 pr-8 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer appearance-none transition-colors">
-                    <option>Mới nhất</option>
-                    <option>Cũ nhất</option>
-                    <option>Xem nhiều nhất</option>
+                  <select
+                    onChange={
+                      e => setSortKey(e.target.value as 'newest' | 'oldest')
+                    }
+                    className="block w-full bg-[#261c1c] rounded-lg border py-2.5 pl-10 pr-8 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer appearance-none transition-colors">
+                    <option value="newest">Mới nhất</option>
+                    <option value="oldest">Cũ nhất</option>
                   </select>
                 </div>
               </div>
             </div>
-            {/* Categories Chips */}
-            <div className="flex flex-wrap gap-3">
-              <button className="px-5 py-2 rounded-lg bg-red-500 text-white text-sm font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
-                Tất cả
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-orange-900 text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Khuyến mãi
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Review Phim
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Sự kiện
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Góc Điện Ảnh
-              </button>
-              <button style={{ backgroundColor: "#261c1c", color: "#9c8486" }} className="px-5 py-2 rounded-lg bg-surface-dark text-white border border-border-dark text-text-muted hover:text-white hover:border-white/20 text-sm font-medium transition-all hover:-translate-y-0.5">
-                Tuyển dụng
-              </button>
-            </div>
           </section>
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {newsList}
+            {sortedPosts.map(post => {
+              return <article key={post?.id} style={{ borderColor: "#261c1c" }} className="group flex flex-col h-full bg-[#261c1c] rounded-xl border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1 cursor-pointer">
+                <a href={`/news/${post?.id}`} className="relative h-56 overflow-hidden">
+                  <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider border border-white/10">
+                    {post?.category}
+                  </div>
+                  <div
+                    className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                    data-alt="Popcorn buckets and movie tickets on a red background"
+                    style={{
+                      backgroundImage: `url(${post?.coverUrl})`,
+                    }}
+                  ></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60" />
+                </a>
+                <div className="flex flex-col flex-1 p-5 gap-3">
+                  <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                    {post?.title}
+                  </h3>
+                  <p style={{ color: "#9c8486" }} className="text-text-muted text-sm line-clamp-2 leading-relaxed mb-auto">
+                    {post?.excerpt}
+                  </p>
+                  <div style={{ color: "#9c8486" }} className="flex items-center justify-between pt-4 border-t border-border-dark mt-2">
+                    <span className="text-xs text-text-muted font-medium">
+                      {post?.publishedAt}
+                    </span>
+                    <a href={`/news/${post?.id}`} className="text-xs font-bold text-red-500 flex items-center gap-1 group/btn">
+                      Info
+                    </a>
+                  </div>
+                </div>
+              </article>
+            })}
           </section>
           {/* Pagination */}
+
           <div className="flex justify-center pt-8 pb-12">
-            <button className="flex items-center gap-2 px-8 py-3 rounded-lg border bg-[#261c1c] text-white font-bold hover:bg-primary hover:border-primary transition-all duration-300 group shadow-lg">
-              Xem thêm nhiều tin cũ hơn
-            </button>
+            {paginate}
           </div>
         </main>
       </>
