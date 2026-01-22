@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { PlayCircleOutline, ConfirmationNumber } from "@mui/icons-material";
+import { PlayCircleOutline, ConfirmationNumber, Star } from "@mui/icons-material";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
 import { MoviePublic } from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
 import { useParams, useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MovieDetailProps {
   movieId: string;
@@ -19,6 +20,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const { id } = useParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const [reviewPage, setReviewPage] = useState(1);
 
@@ -27,45 +29,31 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const glassCardSoft =
     "rounded-2xl border border-white/5 bg-black/40 shadow-[0_14px_35px_rgba(0,0,0,0.85)] backdrop-blur-lg";
 
-  // ===== movie detail =====
   const dataMovieDetail = useQuery({
     ...MoviePublic.getMovieById(Number(id)),
   });
   const movie = dataMovieDetail.data?.data;
 
-  // ===== reviews list =====
   const dataMovieReviews = useQuery({
     ...MovieReview.getAllReviewByMovieId(Number(id)),
   });
   const reviews = dataMovieReviews.data?.data;
 
-  // ===== rating summary =====
   const dataMovieCountRating = useQuery({
     ...MovieReview.getCountRatingByMovieId(Number(id)),
   });
   const reviews_rating = dataMovieCountRating.data?.data;
 
-  // ===== userId (simple) =====
   const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    try {
-      const raw =
-        localStorage.getItem("userId") ||
-        localStorage.getItem("user_id") ||
-        localStorage.getItem("auth.userId");
-      const n = raw ? Number(raw) : NaN;
-      setUserId(Number.isFinite(n) && n > 0 ? Math.floor(n) : null);
-    } catch {
-      setUserId(null);
-    }
-  }, []);
+    const uid = Number((user as any)?.id);
+    setUserId(Number.isFinite(uid) && uid > 0 ? Math.floor(uid) : null);
+  }, [user]);
 
-  // ===== create review form =====
   const [ratingInput, setRatingInput] = useState<number>(5);
   const [commentInput, setCommentInput] = useState<string>("");
 
-  // show warning only after submit attempt
   const [needLogin, setNeedLogin] = useState(false);
   const [formError, setFormError] = useState<string>("");
 
@@ -76,13 +64,15 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const createCommentMutation = useMutation({
     mutationFn: async () => {
-      if (!userId) {
+      const uid = userId;
+
+      if (!uid) {
         const e: any = new Error("NEED_LOGIN");
         e.code = "NEED_LOGIN";
         throw e;
       }
-      // dùng đúng factory bạn đang có (giữ style)
-      return MovieReview.createComment(userId, Number(id), ratingInput, commentInput).queryFn();
+
+      return MovieReview.createComment(uid, Number(id), ratingInput, commentInput).queryFn();
     },
     onSuccess: async () => {
       setFormError("");
@@ -117,7 +107,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     createCommentMutation.mutate();
   };
 
-  // ===== Cast list =====
   const cast_list = (movie?.cast ?? "")
     .split(",")
     .map((s) => s.trim())
@@ -217,38 +206,46 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col gap-10 lg:flex-row">
             <div className="flex-1 space-y-10">
-              {/* ===== INFO ===== */}
               <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">Thông Tin Phim</h2>
 
                 <div className="grid gap-4 text-sm text-slate-100 md:grid-cols-2">
                   <div className="flex items-start gap-3">
                     <span>
-                      Khởi chiếu: <span className="font-semibold text-red-300">{movie?.releaseDate}</span>
+                      Khởi chiếu:{" "}
+                      <span className="font-semibold text-red-300">{movie?.releaseDate}</span>
                     </span>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <span>
-                      Đạo diễn: <span className="font-semibold text-red-300">{movie?.director}</span>
+                      Đạo diễn:{" "}
+                      <span className="font-semibold text-red-300">{movie?.director}</span>
                     </span>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <span>
-                      Thời lượng: <span className="font-semibold text-red-300">{movie?.durationMinutes} phút</span>
+                      Thời lượng:{" "}
+                      <span className="font-semibold text-red-300">
+                        {movie?.durationMinutes} phút
+                      </span>
                     </span>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <span>
-                      Đánh giá: <span className="font-semibold text-red-300">{reviews_rating?.avgRating}/5</span>
+                      Đánh giá:{" "}
+                      <span className="font-semibold text-red-300">
+                        {reviews_rating?.avgRating}/5
+                      </span>
                     </span>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <span>
-                      Ngôn ngữ: <span className="font-semibold text-red-300">{movie?.language}</span>
+                      Ngôn ngữ:{" "}
+                      <span className="font-semibold text-red-300">{movie?.language}</span>
                     </span>
                   </div>
 
@@ -260,7 +257,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
 
                 <div className="mt-6">
-                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-300">Diễn viên</h3>
+                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-300">
+                    Diễn viên
+                  </h3>
                   <ul className="flex flex-wrap gap-2 text-sm">
                     {cast_list?.map((actor) => (
                       <li
@@ -274,19 +273,22 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
 
                 <div className="mt-6">
-                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-300">Nội Dung Phim</h3>
+                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-300">
+                    Nội Dung Phim
+                  </h3>
                   <p className="text-sm leading-relaxed text-slate-200">{movie?.description}</p>
                 </div>
               </section>
 
-              {/* ===== SHOWTIME ===== */}
               <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">Lịch Chiếu</h2>
 
                 <div className="space-y-4">
                   <div className={`${glassCardSoft} p-4 md:p-5`}>
                     <h4 className="text-sm font-semibold md:text-base">CGV Vincom Center</h4>
-                    <p className="mt-1 text-xs text-slate-300 md:text-sm">191 Bà Triệu, Hai Bà Trưng, Hà Nội</p>
+                    <p className="mt-1 text-xs text-slate-300 md:text-sm">
+                      191 Bà Triệu, Hai Bà Trưng, Hà Nội
+                    </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {["10:00", "13:30", "16:45", "19:00", "21:30"].map((time) => (
                         <button
@@ -300,8 +302,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className={`${glassCardSoft} p-4 md:p-5`}>
-                    <h4 className="text-sm font-semibold md:text-base">Lotte Cinema Landmark</h4>
-                    <p className="mt-1 text-xs text-slate-300 md:text-sm">5B Nguyễn Du, Hai Bà Trưng, Hà Nội</p>
+                    <h4 className="text-sm font-semibold md:text-base">
+                      Lotte Cinema Landmark
+                    </h4>
+                    <p className="mt-1 text-xs text-slate-300 md:text-sm">
+                      5B Nguyễn Du, Hai Bà Trưng, Hà Nội
+                    </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {["11:15", "14:00", "17:15", "20:30"].map((time) => (
                         <button
@@ -316,37 +322,47 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              {/* ====== REVIEW SECTION (FIXED UX) ====== */}
               <section className={`${glassCard} p-5 md:p-6 lg:p-7`}>
                 <h2 className="mb-5 text-xl font-semibold md:text-2xl">Đánh giá & Bình luận</h2>
 
-                {/* Summary */}
                 <div className="mb-6 flex items-center gap-4">
                   <div className="flex items-center gap-1 rounded-full bg-black/40 px-4 py-2 text-sm backdrop-blur-md">
                     <span className="material-symbols-outlined text-yellow-400">star</span>
-                    <span className="font-semibold text-slate-100">{reviews_rating?.avgRating ?? 0}</span>
+                    <span className="font-semibold text-slate-100">
+                      {reviews_rating?.avgRating ?? 0}
+                    </span>
                     <span className="text-slate-300">/ 5</span>
                   </div>
 
                   <span className="text-sm text-slate-300">{reviews?.length ?? 0} đánh giá</span>
                 </div>
 
-                {/* Form (always show) */}
                 <div className="mb-6 rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-slate-200">Rating</span>
-                      <select
-                        value={ratingInput}
-                        onChange={(e) => setRatingInput(Number(e.target.value))}
-                        className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
-                      >
-                        {[5, 4, 3, 2, 1].map((v) => (
-                          <option key={v} value={v}>
-                            {v} / 5
-                          </option>
-                        ))}
-                      </select>
+
+                      <div className="relative">
+                        <select
+                          value={ratingInput}
+                          onChange={(e) => setRatingInput(Number(e.target.value))}
+                          className="appearance-none rounded-xl border border-white/10 bg-black/30 pl-3 pr-20 py-2 text-sm text-white outline-none"
+                        >
+                          {[5, 4, 3, 2, 1].map((v) => (
+                            <option key={v} value={v}>
+                              {v} / 5
+                            </option>
+                          ))}
+                        </select>
+
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/70">
+                          ▾
+                        </span>
+
+                        <span className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2">
+                          <Star fontSize="small" className="text-yellow-400" />
+                        </span>
+                      </div>
                     </div>
 
                     <div className="sm:ml-auto flex gap-2">
@@ -382,7 +398,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     className="mt-3 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40"
                   />
 
-                  {/* Warning only after user clicks submit */}
                   {needLogin ? (
                     <div className="mt-3 flex flex-col gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3">
                       <p className="text-sm font-semibold text-red-200">
@@ -403,7 +418,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   ) : null}
                 </div>
 
-                {/* Review list */}
                 {(reviews?.length ?? 0) === 0 ? (
                   <p className="text-sm text-slate-400">Chưa có đánh giá nào cho phim này.</p>
                 ) : (
@@ -442,7 +456,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
               <section className="rounded-2xl border border-red-400/50 bg-gradient-to-br from-red-500/80 via-rose-500/80 to-red-600/80 p-[1px] shadow-[0_18px_45px_rgba(248,113,113,0.65)]">
                 <div className="rounded-2xl bg-black/60 px-5 py-6 text-center backdrop-blur-2xl">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-red-200">Đặt Vé Nhanh</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-red-200">
+                    Đặt Vé Nhanh
+                  </p>
                   <p className="mt-1 text-[13px] text-slate-300">
                     Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.
                   </p>
@@ -462,16 +478,38 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                 <div className="space-y-3">
                   {[
-                    { id: 2, title: "Doctor Strange in the Multiverse", genre: "Hành động, Khoa học viễn tưởng", rating: 4.5, poster: movie?.posterUrl },
-                    { id: 3, title: "Spider-Man: No Way Home", genre: "Hành động, Phiêu lưu", rating: 4.7, poster: movie?.posterUrl },
-                    { id: 4, title: "Guardians of the Galaxy Vol. 4", genre: "Hài hước, Viễn tưởng", rating: 4.6, poster: movie?.posterUrl },
+                    {
+                      id: 2,
+                      title: "Doctor Strange in the Multiverse",
+                      genre: "Hành động, Khoa học viễn tưởng",
+                      rating: 4.5,
+                      poster: movie?.posterUrl,
+                    },
+                    {
+                      id: 3,
+                      title: "Spider-Man: No Way Home",
+                      genre: "Hành động, Phiêu lưu",
+                      rating: 4.7,
+                      poster: movie?.posterUrl,
+                    },
+                    {
+                      id: 4,
+                      title: "Guardians of the Galaxy Vol. 4",
+                      genre: "Hài hước, Viễn tưởng",
+                      rating: 4.6,
+                      poster: movie?.posterUrl,
+                    },
                   ].map((item) => (
                     <button
                       key={item?.id}
                       className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-black/40 p-2 text-left shadow-[0_10px_28px_rgba(0,0,0,0.75)] backdrop-blur-lg transition hover:border-red-400/60 hover:bg-red-900/40"
                     >
                       <div className="h-16 w-12 overflow-hidden rounded-lg bg-slate-700">
-                        <img src={item?.poster as any} alt={item?.title} className="h-full w-full object-cover" />
+                        <img
+                          src={item?.poster as any}
+                          alt={item?.title}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
 
                       <div className="flex flex-1 flex-col">
