@@ -26,6 +26,7 @@
     "react-hook-form": "^7.69.0",
     "react-hot-toast": "^2.6.0",
     "react-toastify": "^11.0.5",
+    "use-debounce": "^10.1.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
