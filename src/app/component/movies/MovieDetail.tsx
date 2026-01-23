@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   PlayCircleOutline,
   ConfirmationNumber,
@@ -14,7 +13,11 @@ import {
 } from "@mui/icons-material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { IMovieShowtimeGroup, IShowtimeItem, MoviePublic } from "@/types/data/movie-public";
+import {
+  IMovieShowtimeGroup,
+  IShowtimeItem,
+  MoviePublic,
+} from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -290,20 +293,26 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       .filter(Boolean);
   }, [movie?.cast]);
 
+  const Glass = "rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
+
   return (
-    <main className="">
+    <main className="relative min-h-screen bg-[#0A0B0D] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#1A1C1F] via-[#0F1114] to-[#071816]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(1200px_600px_at_25%_0%,rgba(255,255,255,0.06),transparent_60%),radial-gradient(900px_520px_at_82%_25%,rgba(34,211,238,0.12),transparent_55%),radial-gradient(1100px_620px_at_35%_110%,rgba(16,185,129,0.10),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 backdrop-blur-[2px]" />
+
       <section className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center opacity-55"
           style={{
             backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/banner/placeholder.jpg")}")`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-black/70 backdrop-blur-md" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0B0D]/90 via-[#0A0B0D]/80 to-[#0A0B0D]" />
 
-        <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-32">
+        <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
           <div className="flex justify-center md:justify-start">
-            <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/70">
+            <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
               <img
                 alt={`${movie?.title} Poster`}
                 src={resolveUrl(movie?.posterUrl, "/poster/placeholder.jpg")}
@@ -319,41 +328,47 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
           </div>
 
           <div className="flex flex-1 flex-col gap-4 md:gap-6">
-            <h1 className="text-3xl font-bold leading-tight md:text-4xl lg:text-5xl">{movie?.title}</h1>
-            <p className="max-w-2xl text-sm text-slate-200 md:text-base">{movie?.description}</p>
+            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
+              {movie?.title}
+            </h1>
+
+            <p className="max-w-2xl text-sm text-white/75 md:text-base">
+              {movie?.description}
+            </p>
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
-              <div className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm shadow backdrop-blur-md">
-                <span className="material-symbols-outlined text-base align-middle text-yellow-400">star</span>
-                <span className="font-semibold">{reviews_rating?.avgRating}</span>
-                <span className="text-xs text-slate-300">/ 5</span>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
+                <Star className="text-yellow-400" fontSize="small" />
+                <span className="font-extrabold text-white">{reviews_rating?.avgRating ?? 0}</span>
+                <span className="text-white/60">/ 5</span>
               </div>
 
-              <div className="rounded-full bg-black/40 px-3 py-1 text-xs text-slate-200 backdrop-blur-md">
+              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
                 {movie?.durationMinutes} phút
               </div>
-            </div>
 
-            <ul className="flex flex-wrap gap-2">
-              {movie?.genre && (
-                <li className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-slate-100 backdrop-blur-md">
+              {movie?.genre ? (
+                <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
                   {movie?.genre}
-                </li>
-              )}
-            </ul>
+                </div>
+              ) : null}
+            </div>
 
             <div className="mt-2 flex flex-wrap gap-3">
               <a
                 href={movie?.trailerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-500/20 transition hover:bg-red-500"
+                className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
               >
                 <PlayCircleOutline className="text-lg" />
                 <span>Xem Trailer</span>
               </a>
 
-              <button className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-cyan-300 via-emerald-200 to-cyan-300 px-5 py-2.5 text-sm font-extrabold text-[#071816] shadow-[0_22px_60px_rgba(34,211,238,0.26)] transition hover:brightness-110 active:brightness-95"
+              >
                 <ConfirmationNumber className="text-lg" />
                 <span>Đặt Vé Ngay</span>
               </button>
@@ -362,37 +377,37 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         </div>
       </section>
 
-      <section>
+      <section className="relative z-10">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col gap-10 lg:flex-row">
             <div className="flex-1 space-y-10">
-              <section className="rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+              <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
-                  <h2 className="mb-5 text-xl font-semibold md:text-2xl">Thông Tin Phim</h2>
+                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Thông Tin Phim</h2>
 
-                  <div className="grid gap-4 text-sm text-slate-100 md:grid-cols-2">
+                  <div className="grid gap-4 text-sm text-white/85 md:grid-cols-2">
                     <div className="flex items-start gap-3">
-                      <EventAvailable className="mt-0.5 text-red-400" fontSize="small" />
+                      <EventAvailable className="mt-0.5 text-cyan-200" fontSize="small" />
                       <span>
                         Khởi chiếu:{" "}
-                        <span className="font-semibold text-slate-100">
+                        <span className="font-extrabold text-white">
                           {formatDMY(movie?.releaseDate as any)}
                         </span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Person className="mt-0.5 text-red-400" fontSize="small" />
+                      <Person className="mt-0.5 text-cyan-200" fontSize="small" />
                       <span>
-                        Đạo diễn: <span className="font-semibold text-slate-100">{movie?.director}</span>
+                        Đạo diễn: <span className="font-extrabold text-white">{movie?.director}</span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Schedule className="mt-0.5 text-red-400" fontSize="small" />
+                      <Schedule className="mt-0.5 text-cyan-200" fontSize="small" />
                       <span>
                         Thời lượng:{" "}
-                        <span className="font-semibold text-slate-100">{movie?.durationMinutes} phút</span>
+                        <span className="font-extrabold text-white">{movie?.durationMinutes} phút</span>
                       </span>
                     </div>
 
@@ -400,32 +415,34 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       <Star className="mt-0.5 text-yellow-400" fontSize="small" />
                       <span>
                         Đánh giá:{" "}
-                        <span className="font-semibold text-slate-100">{reviews_rating?.avgRating ?? 0}/5</span>
+                        <span className="font-extrabold text-white">{reviews_rating?.avgRating ?? 0}/5</span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Language className="mt-0.5 text-red-400" fontSize="small" />
+                      <Language className="mt-0.5 text-cyan-200" fontSize="small" />
                       <span>
-                        Ngôn ngữ: <span className="font-semibold text-slate-100">{movie?.language}</span>
+                        Ngôn ngữ: <span className="font-extrabold text-white">{movie?.language}</span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <LocalOffer className="mt-0.5 text-red-400" fontSize="small" />
+                      <LocalOffer className="mt-0.5 text-cyan-200" fontSize="small" />
                       <span>
-                        Phân loại: <span className="font-semibold text-slate-100">C18</span>
+                        Phân loại: <span className="font-extrabold text-white">C18</span>
                       </span>
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-300">Diễn viên</h3>
+                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
+                      Diễn viên
+                    </h3>
                     <ul className="flex flex-wrap gap-2 text-sm">
                       {cast_list?.map((actor) => (
                         <li
                           key={actor}
-                          className="rounded-full bg-black/30 px-3 py-1 text-slate-100 backdrop-blur-md border border-white/10"
+                          className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-white/90 backdrop-blur-md"
                         >
                           {actor}
                         </li>
@@ -434,27 +451,33 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-300">Nội Dung Phim</h3>
-                    <p className="text-sm leading-relaxed text-slate-200">{movie?.description}</p>
+                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
+                      Nội Dung Phim
+                    </h3>
+                    <p className="text-sm leading-relaxed text-white/75">{movie?.description}</p>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+              <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold md:text-2xl text-slate-50">Lịch Chiếu</h2>
-                      <p className="mt-1 text-xs text-slate-300 md:text-sm">Chọn ngày để xem suất chiếu theo rạp.</p>
+                      <h2 className="text-xl font-extrabold md:text-2xl">Lịch Chiếu</h2>
+                      <p className="mt-1 text-xs text-white/55 md:text-sm">
+                        Chọn ngày để xem suất chiếu theo rạp.
+                      </p>
                     </div>
 
                     {dataMovieCinemasShowtimes.isFetching ? (
-                      <span className="text-xs font-semibold text-slate-300">Đang tải...</span>
+                      <span className="text-xs font-semibold text-white/55">Đang tải...</span>
                     ) : null}
                   </div>
 
                   <div className="mt-5">
-                    <div className="text-xs font-extrabold tracking-wide text-slate-200 uppercase">Chọn ngày</div>
+                    <div className="text-xs font-extrabold tracking-wide text-white/70 uppercase">
+                      Chọn ngày
+                    </div>
 
                     <div className="mt-3 flex flex-wrap gap-3">
                       {dateTabs.map((k) => {
@@ -467,17 +490,24 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             type="button"
                             onClick={() => setSelectedDate(k)}
                             className={[
-                              "min-w-[72px] rounded-xl border px-4 py-3 text-center transition",
+                              "min-w-[76px] rounded-xl border px-4 py-3 text-center transition",
                               active
-                                ? "border-cyan-300/50 bg-cyan-500/20 text-cyan-50 shadow-[0_12px_30px_rgba(34,211,238,0.15)]"
-                                : "border-white/10 bg-black/30 text-slate-200 hover:border-cyan-300/25 hover:bg-cyan-500/10",
-                              has ? "" : "opacity-40 hover:bg-black/30 hover:border-white/10",
+                                ? "border-cyan-200/35 bg-cyan-500/20 text-cyan-50 shadow-[0_16px_40px_rgba(34,211,238,0.14)]"
+                                : "border-white/10 bg-black/25 text-white/85 hover:border-cyan-200/20 hover:bg-cyan-500/10",
+                              has ? "" : "opacity-40 hover:bg-black/25 hover:border-white/10",
                             ].join(" ")}
                           >
-                            <div className={["text-[12px] font-extrabold", active ? "text-cyan-50" : "text-slate-300"].join(" ")}>
+                            <div
+                              className={[
+                                "text-[12px] font-extrabold",
+                                active ? "text-cyan-50" : "text-white/55",
+                              ].join(" ")}
+                            >
                               {weekdayBadge(k)}
                             </div>
-                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">{dayOfMonth(k)}</div>
+                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">
+                              {dayOfMonth(k)}
+                            </div>
                           </button>
                         );
                       })}
@@ -491,9 +521,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   ) : null}
 
                   {!dataMovieCinemasShowtimes.isLoading && cinemas.length === 0 ? (
-                    <p className="mt-5 text-sm text-slate-400">Chưa có rạp hoặc suất chiếu cho phim này.</p>
+                    <p className="mt-5 text-sm text-white/55">Chưa có rạp hoặc suất chiếu cho phim này.</p>
                   ) : scheduleRows.length === 0 && !dataMovieCinemasShowtimes.isLoading ? (
-                    <div className="mt-6 rounded-xl border border-white/10 bg-black/30 px-4 py-4 text-sm text-slate-300">
+                    <div className="mt-6 rounded-xl border border-white/10 bg-black/25 px-4 py-4 text-sm text-white/65">
                       Không có suất chiếu cho ngày đã chọn.
                     </div>
                   ) : (
@@ -515,11 +545,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         return (
                           <div
                             key={cinemaId}
-                            className="rounded-2xl border border-white/10 bg-black/30 shadow-[0_14px_35px_rgba(0,0,0,0.85)] backdrop-blur-lg"
+                            className="rounded-2xl border border-white/10 bg-black/22 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                           >
                             <div className="p-4 md:p-5">
                               <div className="flex items-start gap-4">
-                                <div className="h-16 w-12 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                                <div className="h-16 w-12 overflow-hidden rounded-xl border border-white/10 bg-black/30">
                                   <img
                                     src={resolveUrl(posterUrl, "/poster/placeholder.jpg")}
                                     alt={cinemaName}
@@ -534,17 +564,19 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 </div>
 
                                 <div className="flex-1">
-                                  <div className="text-base font-extrabold text-slate-50">{cinemaName}</div>
-                                  {address ? <div className="mt-1 text-xs text-slate-300 md:text-sm">{address}</div> : null}
+                                  <div className="text-base font-extrabold text-white">{cinemaName}</div>
+                                  {address ? (
+                                    <div className="mt-1 text-xs text-white/55 md:text-sm">{address}</div>
+                                  ) : null}
                                 </div>
                               </div>
 
                               <div className="mt-4 flex flex-wrap gap-2">
                                 {dataMovieCinemasShowtimes.isLoading ? (
                                   <>
-                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/30" />
-                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/30" />
-                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/30" />
+                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
                                   </>
                                 ) : (
                                   showtimes
@@ -553,10 +585,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                     .map((st) => (
                                       <button
                                         key={st.id}
-                                        className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/35 px-4 py-2.5 text-sm font-extrabold text-slate-50 transition hover:border-cyan-300/40 hover:bg-cyan-500/15"
+                                        className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-cyan-200/25 hover:bg-cyan-500/10"
                                       >
                                         <span className="tabular-nums">{formatHM(st.startTime)}</span>
-                                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-200 group-hover:border-cyan-200/20 group-hover:bg-cyan-500/10">
+                                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-cyan-200/20 group-hover:bg-cyan-500/10">
                                           {st.type}
                                         </span>
                                       </button>
@@ -572,30 +604,30 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+              <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
-                  <h2 className="mb-5 text-xl font-semibold md:text-2xl">Đánh giá</h2>
+                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Đánh giá</h2>
 
                   <div className="mb-6 flex items-center gap-4">
-                    <div className="flex items-center gap-1 rounded-full bg-black/40 px-4 py-2 text-sm backdrop-blur-md">
-                      <span className="material-symbols-outlined text-yellow-400">star</span>
-                      <span className="font-semibold text-slate-100">{reviews_rating?.avgRating ?? 0}</span>
-                      <span className="text-slate-300">/ 5</span>
+                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
+                      <Star className="text-yellow-400" fontSize="small" />
+                      <span className="font-extrabold text-white">{reviews_rating?.avgRating ?? 0}</span>
+                      <span className="text-white/60">/ 5</span>
                     </div>
 
-                    <span className="text-sm text-slate-300">{reviews?.length ?? 0} đánh giá</span>
+                    <span className="text-sm text-white/60">{reviews?.length ?? 0} đánh giá</span>
                   </div>
 
-                  <div className="mb-6 rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md">
+                  <div className="mb-6 rounded-2xl border border-white/10 bg-black/25 p-4 backdrop-blur-md">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-200">Rating</span>
+                        <span className="text-sm font-extrabold text-white/80">Rating</span>
 
                         <div className="relative">
                           <select
                             value={ratingInput}
                             onChange={(e) => setRatingInput(Number(e.target.value))}
-                            className="appearance-none rounded-xl border border-white/10 bg-black/30 pl-3 pr-20 py-2 text-sm text-white outline-none"
+                            className="appearance-none rounded-xl border border-white/10 bg-black/25 pl-3 pr-20 py-2 text-sm text-white outline-none"
                           >
                             {[5, 4, 3, 2, 1].map((v) => (
                               <option key={v} value={v}>
@@ -623,7 +655,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             setFormError("");
                             setNeedLogin(false);
                           }}
-                          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/85 hover:bg-white/10"
+                          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-white/85 hover:bg-white/10"
                         >
                           Xóa
                         </button>
@@ -632,7 +664,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           type="button"
                           disabled={createCommentMutation.isPending}
                           onClick={onSubmitReview}
-                          className="rounded-xl bg-red-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-red-500 disabled:opacity-60"
+                          className="rounded-xl bg-[#E11D2E] px-4 py-2 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.18)] hover:brightness-110 disabled:opacity-60"
                         >
                           {createCommentMutation.isPending ? "Đang gửi..." : "Gửi"}
                         </button>
@@ -644,49 +676,51 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       onChange={(e) => setCommentInput(e.target.value)}
                       rows={3}
                       placeholder="Chia sẻ cảm nhận của bạn về bộ phim..."
-                      className="mt-3 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40"
+                      className="mt-3 w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/45"
                     />
 
                     {needLogin ? (
                       <div className="mt-3 flex flex-col gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3">
-                        <p className="text-sm font-semibold text-red-200">
+                        <p className="text-sm font-extrabold text-red-200">
                           Bạn cần đăng nhập để thực hiện chức năng đánh giá.
                         </p>
                         <button
                           type="button"
                           onClick={goLogin}
-                          className="w-fit rounded-lg bg-red-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-red-500"
+                          className="w-fit rounded-lg bg-[#E11D2E] px-4 py-2 text-sm font-extrabold text-white hover:brightness-110"
                         >
                           Đăng nhập
                         </button>
                       </div>
                     ) : null}
 
-                    {formError ? <p className="mt-3 text-sm font-semibold text-red-300">{formError}</p> : null}
+                    {formError ? <p className="mt-3 text-sm font-extrabold text-red-300">{formError}</p> : null}
                   </div>
 
                   {(reviews?.length ?? 0) === 0 ? (
-                    <p className="text-sm text-slate-400">Chưa có đánh giá nào cho phim này.</p>
+                    <p className="text-sm text-white/55">Chưa có đánh giá nào cho phim này.</p>
                   ) : (
                     <ul className="space-y-4">
                       {reviews.map((review: any) => (
                         <li
                           key={review.id}
-                          className="rounded-xl border border-white/10 bg-black/40 p-4 backdrop-blur-md"
+                          className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md"
                         >
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-semibold text-slate-100">Người dùng #{review.userId}</span>
+                            <span className="text-sm font-extrabold text-white">
+                              Người dùng #{review.userId}
+                            </span>
 
                             <div className="flex items-center gap-1 text-xs text-yellow-400">
-                              <span className="material-symbols-outlined text-sm">star</span>
-                              <span>{review.rating}</span>
-                              <span className="text-slate-300">/5</span>
+                              <Star fontSize="small" className="text-yellow-400" />
+                              <span className="font-extrabold">{review.rating}</span>
+                              <span className="text-white/60">/5</span>
                             </div>
                           </div>
 
-                          <p className="text-sm text-slate-200">{review.comment}</p>
+                          <p className="text-sm text-white/80">{review.comment}</p>
 
-                          <p className="mt-2 text-xs text-slate-400">
+                          <p className="mt-2 text-xs text-white/45">
                             {review.createdAt ? new Date(review.createdAt).toLocaleDateString("vi-VN") : ""}
                           </p>
                         </li>
@@ -698,21 +732,23 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </div>
 
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
-              <section className="rounded-2xl border border-emerald-300/30 bg-gradient-to-br from-emerald-500/90 via-cyan-500/90 to-emerald-400/90 p-[1px] shadow-[0_30px_90px_rgba(34,197,94,0.25)]">
-                <div className="rounded-2xl bg-black/45 px-5 py-7 text-center backdrop-blur-2xl">
-                  <p className="text-xs font-extrabold uppercase tracking-wide text-emerald-100">Đặt Vé Nhanh</p>
-                  <p className="mt-1 text-[13px] text-slate-100">
+              <section className="rounded-2xl border border-cyan-200/25 bg-gradient-to-br from-cyan-500/35 via-emerald-500/20 to-cyan-500/30 p-[1px] shadow-[0_30px_90px_rgba(34,211,238,0.18)]">
+                <div className="rounded-2xl bg-black/35 px-5 py-7 text-center backdrop-blur-2xl">
+                  <p className="text-xs font-extrabold uppercase tracking-wide text-white/80">
+                    Đặt Vé Nhanh
+                  </p>
+                  <p className="mt-1 text-[13px] text-white/70">
                     Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.
                   </p>
 
-                  <button className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-cyan-400 via-emerald-300 to-cyan-400 px-4 py-3 text-sm font-extrabold text-slate-950 shadow-[0_18px_45px_rgba(34,211,238,0.45)] transition hover:brightness-110 active:brightness-95">
+                  <button className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-cyan-300 via-emerald-200 to-cyan-300 px-4 py-3 text-sm font-extrabold text-[#071816] shadow-[0_22px_60px_rgba(34,211,238,0.26)] transition hover:brightness-110 active:brightness-95">
                     Đặt Vé Ngay
                   </button>
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.9)] backdrop-blur-xl p-4">
-                <h2 className="mb-4 text-base font-semibold md:text-lg">Phim Liên Quan</h2>
+              <section className={`${Glass} p-4`}>
+                <h2 className="mb-4 text-base font-extrabold md:text-lg">Phim Liên Quan</h2>
 
                 <div className="space-y-3">
                   {[
@@ -740,9 +776,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   ].map((item) => (
                     <button
                       key={item?.id}
-                      className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-black/40 p-2 text-left shadow-[0_10px_28px_rgba(0,0,0,0.75)] backdrop-blur-lg transition hover:border-emerald-300/30 hover:bg-emerald-500/10"
+                      className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl transition hover:border-cyan-200/20 hover:bg-cyan-500/10"
                     >
-                      <div className="h-16 w-12 overflow-hidden rounded-lg bg-slate-700">
+                      <div className="h-16 w-12 overflow-hidden rounded-lg bg-white/5 border border-white/10">
                         <img
                           src={resolveUrl(item?.poster as any, "/poster/placeholder.jpg")}
                           alt={item?.title}
@@ -751,11 +787,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       </div>
 
                       <div className="flex flex-1 flex-col">
-                        <p className="text-sm font-semibold text-slate-50">{item?.title}</p>
-                        <p className="mt-0.5 text-[11px] text-slate-300">{item?.genre}</p>
+                        <p className="text-sm font-extrabold text-white">{item?.title}</p>
+                        <p className="mt-0.5 text-[11px] text-white/55">{item?.genre}</p>
                         <div className="mt-1 flex items-center gap-1 text-xs text-yellow-400">
-                          <span className="material-symbols-outlined text-sm">star</span>
-                          <span>{item?.rating}</span>
+                          <Star fontSize="small" className="text-yellow-400" />
+                          <span className="font-extrabold">{item?.rating}</span>
                         </div>
                       </div>
                     </button>
