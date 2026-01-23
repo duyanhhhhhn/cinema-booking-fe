@@ -31,3 +31,28 @@ export interface IMovieStatus {
     posterUrl: string;
     status: MovieStatus;
 }
+
+export interface ICinemaMovie {
+  id: number;
+  name: string;
+}
+
+export interface IShowtimeItem {
+  id: number;
+  startTime: string;
+  type: string;
+}
+
+export interface ICinemaMovieShowtimeItem {
+  address: string;
+  cinemaId: number;
+  cinemaName: string;
+  durationMinutes: number; 
+  posterUrl: string | null;
+  showtime: IShowtimeItem[];
+}
+
+export type IMovieShowtimeGroup = Omit<ICinemaMovieShowtimeItem, "showtime"> & {
+  showtimes?: IShowtimeItem[];
+  showtime?: IShowtimeItem[];
+};
