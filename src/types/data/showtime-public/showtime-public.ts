@@ -18,7 +18,7 @@ export class ShowtimePublic extends Model {
   };
 
   static objects = this.factory<IMovieShowtimeGroup>(
-    modelConfig,
+    modelConfig, 
     this.queryKeys,
   );
 
