@@ -1,79 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { use, useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MoviePublic } from "@/types/data/movie-public";
 import { IPost, Post } from "@/types/data/post/post";
 import { CreditCard, LocationOn, Phone } from "@mui/icons-material";
 import { Banner } from "@/types/data/home/banner";
+import MovieStatus from "./MovieComponent/MovieStatus";
 
 type MovieStatus = "NOW_SHOWING" | "COMING_SOON" | "ENDED" | string;
 
-type IMovieCard = {
-  id: number;
-  title: string;
-  genre?: string | null;
-  posterUrl?: string | null;
-  status?: MovieStatus | null;
-};
-
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
-  const [tab, setTab] = useState<"dangChieu" | "sapChieu">("dangChieu");
-
-  const IMAGE_BASE = (process.env.NEXT_PUBLIC_IMAGE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
-
-  const resolvePosterUrl = (posterUrl?: string | null) => {
-    if (!posterUrl || !posterUrl.trim()) return "/poster/placeholder.jpg";
-    const raw = posterUrl.trim();
-    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-    if (raw.startsWith("/")) return `${IMAGE_BASE}${raw}`;
-    return `${IMAGE_BASE}/${raw}`;
-  };
-
-  const renderStatus = (status?: MovieStatus | null) => {
-    switch (status) {
-      case "NOW_SHOWING":
-        return "Đang chiếu";
-      case "COMING_SOON":
-        return "Sắp chiếu";
-      case "ENDED":
-        return "Ngừng chiếu";
-      default:
-        return "Khác";
-    }
-  };
-
-  const statusPillClass = (status?: MovieStatus | null) => {
-    if (status === "NOW_SHOWING") {
-      return "bg-red-600 text-white shadow-[0_0_18px_rgba(239,68,68,0.55)] ring-1 ring-red-400/40";
-    }
-    if (status === "COMING_SOON") {
-      return "bg-amber-500 text-black shadow-[0_0_18px_rgba(245,158,11,0.40)] ring-1 ring-amber-300/40";
-    }
-    return "bg-white/10 text-white/90 ring-1 ring-white/10";
-  };
-
-  const { data, isLoading, isError } = useQuery(MoviePublic.getAllMovieStatus({ page: 1, perPage: 60 }));
-
-  const allMovies: IMovieCard[] = (data?.data ?? []) as unknown as IMovieCard[];
-
-  const { nowShowing, comingSoon } = useMemo(() => {
-    const ns = allMovies.filter((m) => m.status === "NOW_SHOWING");
-    const cs = allMovies.filter((m) => m.status === "COMING_SOON");
-    return { nowShowing: ns, comingSoon: cs };
-  }, [allMovies]);
-
-  const moviesForTab = tab === "dangChieu" ? nowShowing : comingSoon;
-  const queryKey = useMemo(() => {
-    return {
-      page: 1,
-      perPage: 3,
-      id: 0
-    }
-  }, [])
-  const data1 = useQuery({ ...Post.objects.paginateQueryFactory(queryKey), });
+  const data1 = useQuery(Post.getPosts());
   const posts = data1?.data?.data || [];
   const dataBanner = useQuery({
     ...Banner.objects.paginateQueryFactory()
@@ -83,7 +23,6 @@ export default function HomePage() {
   const [index, setIndex] = useState(0)
   const total = banners.length;
 
-  if (!total) return null;
 
   const next = () => setIndex((prev) => (prev + 1) % total);
   const prev = () => setIndex((prev) => (prev - 1 + total) % total);
@@ -97,7 +36,7 @@ export default function HomePage() {
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
         {banners.map((banner, i) => (
-          <div key={i} className="relative w-full flex-shrink-0">
+          <div key={i} className="relative w-full ">
             <img
               src={banner.imageUrl}
               className="w-full h-[500px] object-cover"
@@ -165,88 +104,7 @@ export default function HomePage() {
             <div className="layout-content-container flex flex-col max-w-7xl flex-1 px-4 sm:px-10">
               {fullslide}
 
-              <div className="pb-3 mb-4">
-                <div className="flex border-b border-white/10 gap-8">
-                  <a
-                    className={
-                      tab === "dangChieu"
-                        ? "flex flex-col items-center justify-center border-b-[3px] border-b-red-500 text-white pb-[13px] pt-4"
-                        : "flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#E0E0E0]/70 pb-[13px] pt-4 hover:text-white transition-colors"
-                    }
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setTab("dangChieu");
-                    }}
-                  >
-                    <p className="text-sm font-bold leading-normal tracking-[0.015em]">Phim Đang Chiếu</p>
-                  </a>{" "}
-                  <a
-                    className={
-                      tab === "sapChieu"
-                        ? "flex flex-col items-center justify-center border-b-[3px] border-b-red-500 text-white pb-[13px] pt-4"
-                        : "flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#E0E0E0]/70 pb-[13px] pt-4 hover:text-white transition-colors"
-                    }
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setTab("sapChieu");
-                    }}
-                  >
-                    <p className="text-sm font-bold leading-normal tracking-[0.015em]">Phim Sắp Chiếu</p>
-                  </a>
-                </div>
-              </div>
-
-              {isLoading && <div className="text-white/70 py-6">Loading movies...</div>}
-              {isError && <div className="text-white/70 py-6">Failed to load movies</div>}
-
-              {!isLoading && !isError && (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 sm:gap-6">
-                  {moviesForTab.slice(0, 6).map((m) => (
-                    <div key={m.id} className="flex flex-col gap-3 pb-3 group">
-                      <a href={`movies/${m.id}`}>
-                        <div className="w-full bg-center bg-no-repeat aspect-[2/3] bg-cover rounded-xl overflow-hidden relative shadow-lg shadow-black/30 transform group-hover:scale-[1.03] transition-transform duration-300 ring-1 ring-white/10 bg-[#1E1E1E]">
-                          <div
-                            className="absolute inset-0 bg-cover bg-center"
-                            data-alt={m.title}
-                            style={{
-                              backgroundImage: `url("${resolvePosterUrl(m.posterUrl)}")`,
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                            <button className="w-full text-center bg-red-600 text-white font-bold py-2 rounded-md text-sm opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                              Mua Vé
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="mt-1">
-                          <p className="text-white text-base font-semibold leading-normal line-clamp-1">{m.title}</p>
-                          <p className="text-[#E0E0E0]/70 text-sm font-normal leading-normal">
-                            {m.genre ?? "Chưa rõ thể loại"}
-                          </p>
-
-                          <div className="mt-2">
-                            <span
-                              className={[
-                                "inline-flex items-center rounded-full px-3 py-1 text-sm font-bold tracking-wide",
-                                statusPillClass(m.status),
-                              ].join(" ")}
-                            >
-                              {renderStatus(m.status)}
-                            </span>
-                          </div>
-                        </div>
-                      </a>
-                    </div>
-                  ))}
-
-                  {moviesForTab.length === 0 && (
-                    <div className="text-white/60 py-4">Chưa có phim cho mục này.</div>
-                  )}
-                </div>
-              )}
+              <MovieStatus />
 
               <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-10">
                 Tin Tức &amp; Ưu Đãi
@@ -295,18 +153,14 @@ export default function HomePage() {
                     <Phone className="text-3xl" />
                   </div>
                   <h3 className="text-white text-xl font-bold">Đặt Vé Nhanh Chóng</h3>
-                  <p className="text-[#E0E0E0]/70">
-                    Chỉ với vài thao tác đơn giản, bạn đã có thể đặt vé xem phim yêu thích.
-                  </p>
+                  <p className="text-[#E0E0E0]/70">Chỉ với vài thao tác đơn giản, bạn đã có thể đặt vé xem phim yêu thích.</p>
                 </div>
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">
                     <LocationOn className="text-3xl" />
                   </div>
                   <h3 className="text-white text-xl font-bold">Nhiều Rạp Chiếu</h3>
-                  <p className="text-[#E0E0E0]/70">
-                    Hệ thống rạp chiếu phủ khắp toàn quốc với chất lượng hàng đầu.
-                  </p>
+                  <p className="text-[#E0E0E0]/70">Hệ thống rạp chiếu phủ khắp toàn quốc với chất lượng hàng đầu.</p>
                 </div>
                 <div className="flex flex-col items-center text-center gap-4">
                   <div className="flex items-center justify-center size-16 bg-red-500/10 rounded-full text-red-400">

@@ -22,3 +22,12 @@ export interface IMoviePublic {
   status: MovieStatus;
   createdAt: string; 
 }
+
+export interface IMovieStatus {
+    id: number;
+    title: string;
+    durationMinutes: number;
+    genre: string;
+    posterUrl: string;
+    status: MovieStatus;
+}
