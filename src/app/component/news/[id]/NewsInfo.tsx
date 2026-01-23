@@ -9,40 +9,8 @@ export default function NewsInfo() {
 
     const data = useQuery(Post.getPostsInfo(id));
     const data2 = data?.data?.data;
-    console.log(data2);
 
     const date = new Date(data2 && data2?.at(0).publishedAt).toLocaleString();
-    console.log("Published At:", date);
-
-    // ContentArea.push(
-    //     <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
-    //         <p>
-    //             Line 1
-    //         </p>
-    //         <p>
-    //             Line 2
-    //         </p>
-    //         <blockquote className="border-l-4 border-primary pl-4 italic text-gray-600 dark:text-gray-400">
-    //             hightlight
-    //         </blockquote>
-    //         <p>
-    //             Line 3
-    //         </p>
-    //         <figure>
-    //             <img
-    //                 alt="text"
-    //                 className="rounded-lg w-full"
-    //                 src="https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3"
-    //             />
-    //             <figcaption className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-    //                 Image
-    //             </figcaption>
-    //         </figure>
-    //         <p>
-    //             Line 4
-    //         </p>
-    //     </div>
-    // )
     return (
         <>
             <div className="relative flex h-auto min-h-screen w-full flex-col">
