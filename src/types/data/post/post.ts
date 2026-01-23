@@ -1,4 +1,4 @@
-import { IPaginateResponse } from "@/types/core/api";
+import { IPaginateResponse, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 
@@ -26,7 +26,7 @@ export interface PostFormData {
     published_at: string;
 }
 export interface IListResponse<T> {
-    list: T[];
+    data: T[];
     is_success: boolean;
     message: string;
 }
@@ -68,7 +68,7 @@ export class Post extends Model {
             queryKey: [this.queryKeys.findOne],
             queryFn: () => {
                 return this.api
-                    .get<IPost>({
+                    .get<IListResponse<IPost>>({
                         url: `/public/posts/${id}`,
                     })
                     .then(r => r.data)

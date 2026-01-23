@@ -34,7 +34,6 @@ export default function NewsList() {
     return {
       page: searchQuery.get("page") || 1,
       perPage: searchQuery.get("perPage") || 6,
-      id: 0
     }
   }, [searchQuery])
   const { data, refetch: refetchPost } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam) });
@@ -42,7 +41,7 @@ export default function NewsList() {
   const data2 = useQuery(Post.getPostsInfo(firstId));
   var first;
   if (data2 != null && data2?.data != undefined) {
-    first = data2?.data;
+    first = data2?.data?.data.at(0);
   }
   const firstDate = new Date(first?.publishedAt).toLocaleDateString();
   const posts = data?.data ?? [];
@@ -51,8 +50,6 @@ export default function NewsList() {
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  console.log(posts)
-  console.log(data?.meta);
   const searchPosts = useMemo(() => {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;
