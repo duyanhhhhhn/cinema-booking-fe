@@ -39,12 +39,23 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [formError, setFormError] = useState<string>("");
 
   const movieIdNum = useMemo(() => {
-    const v = Number(id);
-    return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
-  }, [id]);
+    const vFromParams = Number(id);
+    const vFromProp = Number(movieId);
+    const v =
+      Number.isFinite(vFromParams) && vFromParams > 0
+        ? Math.floor(vFromParams)
+        : Number.isFinite(vFromProp) && vFromProp > 0
+        ? Math.floor(vFromProp)
+        : 0;
+    return v;
+  }, [id, movieId]);
+
+  const routeMoviePath = useMemo(() => {
+    return movieIdNum > 0 ? `/movies/${movieIdNum}` : "/movies";
+  }, [movieIdNum]);
 
   const IMAGE_BASE = useMemo(
-    () => (process.env.NEXT_PUBLIC_IMAGE_URL ?? "").replace(/\/+$/, ""),
+    () => (process.env.NEXT_PUBLIC_IMAGE_URL ?? "http://localhost:8080").replace(/\/+$/, ""),
     []
   );
 
@@ -60,12 +71,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const buildReturnUrl = useMemo(() => {
     return () => {
-      if (typeof window === "undefined") return `${pathname || `/movies/${id}` }#review`;
-      const p = window.location.pathname || pathname || `/movies/${id}`;
+      if (typeof window === "undefined") return `${pathname || routeMoviePath}#review`;
+      const p = window.location.pathname || pathname || routeMoviePath;
       const s = window.location.search || "";
       return `${p}${s}#review`;
     };
-  }, [pathname, id]);
+  }, [pathname, routeMoviePath]);
 
   const goLogin = useMemo(() => {
     return () => {
@@ -135,6 +146,26 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const movie = dataMovieDetail.data?.data;
   const reviews = dataMovieReviews.data?.data;
   const reviews_rating = dataMovieCountRating.data?.data;
+
+  const relatedQuery = useQuery({
+    queryKey: ["MOVIES_PUBLIC_GENRES", String(movie?.genre ?? ""), movieIdNum],
+    enabled: movieIdNum > 0 && !!movie?.genre,
+    queryFn: async () => {
+      const api = (MoviePublic as any)?.api;
+      if (!api?.get) return { data: [] };
+      const res = await api.get({
+        url: "/public/movies/related",
+        params: { genre: movie?.genre, movieId: movieIdNum },
+      });
+      return res?.data;
+    },
+  });
+
+  const relatedMovies = useMemo(() => {
+    const raw: any = relatedQuery.data;
+    const list: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+    return list.filter((x) => Number(x?.id) !== movieIdNum);
+  }, [relatedQuery.data, movieIdNum]);
 
   const cinemasRaw = useMemo(
     () => dataMovieCinemasShowtimes.data ?? [],
@@ -306,22 +337,22 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   }, [movie?.cast]);
 
   const Glass =
-    "rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
+    "rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
 
   return (
-    <main className="relative min-h-screen bg-[#0A0B0D] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#1A1C1F] via-[#0F1114] to-[#071816]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(1200px_600px_at_25%_0%,rgba(255,255,255,0.06),transparent_60%),radial-gradient(900px_520px_at_82%_25%,rgba(34,211,238,0.12),transparent_55%),radial-gradient(1100px_620px_at_35%_110%,rgba(16,185,129,0.10),transparent_55%)]" />
-      <div className="pointer-events-none absolute inset-0 backdrop-blur-[2px]" />
+    <main className="relative min-h-screen bg-[#0B0C0F] text-white">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#17181D]/45 via-[#0B0C0F]/70 to-[#0B0C0F]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[2px]" />
 
       <section className="relative overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-55"
           style={{
-            backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/banner/placeholder.jpg")}")`,
+            backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/poster/poster.jpg")}")`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0B0D]/90 via-[#0A0B0D]/80 to-[#0A0B0D]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/92 via-[#0B0C0F]/85 to-[#0B0C0F]" />
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
           <div className="flex justify-center md:justify-start">
@@ -345,9 +376,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
               {movie?.title}
             </h1>
 
-            <p className="max-w-2xl text-sm text-white/75 md:text-base">
-              {movie?.description}
-            </p>
+            <p className="max-w-2xl text-sm text-white/75 md:text-base">{movie?.description}</p>
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
@@ -380,7 +409,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-cyan-300 via-emerald-200 to-cyan-300 px-5 py-2.5 text-sm font-extrabold text-[#071816] shadow-[0_22px_60px_rgba(34,211,238,0.26)] transition hover:brightness-110 active:brightness-95"
+                className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(0,0,0,0.45)] transition hover:border-red-400/30 hover:bg-red-500/10"
               >
                 <ConfirmationNumber className="text-lg" />
                 <span>Đặt Vé Ngay</span>
@@ -400,7 +429,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                   <div className="grid gap-4 text-sm text-white/85 md:grid-cols-2">
                     <div className="flex items-start gap-3">
-                      <EventAvailable className="mt-0.5 text-cyan-200" fontSize="small" />
+                      <EventAvailable className="mt-0.5 text-white/70" fontSize="small" />
                       <span>
                         Khởi chiếu:{" "}
                         <span className="font-extrabold text-white">
@@ -410,14 +439,14 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Person className="mt-0.5 text-cyan-200" fontSize="small" />
+                      <Person className="mt-0.5 text-white/70" fontSize="small" />
                       <span>
                         Đạo diễn: <span className="font-extrabold text-white">{movie?.director}</span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Schedule className="mt-0.5 text-cyan-200" fontSize="small" />
+                      <Schedule className="mt-0.5 text-white/70" fontSize="small" />
                       <span>
                         Thời lượng:{" "}
                         <span className="font-extrabold text-white">{movie?.durationMinutes} phút</span>
@@ -433,14 +462,14 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Language className="mt-0.5 text-cyan-200" fontSize="small" />
+                      <Language className="mt-0.5 text-white/70" fontSize="small" />
                       <span>
                         Ngôn ngữ: <span className="font-extrabold text-white">{movie?.language}</span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <LocalOffer className="mt-0.5 text-cyan-200" fontSize="small" />
+                      <LocalOffer className="mt-0.5 text-white/70" fontSize="small" />
                       <span>
                         Phân loại: <span className="font-extrabold text-white">C18</span>
                       </span>
@@ -505,15 +534,15 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             className={[
                               "min-w-[76px] rounded-xl border px-4 py-3 text-center transition",
                               active
-                                ? "border-cyan-200/35 bg-cyan-500/20 text-cyan-50 shadow-[0_16px_40px_rgba(34,211,238,0.14)]"
-                                : "border-white/10 bg-black/25 text-white/85 hover:border-cyan-200/20 hover:bg-cyan-500/10",
+                                ? "border-red-400/30 bg-red-500/15 text-white shadow-[0_16px_40px_rgba(225,29,46,0.16)]"
+                                : "border-white/10 bg-black/25 text-white/85 hover:border-red-400/20 hover:bg-red-500/10",
                               has ? "" : "opacity-40 hover:bg-black/25 hover:border-white/10",
                             ].join(" ")}
                           >
                             <div
                               className={[
                                 "text-[12px] font-extrabold",
-                                active ? "text-cyan-50" : "text-white/55",
+                                active ? "text-white/90" : "text-white/55",
                               ].join(" ")}
                             >
                               {weekdayBadge(k)}
@@ -543,7 +572,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     <div className="mt-6 space-y-4">
                       {(dataMovieCinemasShowtimes.isLoading
                         ? Array.from({ length: 2 }).map((_, i) => ({
-                            cinema: { cinemaId: i, cinemaName: "Đang tải...", address: "", posterUrl: null } as any,
+                            cinema: {
+                              cinemaId: i,
+                              cinemaName: "Đang tải...",
+                              address: "",
+                              posterUrl: null,
+                            } as any,
                             showtimes: [] as IShowtimeItem[],
                           }))
                         : scheduleRows
@@ -558,7 +592,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         return (
                           <div
                             key={cinemaId}
-                            className="rounded-2xl border border-white/10 bg-black/22 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+                            className="rounded-2xl border border-white/10 bg-black/25 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                           >
                             <div className="p-4 md:p-5">
                               <div className="flex items-start gap-4">
@@ -598,10 +632,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                     .map((st) => (
                                       <button
                                         key={st.id}
-                                        className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-cyan-200/25 hover:bg-cyan-500/10"
+                                        className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10"
                                       >
                                         <span className="tabular-nums">{formatHM(st.startTime)}</span>
-                                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-cyan-200/20 group-hover:bg-cyan-500/10">
+                                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
                                           {st.type}
                                         </span>
                                       </button>
@@ -747,8 +781,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </div>
 
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
-              <section className="rounded-2xl border border-cyan-200/25 bg-gradient-to-br from-cyan-500/35 via-emerald-500/20 to-cyan-500/30 p-[1px] shadow-[0_30px_90px_rgba(34,211,238,0.18)]">
-                <div className="rounded-2xl bg-black/35 px-5 py-7 text-center backdrop-blur-2xl">
+              <section className="rounded-2xl border border-white/10 bg-black/25 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+                <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-7 text-center">
                   <p className="text-xs font-extrabold uppercase tracking-wide text-white/80">
                     Đặt Vé Nhanh
                   </p>
@@ -756,50 +790,100 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.
                   </p>
 
-                  <button className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-cyan-300 via-emerald-200 to-cyan-300 px-4 py-3 text-sm font-extrabold text-[#071816] shadow-[0_22px_60px_rgba(34,211,238,0.26)] transition hover:brightness-110 active:brightness-95">
+                  <button className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-[#E11D2E] px-4 py-3 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.22)] transition hover:brightness-110 active:brightness-95">
                     Đặt Vé Ngay
                   </button>
                 </div>
               </section>
 
               <section className={`${Glass} p-4`}>
-                <h2 className="mb-4 text-base font-extrabold md:text-lg">Phim Liên Quan</h2>
+                <div className="mb-4 flex items-end justify-between gap-3">
+                  <h2 className="text-base font-extrabold md:text-lg">Phim Liên Quan</h2>
+                  {relatedQuery.isFetching ? (
+                    <span className="text-xs font-semibold text-white/55">Đang tải...</span>
+                  ) : null}
+                </div>
 
-                <div className="space-y-3">
-                  {[
-                    { id: 2, title: "Phim Hay 1", genre: "Hành động, Phiêu lưu", rating: 4.3, poster: movie?.posterUrl },
-                    { id: 3, title: "Phim Hay 2", genre: "Hài hước, Gia đình", rating: 4.4, poster: movie?.posterUrl },
-                    { id: 4, title: "Phim Hay 3", genre: "Khoa học viễn tưởng", rating: 4.5, poster: movie?.posterUrl },
-                  ].map((item) => (
-                    <button
-                      key={item?.id}
-                      className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl transition hover:border-cyan-200/20 hover:bg-cyan-500/10"
-                    >
-                      <div className="h-16 w-12 overflow-hidden rounded-lg bg-white/5 border border-white/10">
-                        <img
-                          src={resolveUrl(item?.poster as any, "/poster/poster.jpg")}
-                          alt={item?.title}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            const img = e.currentTarget as HTMLImageElement;
-                            if (img.dataset.fallback === "1") return;
-                            img.dataset.fallback = "1";
-                            img.src = "/poster/poster.jpg";
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex flex-1 flex-col">
-                        <p className="text-sm font-extrabold text-white">{item?.title}</p>
-                        <p className="mt-0.5 text-[11px] text-white/55">{item?.genre}</p>
-                        <div className="mt-1 flex items-center gap-1 text-xs text-yellow-400">
-                          <Star fontSize="small" className="text-yellow-400" />
-                          <span className="font-extrabold">{item?.rating}</span>
+                {relatedQuery.isError ? (
+                  <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    Không tải được phim liên quan.
+                  </div>
+                ) : relatedQuery.isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2"
+                      >
+                        <div className="h-16 w-12 rounded-lg border border-white/10 bg-black/30" />
+                        <div className="flex-1">
+                          <div className="h-4 w-2/3 rounded bg-white/10" />
+                          <div className="mt-2 h-3 w-1/2 rounded bg-white/10" />
+                          <div className="mt-2 h-3 w-1/3 rounded bg-white/10" />
                         </div>
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : relatedMovies.length === 0 ? (
+                  <p className="text-sm text-white/55">Chưa có phim liên quan.</p>
+                ) : (
+                  <div
+                    className={[
+                      "space-y-3 pr-2",
+                      "max-h-[420px] overflow-y-auto",
+                      "[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent]",
+                      "[&::-webkit-scrollbar]:w-[8px]",
+                      "[&::-webkit-scrollbar-track]:bg-transparent",
+                      "[&::-webkit-scrollbar-thumb]:rounded-full",
+                      "[&::-webkit-scrollbar-thumb]:bg-[rgba(255,255,255,0.16)]",
+                      "[&::-webkit-scrollbar-thumb:hover]:bg-[rgba(255,255,255,0.22)]",
+                    ].join(" ")}
+                  >
+                    {relatedMovies.map((item: any) => {
+                      const nextId = Number(item?.id);
+                      const safeId = Number.isFinite(nextId) && nextId > 0 ? Math.floor(nextId) : 0;
+
+                      const title = String(item?.title ?? "");
+                      const genre = String(item?.genre ?? "");
+                      const duration = Number(item?.durationMinutes) || 0;
+                      const poster = item?.posterUrl ?? null;
+
+                      return (
+                        <button
+                          key={safeId || `${title}-${Math.random()}`}
+                          type="button"
+                          onClick={() => {
+                            if (!safeId) return;
+                            router.push(`/movies/${safeId}`);
+                          }}
+                          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl transition hover:border-red-400/20 hover:bg-red-500/10"
+                        >
+                          <div className="h-16 w-12 overflow-hidden rounded-lg border border-white/10 bg-black/30">
+                            <img
+                              src={resolveUrl(poster as any, "/poster/poster.jpg")}
+                              alt={title}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                const img = e.currentTarget as HTMLImageElement;
+                                if (img.dataset.fallback === "1") return;
+                                img.dataset.fallback = "1";
+                                img.src = "/poster/poster.jpg";
+                              }}
+                            />
+                          </div>
+
+                          <div className="flex flex-1 flex-col">
+                            <p className="line-clamp-2 text-sm font-extrabold text-white">{title}</p>
+                            <p className="mt-0.5 text-[11px] text-white/55">
+                              {genre}
+                              {duration > 0 ? ` • ${duration} phút` : ""}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
             </aside>
           </div>

@@ -73,6 +73,19 @@ export class MoviePublic extends Model {
       },
     };
   }
+
+  static getAllMovieGenres(genre: string) {
+    return {
+      queryKey: ["MOVIES_PUBLIC_GENRES", genre],
+      queryFn: () => {
+        return this.api
+          .get<IResponse<IMoviePublic[]>>({
+            url: `/public/movies/related`,
+          })
+          .then((r) => r.data);
+      },
+    };
+  }
 }
 
 MoviePublic.setup();
