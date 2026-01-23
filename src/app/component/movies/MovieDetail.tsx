@@ -14,11 +14,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, usePathname, useRouter } from "next/navigation";
 
-import {
-  IMovieShowtimeGroup,
-  IShowtimeItem,
-  MoviePublic,
-} from "@/types/data/movie-public";
+import { IMovieShowtimeGroup, IShowtimeItem, MoviePublic } from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -147,6 +143,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const reviews = dataMovieReviews.data?.data;
   const reviews_rating = dataMovieCountRating.data?.data;
 
+  // ====== PHIM LIÊN QUAN: HIỂN THỊ 6 + SCROLL DỌC ======
+  const RELATED_LIMIT = 6;
+
   const relatedQuery = useQuery({
     queryKey: ["MOVIES_PUBLIC_GENRES", String(movie?.genre ?? ""), movieIdNum],
     enabled: movieIdNum > 0 && !!movie?.genre,
@@ -155,7 +154,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       if (!api?.get) return { data: [] };
       const res = await api.get({
         url: "/public/movies/related",
-        params: { genre: movie?.genre, movieId: movieIdNum },
+        params: { genre: movie?.genre, movieId: movieIdNum, limit: RELATED_LIMIT },
       });
       return res?.data;
     },
@@ -164,22 +163,16 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const relatedMovies = useMemo(() => {
     const raw: any = relatedQuery.data;
     const list: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
-    return list.filter((x) => Number(x?.id) !== movieIdNum);
+    return list.filter((x) => Number(x?.id) !== movieIdNum).slice(0, RELATED_LIMIT);
   }, [relatedQuery.data, movieIdNum]);
 
-  const cinemasRaw = useMemo(
-    () => dataMovieCinemasShowtimes.data ?? [],
-    [dataMovieCinemasShowtimes.data]
-  );
+  const cinemasRaw = useMemo(() => dataMovieCinemasShowtimes.data ?? [], [dataMovieCinemasShowtimes.data]);
 
   const cinemas = useMemo(() => {
     return cinemasRaw
       .map((c) => {
-        const list =
-          (((c as any)?.showtimes ?? (c as any)?.showtime ?? []) as IShowtimeItem[]) || [];
-        const showtimes = [...list].sort((a, b) =>
-          (a?.startTime || "").localeCompare(b?.startTime || "")
-        );
+        const list = (((c as any)?.showtimes ?? (c as any)?.showtime ?? []) as IShowtimeItem[]) || [];
+        const showtimes = [...list].sort((a, b) => (a?.startTime || "").localeCompare(b?.startTime || ""));
         return { ...c, showtimes };
       })
       .sort((a, b) => (a.cinemaName ?? "").localeCompare(b.cinemaName ?? ""));
@@ -280,9 +273,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return startOfWeekMonday(new Date());
   }, [availableDateKeys, selectedDate, startOfWeekMonday]);
 
-  const dateTabs = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDaysKey(weekBase, i));
-  }, [addDaysKey, weekBase]);
+  const dateTabs = useMemo(() => Array.from({ length: 7 }, (_, i) => addDaysKey(weekBase, i)), [addDaysKey, weekBase]);
 
   useEffect(() => {
     const firstWithShowtime = dateTabs.find((k) => hasShowtimeByDate(k));
@@ -293,9 +284,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const scheduleRows = useMemo(() => {
     return cinemas
       .map((c) => {
-        const showtimes = (((c as any).showtimes as IShowtimeItem[]) ?? []).filter(
-          (st) => dateKey(st.startTime) === selectedDate
-        );
+        const showtimes = (((c as any).showtimes as IShowtimeItem[]) ?? []).filter((st) => dateKey(st.startTime) === selectedDate);
         return { cinema: c, showtimes };
       })
       .filter((x) => x.showtimes.length > 0);
@@ -314,9 +303,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return (key: string) => {
       const d = new Date(`${key}T00:00:00`);
       if (Number.isNaN(d.getTime())) return "";
-      const en = new Intl.DateTimeFormat("en-US", { weekday: "long" })
-        .format(d)
-        .toLowerCase();
+      const en = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(d).toLowerCase();
       return map[en] ?? "";
     };
   }, []);
@@ -342,17 +329,18 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   return (
     <main className="relative min-h-screen bg-[#0B0C0F] text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#17181D]/45 via-[#0B0C0F]/70 to-[#0B0C0F]" />
-      <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[2px]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#17181D]/40 via-[#0B0C0F]/60 to-[#0B0C0F]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[1px]" />
 
       <section className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-55"
+          className="absolute inset-0 bg-cover bg-center opacity-70"
           style={{
             backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/poster/poster.jpg")}")`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/92 via-[#0B0C0F]/85 to-[#0B0C0F]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_20%_30%,rgba(225,29,46,0.10),transparent_55%),radial-gradient(900px_420px_at_80%_35%,rgba(255,255,255,0.06),transparent_60%)]" />
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
           <div className="flex justify-center md:justify-start">
@@ -372,9 +360,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
           </div>
 
           <div className="flex flex-1 flex-col gap-4 md:gap-6">
-            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
-              {movie?.title}
-            </h1>
+            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">{movie?.title}</h1>
 
             <p className="max-w-2xl text-sm text-white/75 md:text-base">{movie?.description}</p>
 
@@ -423,6 +409,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col gap-10 lg:flex-row">
             <div className="flex-1 space-y-10">
+              {/* ==== (GIỮ NGUYÊN CÁC SECTION BÊN TRÁI CỦA BẠN) ==== */}
+              {/* Thông Tin Phim */}
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
                   <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Thông Tin Phim</h2>
@@ -432,9 +420,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       <EventAvailable className="mt-0.5 text-white/70" fontSize="small" />
                       <span>
                         Khởi chiếu:{" "}
-                        <span className="font-extrabold text-white">
-                          {formatDMY(movie?.releaseDate as any)}
-                        </span>
+                        <span className="font-extrabold text-white">{formatDMY(movie?.releaseDate as any)}</span>
                       </span>
                     </div>
 
@@ -477,9 +463,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
-                      Diễn viên
-                    </h3>
+                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">Diễn viên</h3>
                     <ul className="flex flex-wrap gap-2 text-sm">
                       {cast_list?.map((actor) => (
                         <li
@@ -493,22 +477,19 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
-                      Nội Dung Phim
-                    </h3>
+                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">Nội Dung Phim</h3>
                     <p className="text-sm leading-relaxed text-white/75">{movie?.description}</p>
                   </div>
                 </div>
               </section>
 
+              {/* Lịch Chiếu */}
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <h2 className="text-xl font-extrabold md:text-2xl">Lịch Chiếu</h2>
-                      <p className="mt-1 text-xs text-white/55 md:text-sm">
-                        Chọn ngày để xem suất chiếu theo rạp.
-                      </p>
+                      <p className="mt-1 text-xs text-white/55 md:text-sm">Chọn ngày để xem suất chiếu theo rạp.</p>
                     </div>
 
                     {dataMovieCinemasShowtimes.isFetching ? (
@@ -517,9 +498,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-5">
-                    <div className="text-xs font-extrabold tracking-wide text-white/70 uppercase">
-                      Chọn ngày
-                    </div>
+                    <div className="text-xs font-extrabold tracking-wide text-white/70 uppercase">Chọn ngày</div>
 
                     <div className="mt-3 flex flex-wrap gap-3">
                       {dateTabs.map((k) => {
@@ -539,17 +518,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               has ? "" : "opacity-40 hover:bg-black/25 hover:border-white/10",
                             ].join(" ")}
                           >
-                            <div
-                              className={[
-                                "text-[12px] font-extrabold",
-                                active ? "text-white/90" : "text-white/55",
-                              ].join(" ")}
-                            >
+                            <div className={["text-[12px] font-extrabold", active ? "text-white/90" : "text-white/55"].join(" ")}>
                               {weekdayBadge(k)}
                             </div>
-                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">
-                              {dayOfMonth(k)}
-                            </div>
+                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">{dayOfMonth(k)}</div>
                           </button>
                         );
                       })}
@@ -572,12 +544,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     <div className="mt-6 space-y-4">
                       {(dataMovieCinemasShowtimes.isLoading
                         ? Array.from({ length: 2 }).map((_, i) => ({
-                            cinema: {
-                              cinemaId: i,
-                              cinemaName: "Đang tải...",
-                              address: "",
-                              posterUrl: null,
-                            } as any,
+                            cinema: { cinemaId: i, cinemaName: "Đang tải...", address: "", posterUrl: null } as any,
                             showtimes: [] as IShowtimeItem[],
                           }))
                         : scheduleRows
@@ -612,9 +579,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                                 <div className="flex-1">
                                   <div className="text-base font-extrabold text-white">{cinemaName}</div>
-                                  {address ? (
-                                    <div className="mt-1 text-xs text-white/55 md:text-sm">{address}</div>
-                                  ) : null}
+                                  {address ? <div className="mt-1 text-xs text-white/55 md:text-sm">{address}</div> : null}
                                 </div>
                               </div>
 
@@ -651,6 +616,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
+              {/* Đánh giá */}
               <section className={Glass} id="review">
                 <div className="p-5 md:p-6 lg:p-7">
                   <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Đánh giá</h2>
@@ -728,9 +694,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                     {needLogin ? (
                       <div className="mt-3 flex flex-col gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3">
-                        <p className="text-sm font-extrabold text-red-200">
-                          Bạn cần đăng nhập để thực hiện chức năng đánh giá.
-                        </p>
+                        <p className="text-sm font-extrabold text-red-200">Bạn cần đăng nhập để thực hiện chức năng đánh giá.</p>
                         <button
                           type="button"
                           onClick={goLogin}
@@ -741,9 +705,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       </div>
                     ) : null}
 
-                    {formError ? (
-                      <p className="mt-3 text-sm font-extrabold text-red-300">{formError}</p>
-                    ) : null}
+                    {formError ? <p className="mt-3 text-sm font-extrabold text-red-300">{formError}</p> : null}
                   </div>
 
                   {(reviews?.length ?? 0) === 0 ? (
@@ -751,14 +713,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   ) : (
                     <ul className="space-y-4">
                       {reviews.map((review: any) => (
-                        <li
-                          key={review.id}
-                          className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md"
-                        >
+                        <li key={review.id} className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md">
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-extrabold text-white">
-                              Người dùng #{review.userId}
-                            </span>
+                            <span className="text-sm font-extrabold text-white">Người dùng #{review.userId}</span>
 
                             <div className="flex items-center gap-1 text-xs text-yellow-400">
                               <Star fontSize="small" className="text-yellow-400" />
@@ -783,12 +740,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
               <section className="rounded-2xl border border-white/10 bg-black/25 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl">
                 <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-7 text-center">
-                  <p className="text-xs font-extrabold uppercase tracking-wide text-white/80">
-                    Đặt Vé Nhanh
-                  </p>
-                  <p className="mt-1 text-[13px] text-white/70">
-                    Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.
-                  </p>
+                  <p className="text-xs font-extrabold uppercase tracking-wide text-white/80">Đặt Vé Nhanh</p>
+                  <p className="mt-1 text-[13px] text-white/70">Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.</p>
 
                   <button className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-[#E11D2E] px-4 py-3 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.22)] transition hover:brightness-110 active:brightness-95">
                     Đặt Vé Ngay
@@ -799,9 +752,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
               <section className={`${Glass} p-4`}>
                 <div className="mb-4 flex items-end justify-between gap-3">
                   <h2 className="text-base font-extrabold md:text-lg">Phim Liên Quan</h2>
-                  {relatedQuery.isFetching ? (
-                    <span className="text-xs font-semibold text-white/55">Đang tải...</span>
-                  ) : null}
+                  {relatedQuery.isFetching ? <span className="text-xs font-semibold text-white/55">Đang tải...</span> : null}
                 </div>
 
                 {relatedQuery.isError ? (
@@ -811,10 +762,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 ) : relatedQuery.isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2"
-                      >
+                      <div key={i} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2">
                         <div className="h-16 w-12 rounded-lg border border-white/10 bg-black/30" />
                         <div className="flex-1">
                           <div className="h-4 w-2/3 rounded bg-white/10" />
@@ -827,10 +775,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 ) : relatedMovies.length === 0 ? (
                   <p className="text-sm text-white/55">Chưa có phim liên quan.</p>
                 ) : (
+                  // QUAN TRỌNG: wrapper phải có height cố định + overflow-y-auto
                   <div
                     className={[
                       "space-y-3 pr-2",
-                      "max-h-[420px] overflow-y-auto",
+                      "h-[380px] overflow-y-auto overscroll-contain",
+                      "touch-pan-y",
                       "[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent]",
                       "[&::-webkit-scrollbar]:w-[8px]",
                       "[&::-webkit-scrollbar-track]:bg-transparent",
@@ -850,7 +800,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                       return (
                         <button
-                          key={safeId || `${title}-${Math.random()}`}
+                          key={safeId || title}
                           type="button"
                           onClick={() => {
                             if (!safeId) return;
