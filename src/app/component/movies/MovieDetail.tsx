@@ -12,6 +12,7 @@ import {
   LocalOffer,
 } from "@mui/icons-material";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams, usePathname, useRouter } from "next/navigation";
 
 import {
   IMovieShowtimeGroup,
@@ -19,7 +20,6 @@ import {
   MoviePublic,
 } from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
-import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface MovieDetailProps {
@@ -58,12 +58,24 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     };
   }, [IMAGE_BASE]);
 
+  const buildReturnUrl = useMemo(() => {
+    return () => {
+      if (typeof window === "undefined") return `${pathname || `/movies/${id}` }#review`;
+      const p = window.location.pathname || pathname || `/movies/${id}`;
+      const s = window.location.search || "";
+      return `${p}${s}#review`;
+    };
+  }, [pathname, id]);
+
   const goLogin = useMemo(() => {
     return () => {
-      const next = pathname || `/movies/${id}`;
+      const next = buildReturnUrl();
+      try {
+        sessionStorage.setItem("RETURN_AFTER_LOGIN", next);
+      } catch {}
       router.push(`/login?next=${encodeURIComponent(next)}`);
     };
-  }, [pathname, router, id]);
+  }, [router, buildReturnUrl]);
 
   const toDateSafe = useMemo(() => {
     return (iso?: string | null) => {
@@ -293,7 +305,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       .filter(Boolean);
   }, [movie?.cast]);
 
-  const Glass = "rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
+  const Glass =
+    "rounded-2xl border border-white/10 bg-white/5 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
 
   return (
     <main className="relative min-h-screen bg-[#0A0B0D] text-white">
@@ -315,7 +328,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
               <img
                 alt={`${movie?.title} Poster`}
-                src={resolveUrl(movie?.posterUrl, "/poster/placeholder.jpg")}
+                src={resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}
                 className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
                 onError={(e) => {
                   const img = e.currentTarget as HTMLImageElement;
@@ -356,7 +369,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
             <div className="mt-2 flex flex-wrap gap-3">
               <a
-                href={movie?.trailerUrl}
+                href={movie?.trailerUrl || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
@@ -551,7 +564,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               <div className="flex items-start gap-4">
                                 <div className="h-16 w-12 overflow-hidden rounded-xl border border-white/10 bg-black/30">
                                   <img
-                                    src={resolveUrl(posterUrl, "/poster/placeholder.jpg")}
+                                    src={resolveUrl(posterUrl, "/poster/poster.jpg")}
                                     alt={cinemaName}
                                     className="h-full w-full object-cover"
                                     onError={(e) => {
@@ -604,7 +617,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              <section className={Glass}>
+              <section className={Glass} id="review">
                 <div className="p-5 md:p-6 lg:p-7">
                   <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Đánh giá</h2>
 
@@ -694,7 +707,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       </div>
                     ) : null}
 
-                    {formError ? <p className="mt-3 text-sm font-extrabold text-red-300">{formError}</p> : null}
+                    {formError ? (
+                      <p className="mt-3 text-sm font-extrabold text-red-300">{formError}</p>
+                    ) : null}
                   </div>
 
                   {(reviews?.length ?? 0) === 0 ? (
@@ -752,27 +767,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                 <div className="space-y-3">
                   {[
-                    {
-                      id: 2,
-                      title: "Phim Hay 1",
-                      genre: "Hành động, Phiêu lưu",
-                      rating: 4.3,
-                      poster: movie?.posterUrl,
-                    },
-                    {
-                      id: 3,
-                      title: "Phim Hay 2",
-                      genre: "Hài hước, Gia đình",
-                      rating: 4.4,
-                      poster: movie?.posterUrl,
-                    },
-                    {
-                      id: 4,
-                      title: "Phim Hay 3",
-                      genre: "Khoa học viễn tưởng",
-                      rating: 4.5,
-                      poster: movie?.posterUrl,
-                    },
+                    { id: 2, title: "Phim Hay 1", genre: "Hành động, Phiêu lưu", rating: 4.3, poster: movie?.posterUrl },
+                    { id: 3, title: "Phim Hay 2", genre: "Hài hước, Gia đình", rating: 4.4, poster: movie?.posterUrl },
+                    { id: 4, title: "Phim Hay 3", genre: "Khoa học viễn tưởng", rating: 4.5, poster: movie?.posterUrl },
                   ].map((item) => (
                     <button
                       key={item?.id}
@@ -780,9 +777,15 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     >
                       <div className="h-16 w-12 overflow-hidden rounded-lg bg-white/5 border border-white/10">
                         <img
-                          src={resolveUrl(item?.poster as any, "/poster/placeholder.jpg")}
+                          src={resolveUrl(item?.poster as any, "/poster/poster.jpg")}
                           alt={item?.title}
                           className="h-full w-full object-cover"
+                          onError={(e) => {
+                            const img = e.currentTarget as HTMLImageElement;
+                            if (img.dataset.fallback === "1") return;
+                            img.dataset.fallback = "1";
+                            img.src = "/poster/poster.jpg";
+                          }}
                         />
                       </div>
 
