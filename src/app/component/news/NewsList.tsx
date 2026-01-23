@@ -1,19 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Chip,
-  Grid,
-  Button,
-  TextField,
-  InputAdornment,
-  colors,
-} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { IPost, Post } from "@/types/data/post/post";
 import CustomPagination from "../admin/table/CustomPagination";
@@ -46,10 +33,6 @@ export default function NewsList() {
   const firstDate = new Date(first?.publishedAt).toLocaleDateString();
   const posts = data?.data ?? [];
   const [sortKey, setSortKey] = useState<'newest' | 'oldest'>('newest');
-  const filteredNews = posts.filter((item) =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
   const searchPosts = useMemo(() => {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;
