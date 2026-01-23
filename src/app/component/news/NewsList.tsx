@@ -34,7 +34,6 @@ export default function NewsList() {
     return {
       page: searchQuery.get("page") || 1,
       perPage: searchQuery.get("perPage") || 6,
-      id: 0
     }
   }, [searchQuery])
   const { data, refetch: refetchPost } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam) });

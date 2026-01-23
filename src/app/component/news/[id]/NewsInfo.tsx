@@ -7,17 +7,6 @@ export default function NewsInfo() {
     const param = useParams();
     const id = Number(param.id)
 
-    const queryParam = useMemo(() => {
-        return {
-            page: 1,
-            perPage: 6,
-            id: id
-        }
-    }, []);
-    const relate = useQuery(Post.objects.paginateQueryFactory(queryParam));
-    const datar = relate?.data?.data || [];
-    console.log(datar);
-
     const data = useQuery(Post.getPostsInfo(id));
     const data2 = data?.data?.data;
     console.log(data2);
