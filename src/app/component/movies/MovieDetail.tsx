@@ -738,16 +738,46 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </div>
 
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
-              <section className="rounded-2xl border border-white/10 bg-black/25 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-                <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-7 text-center">
-                  <p className="text-xs font-extrabold uppercase tracking-wide text-white/80">Đặt Vé Nhanh</p>
-                  <p className="mt-1 text-[13px] text-white/70">Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.</p>
+              {/* ===== CHỈ CHỈNH PHẦN "ĐẶT VÉ NHANH" BÊN DƯỚI ===== */}
+              <section className="relative overflow-hidden rounded-[28px] bg-black/25 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+                {/* glow đỏ cực mạnh (đèn đỏ) */}
+                <div className="pointer-events-none absolute -inset-12 -z-10 blur-3xl">
+                  <div className="absolute inset-0 bg-[radial-gradient(520px_260px_at_50%_18%,rgba(255,0,0,0.95),transparent_62%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(620px_340px_at_50%_115%,rgba(255,55,55,0.85),transparent_72%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(420px_220px_at_10%_40%,rgba(255,0,0,0.55),transparent_70%)]" />
+                </div>
 
-                  <button className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-[#E11D2E] px-4 py-3 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.22)] transition hover:brightness-110 active:brightness-95">
-                    Đặt Vé Ngay
-                  </button>
+                {/* CARD đỏ tươi đơn giản như mẫu xanh, nhưng phát sáng mạnh */}
+                <div className="relative overflow-hidden rounded-[22px] bg-[#FF0000] px-6 py-6 text-center shadow-[0_28px_95px_rgba(255,0,0,0.78)]">
+                  {/* highlight cho mặt card + glow trong */}
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute inset-0 bg-[radial-gradient(520px_240px_at_50%_0%,rgba(255,255,255,0.30),transparent_60%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(620px_320px_at_50%_120%,rgba(0,0,0,0.16),transparent_62%)]" />
+                    <div className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.10)]" />
+                  </div>
+
+                  <div className="relative">
+                    {/* pill trắng nhẹ để chữ đỏ nổi rực đúng ý bạn */}
+                    <div className="mx-auto inline-flex items-center justify-center rounded-full bg-white/85 px-5 py-2 shadow-[0_14px_38px_rgba(0,0,0,0.22)]">
+                      <p className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#FF0000] [text-shadow:0_0_14px_rgba(255,0,0,0.95),0_0_30px_rgba(255,80,80,0.75)]">
+                        ĐẶT VÉ NHANH
+                      </p>
+                    </div>
+
+                    <p className="mx-auto mt-3 max-w-[30ch] text-sm font-semibold leading-relaxed text-white/95">
+                      Chọn suất chiếu và đặt vé ngay!
+                    </p>
+
+                    <button
+                      type="button"
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-extrabold text-[#FF0000] shadow-[0_18px_55px_rgba(0,0,0,0.30)] transition hover:brightness-105 active:brightness-95"
+                    >
+                      Đặt Vé Ngay
+                    </button>
+                  </div>
                 </div>
               </section>
+              {/* ===== KẾT THÚC PHẦN "ĐẶT VÉ NHANH" ===== */}
 
               <section className={`${Glass} p-4`}>
                 <div className="mb-4 flex items-end justify-between gap-3">
@@ -775,7 +805,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 ) : relatedMovies.length === 0 ? (
                   <p className="text-sm text-white/55">Chưa có phim liên quan.</p>
                 ) : (
-                  // QUAN TRỌNG: wrapper phải có height cố định + overflow-y-auto
                   <div
                     className={[
                       "space-y-3 pr-2",
