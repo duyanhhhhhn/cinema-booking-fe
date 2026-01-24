@@ -134,7 +134,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     enabled: movieIdNum > 0,
   });
 
-  const dataMovieCinemasShowtimes = useQuery<IMovieShowtimeGroup[]>({
+  const dataMovieCinemaShowtimes = useQuery<IMovieShowtimeGroup[]>({
     ...MoviePublic.getMovieByCinema(movieIdNum),
     enabled: movieIdNum > 0,
   });
@@ -166,7 +166,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return list.filter((x) => Number(x?.id) !== movieIdNum).slice(0, RELATED_LIMIT);
   }, [relatedQuery.data, movieIdNum]);
 
-  const cinemasRaw = useMemo(() => dataMovieCinemasShowtimes.data ?? [], [dataMovieCinemasShowtimes.data]);
+  const cinemasRaw = useMemo(() => dataMovieCinemaShowtimes.data ?? [], [dataMovieCinemaShowtimes.data]);
 
   const cinemas = useMemo(() => {
     return cinemasRaw
@@ -492,7 +492,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       <p className="mt-1 text-xs text-white/55 md:text-sm">Chọn ngày để xem suất chiếu theo rạp.</p>
                     </div>
 
-                    {dataMovieCinemasShowtimes.isFetching ? (
+                    {dataMovieCinemaShowtimes.isFetching ? (
                       <span className="text-xs font-semibold text-white/55">Đang tải...</span>
                     ) : null}
                   </div>
@@ -528,21 +528,21 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </div>
                   </div>
 
-                  {dataMovieCinemasShowtimes.isError ? (
+                  {dataMovieCinemaShowtimes.isError ? (
                     <div className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                       Không tải được danh sách rạp & suất chiếu. Vui lòng thử lại.
                     </div>
                   ) : null}
 
-                  {!dataMovieCinemasShowtimes.isLoading && cinemas.length === 0 ? (
+                  {!dataMovieCinemaShowtimes.isLoading && cinemas.length === 0 ? (
                     <p className="mt-5 text-sm text-white/55">Chưa có rạp hoặc suất chiếu cho phim này.</p>
-                  ) : scheduleRows.length === 0 && !dataMovieCinemasShowtimes.isLoading ? (
+                  ) : scheduleRows.length === 0 && !dataMovieCinemaShowtimes.isLoading ? (
                     <div className="mt-6 rounded-xl border border-white/10 bg-black/25 px-4 py-4 text-sm text-white/65">
                       Không có suất chiếu cho ngày đã chọn.
                     </div>
                   ) : (
                     <div className="mt-6 space-y-4">
-                      {(dataMovieCinemasShowtimes.isLoading
+                      {(dataMovieCinemaShowtimes.isLoading
                         ? Array.from({ length: 2 }).map((_, i) => ({
                             cinema: { cinemaId: i, cinemaName: "Đang tải...", address: "", posterUrl: null } as any,
                             showtimes: [] as IShowtimeItem[],
@@ -584,7 +584,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               </div>
 
                               <div className="mt-4 flex flex-wrap gap-2">
-                                {dataMovieCinemasShowtimes.isLoading ? (
+                                {dataMovieCinemaShowtimes.isLoading ? (
                                   <>
                                     <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
                                     <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
