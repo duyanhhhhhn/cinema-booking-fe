@@ -1,203 +1,362 @@
 "use client";
 
-import { useState } from "react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 import {
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  Typography,
   Box,
   Drawer,
   AppBar,
   Toolbar,
-  List,
-  Typography,
-  Divider,
   IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Badge,
   Avatar,
-  MenuItem,
   Menu,
+  MenuItem,
+  Divider,
 } from "@mui/material";
-import Image from "next/image";
-import { useAuth } from "@/contexts/AuthContext";
-import router from "next/router";
 
-const drawerWidth = 280;
+// Import Icons MUI (Thay thế cho ti-icons để đảm bảo hiển thị đẹp)
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PieChartIcon from "@mui/icons-material/PieChart";
+import DomainIcon from "@mui/icons-material/Domain";
+import MovieIcon from "@mui/icons-material/Movie";
+import LocalActivityIcon from "@mui/icons-material/LocalActivity";
+import ArticleIcon from "@mui/icons-material/Article";
+import PersonIcon from "@mui/icons-material/Person";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import MenuIcon from "@mui/icons-material/Menu";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
 
+const drawerWidth = 260;
+
+// --- Cấu hình Menu Data (Dữ liệu mới của bạn) ---
 const menuItems = [
-  { text: "Dashboard", icon: "ti ti-dashboard", path: "/admin" },
-  { text: "Phim", icon: "ti ti-movie", path: "/admin/movies" },
-  { text: "Suất chiếu", icon: "ti ti-clock", path: "/admin/showtimes" },
-  { text: "Vé đã bán", icon: "ti ti-ticket", path: "/admin/tickets" },
-  { text: "Hóa đơn", icon: "ti ti-receipt", path: "/admin/invoices" },
-  { text: "Combo & Đồ ăn", icon: "ti ti-shopping-cart", path: "/admin/combos" },
-  { text: "Mã giảm giá", icon: "ti ti-tag", path: "/admin/vouchers" },
-  { text: "Chi nhánh", icon: "ti ti-building", path: "/admin/branches" },
-  { text: "Rạp chiếu", icon: "ti ti-screen", path: "/admin/cinemas" },
-  { text: "Phòng chiếu", icon: "ti ti-door", path: "/admin/rooms" },
-  { text: "Người dùng", icon: "ti ti-users", path: "/admin/users" },
-  { text: "Bài viết", icon: "ti ti-news", path: "/admin/posts" },
-  { text: "Banner", icon: "ti ti-photo", path: "/admin/banners" },
-  { text: "Thống kê", icon: "ti ti-chart-bar", path: "/admin/statistics" },
+  { text: "Tổng quan", icon: <DashboardIcon />, path: "/admin" },
+  {
+    text: "Thống kê",
+    icon: <PieChartIcon />,
+    path: "/admin/statistics",
+    children: [
+      { text: "Doanh thu", path: "/admin/stats/revenue" },
+      { text: "Vé bán", path: "/admin/stats/tickets" },
+    ],
+  },
+  {
+    text: "Hệ thống rạp",
+    icon: <DomainIcon />,
+    path: "/admin/system",
+    children: [
+      { text: "Quản lý chi nhánh", path: "/admin/branches" },
+      { text: "Quản lý rạp chiếu", path: "/admin/cinemas" },
+      { text: "Quản lý phòng chiếu", path: "/admin/rooms" },
+      { text: "Quản lý mẫu sơ đồ ghế", path: "/admin/seat-maps" },
+    ],
+  },
+  {
+    text: "Phim và Suất Chiếu",
+    icon: <MovieIcon />,
+    path: "/admin/movies-group",
+    children: [
+      { text: "Danh sách phim", path: "/admin/movies" },
+      { text: "Suất chiếu", path: "/admin/showtimes" },
+    ],
+  },
+  {
+    text: "Dịch Vụ và ƯU ĐÃI",
+    icon: <LocalActivityIcon />,
+    path: "/admin/services",
+    children: [
+      { text: "Vé đã bán", path: "/admin/tickets" },
+      { text: "Combo & Đồ ăn", path: "/admin/combos" },
+      { text: "Mã giảm giá", path: "/admin/vouchers" },
+    ],
+  },
+  {
+    text: "Người dùng",
+    icon: <PersonIcon />,
+    path: "/admin/user-management",
+    children: [
+      { text: "Quản lý người dùng", path: "/admin/user-management" },
+      { text: "Nhân viên và phân quyền", path: "/admin/staff-management" },
+    ],
+  },
+  {
+    text: "Nội dung",
+    icon: <ArticleIcon />,
+    path: "/admin/content",
+    children: [
+      { text: "Bài viết", path: "/admin/posts" },
+      { text: "Banner", path: "/admin/banners" },
+    ],
+  },
 ];
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
+// --- Component Sidebar Item ---
+const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
+  const [open, setOpen] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+  const isParentActive = hasChildren
+    ? item.children.some((child: any) => pathname === child.path)
+    : pathname === item.path;
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-    
+  useEffect(() => {
+    if (isParentActive && hasChildren) {
+      setTimeout(() => setOpen(true), 0);
+    }
+  }, [pathname, isParentActive, hasChildren]);
+
+  const handleClick = () => {
+    if (hasChildren) setOpen(!open);
   };
-  const handleClick = (event) => {
+
+  return (
+    <>
+      <ListItemButton
+        onClick={hasChildren ? handleClick : undefined}
+        component={hasChildren ? "div" : Link}
+        href={hasChildren ? undefined : item.path}
+        sx={{
+          py: 1.5,
+          color: "white",
+          "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+        }}
+      >
+        <ListItemIcon sx={{ minWidth: 40, color: "inherit" }}>
+          <span className={isParentActive ? "text-white" : "text-gray-400"}>
+            {item.icon}
+          </span>
+        </ListItemIcon>
+        <ListItemText
+          primary={item.text}
+          primaryTypographyProps={{
+            fontSize: "0.95rem",
+            fontWeight: isParentActive ? 600 : 400,
+            color: isParentActive ? "#ffffff" : "#cbd5e1",
+          }}
+        />
+        {hasChildren ? (
+          open ? <ExpandLess sx={{ color: "gray" }} /> : <ExpandMore sx={{ color: "gray" }} />
+        ) : null}
+      </ListItemButton>
+
+      {hasChildren && (
+        <Collapse in={open} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {item.children.map((child: any) => {
+              const isChildActive = pathname === child.path;
+              return (
+                <Link key={child.path} href={child.path} style={{ textDecoration: "none" }}>
+                  <ListItemButton
+                    sx={{
+                      pl: 4,
+                      py: 1,
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <span className="flex items-center gap-3">
+                          <span className="text-gray-500">-</span>
+                          {child.text}
+                        </span>
+                      }
+                      primaryTypographyProps={{
+                        fontSize: "0.9rem",
+                        color: isChildActive ? "#ffffff" : "#94a3b8",
+                        fontWeight: isChildActive ? 600 : 400,
+                      }}
+                    />
+                  </ListItemButton>
+                </Link>
+              );
+            })}
+          </List>
+        </Collapse>
+      )}
+    </>
+  );
+};
+
+// --- MAIN ADMIN LAYOUT ---
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  
+  // 1. Logic Auth & Menu từ code cũ
+  const { user, logout } = useAuth(); // Lấy thông tin user
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
+  // 2. State cho Sidebar Mobile
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // --- Handlers ---
+  const handleDrawerToggle = () => {
+    if (!isClosing) setMobileOpen(!mobileOpen);
+  };
+
+  const handleDrawerClose = () => {
+    setIsClosing(true);
+    setMobileOpen(false);
+  };
+
+  const handleDrawerTransitionEnd = () => setIsClosing(false);
+
+  // Handlers cho Profile Menu (Code cũ)
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+  
+  const handleMenuClose = () => setAnchorEl(null);
 
-  // 2. Đóng menu
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleProfileNavigate = () => {
+    handleMenuClose();
+    router.push("/profile");
   };
 
-  // 3. Xử lý chuyển trang Profile
-  const handleProfileClick = () => {
-    handleClose();
-    router.push("/profile"); // Thay đường dẫn của bạn vào đây
+  const handleLogout = async () => {
+    handleMenuClose();
+    await logout();
+    router.push("/");
   };
 
-  // 4. Xử lý Đăng xuất
-    const handleLogout = async () => {
-      handleClose();
-      await logout();
-      router.push("/");
-    };
+  const drawerContent = (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "#303f9f",
+        color: "white",
+      }}
+    >
+      {/* 1. Logo Section */}
+      <Box sx={{ px: 3, pt: 3, textAlign: "center" }}>
+        <Box sx={{ width: 100, height: 100, mx: "auto", position: 'relative' }}>
+             <Image src="/logo/logo_cinema.png" alt="logo" fill style={{ objectFit: 'contain'}} />
+         </Box>
+      </Box>
 
-  const drawer = (
-    <div>
-      <Toolbar className="bg-teal-600">
-       
-          <Image src="/logo/logo_cinema.png" alt="logo" width={100} height={100} />
-       
-      </Toolbar>
-      <Divider />
-      <List>
+      {/* 2. Label Menu */}
+      <Box sx={{ px: 3, pb: 1, pt: 2 }}>
+        <Typography variant="caption" sx={{ color: "#8fa1cc", fontWeight: "bold", letterSpacing: 1 }}>
+          MENU
+        </Typography>
+      </Box>
+
+      {/* 3. Danh sách Menu (Phần này sẽ cuộn nhưng không hiện thanh scroll) */}
+      <List 
+        component="nav" 
+        sx={{ 
+          px: 1, 
+          // Logic để cuộn
+          overflowY: "auto", 
+          flex: 1,
+          
+          // --- CSS ĐỂ ẨN THANH CUỘN ---
+          "&::-webkit-scrollbar": { display: "none" }, // Ẩn trên Chrome/Safari/Edge
+          "scrollbarWidth": "none",                    // Ẩn trên Firefox
+          "-ms-overflow-style": "none",                // Ẩn trên IE cũ
+        }}
+      >
         {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <Link href={item.path} className="w-full">
-              <ListItemButton
-                selected={pathname === item.path}
-                className={
-                  pathname === item.path
-                    ? "bg-teal-50 border-r-4 border-teal-500"
-                    : "hover:bg-gray-50"
-                }
-              >
-                <ListItemIcon>
-                  <i
-                    className={`${item.icon} text-xl ${
-                      pathname === item.path ? "text-teal-500" : "text-gray-600"
-                    }`}
-                  ></i>
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  className={
-                    pathname === item.path ? "text-teal-600 font-semibold" : ""
-                  }
-                />
-              </ListItemButton>
-            </Link>
-          </ListItem>
+          <SidebarItem key={item.text} item={item} pathname={pathname} />
         ))}
       </List>
-    </div>
+    </Box>
   );
 
   return (
-    <Box
-      className="flex"
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#ffffff",
-      }}
-    >
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f4f6f8" }}>
+      
+      {/* 1. APP BAR (HEADER) - Lấy style trắng từ code cũ */}
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-          backgroundColor: "#fff",
-          color: "#000",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          // Tính toán width để tránh đè lên Sidebar ở Desktop
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
+          bgcolor: "#fff", // Màu trắng như code cũ
+          color: "#000",   // Chữ đen
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)", // Shadow nhẹ
         }}
       >
         <Toolbar>
+          {/* Nút Hamburger (Chỉ hiện ở Mobile) */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: 2, display: { md: "none" } }}
           >
-            <i className="ti ti-menu-2"></i>
+            <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" className="flex-1">
+
+          {/* Tiêu đề trang */}
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: '#303f9f' }}>
             Quản trị hệ thống
           </Typography>
-          <div className="flex items-center gap-4">
+
+          {/* Phần bên phải: Notification & Profile (Code cũ) */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            
+            {/* Notification */}
             <IconButton>
               <Badge badgeContent={4} color="error">
-                <i className="ti ti-bell text-gray-700"></i>
+                <NotificationsIcon sx={{ color: '#555' }} />
               </Badge>
             </IconButton>
-            <div
-              className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1.5 rounded-lg transition-all"
-              onClick={handleClick}
-              aria-controls={open ? "account-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? "true" : undefined}
-            >
-              <Avatar className="bg-teal-500 w-10 h-10">
-                {/* Hiển thị chữ cái đầu nếu có tên, ngược lại hiện icon */}
-                {user?.fullName ? (
-                  user.fullName.charAt(0).toUpperCase()
-                ) : (
-                  <i className="ti ti-user"></i>
-                )}
-              </Avatar>
-              <div className="hidden md:block text-left">
-                <Typography
-                  variant="body2"
-                  className="font-semibold leading-tight"
-                >
-                  {user?.fullName || "Khách"}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  className="text-gray-500 block text-xs"
-                >
-                  {user?.email || "Chưa đăng nhập"}
-                </Typography>
-              </div>
-            </div>
 
-            {/* Phần Dropdown Menu */}
+            {/* User Profile */}
+            <Box
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5, 
+                cursor: 'pointer',
+                p: 0.5,
+                borderRadius: 1,
+                '&:hover': { bgcolor: '#f5f5f5' }
+              }}
+              onClick={handleProfileClick}
+            >
+              <Avatar 
+                sx={{ bgcolor: '#303f9f', width: 36, height: 36, fontSize: 16 }}
+                src={user?.avatar}
+              >
+                {user?.fullName ? user.fullName.charAt(0).toUpperCase() : "A"}
+              </Avatar>
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                  {user?.fullName}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'gray' }}>
+                  {user?.email}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Dropdown Menu */}
             <Menu
               anchorEl={anchorEl}
-              id="account-menu"
-              open={open}
-              onClose={handleClose}
-              onClick={handleClose}
+              open={openMenu}
+              onClose={handleMenuClose}
+              onClick={handleMenuClose}
               PaperProps={{
                 elevation: 0,
                 sx: {
@@ -205,14 +364,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
                   mt: 1.5,
                   minWidth: 180,
-                  "& .MuiAvatar-root": {
-                    width: 32,
-                    height: 32,
-                    ml: -0.5,
-                    mr: 1,
-                  },
                   "&:before": {
-                    // Tạo mũi tên nhỏ trỏ lên
                     content: '""',
                     display: "block",
                     position: "absolute",
@@ -229,70 +381,66 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               transformOrigin={{ horizontal: "right", vertical: "top" }}
               anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
-              {/* Option 1: Thông tin cá nhân */}
-              <MenuItem onClick={handleProfileClick}>
+              <MenuItem onClick={handleProfileNavigate}>
                 <ListItemIcon>
-                  <i className="ti ti-user-circle text-lg"></i>
+                  <AccountCircleIcon fontSize="small" />
                 </ListItemIcon>
                 Thông tin cá nhân
               </MenuItem>
-
               <Divider />
-
-              {/* Option 2: Đăng xuất */}
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                  <i className="ti ti-logout text-lg text-red-500"></i>
+                  <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
                 </ListItemIcon>
                 <Typography color="error">Đăng xuất</Typography>
               </MenuItem>
             </Menu>
-          </div>
+          </Box>
         </Toolbar>
       </AppBar>
+
+      {/* 2. SIDEBAR NAVIGATION */}
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
       >
+        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
+          onTransitionEnd={handleDrawerTransitionEnd}
+          onClose={handleDrawerClose}
+          ModalProps={{ keepMounted: true }}
           sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: drawerWidth,
-            },
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth, border: "none" },
           }}
         >
-          {drawer}
+          {drawerContent}
         </Drawer>
+
+        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: drawerWidth,
-            },
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth, borderRight: "1px solid rgba(255,255,255,0.1)" },
           }}
           open
         >
-          {drawer}
+          {drawerContent}
         </Drawer>
       </Box>
+
+      {/* 3. MAIN CONTENT */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: "64px",
-          backgroundColor: "#ffffff",
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          mt: "64px", // Đẩy nội dung xuống bằng chiều cao của Header (AppBar)
+          overflowX: "hidden",
         }}
       >
         {children}
