@@ -13,8 +13,18 @@ import {
 } from "@mui/icons-material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, usePathname, useRouter } from "next/navigation";
+import { Be_Vietnam_Pro } from "next/font/google";
 
-import { IMovieShowtimeGroup, IShowtimeItem, MoviePublic } from "@/types/data/movie-public";
+const beVN = Be_Vietnam_Pro({
+  subsets: ["vietnamese"],
+  weight: ["600", "700", "800"],
+});
+
+import {
+  IMovieShowtimeGroup,
+  IShowtimeItem,
+  MoviePublic,
+} from "@/types/data/movie-public";
 import { MovieReview } from "@/types/data/movie-review";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -41,8 +51,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       Number.isFinite(vFromParams) && vFromParams > 0
         ? Math.floor(vFromParams)
         : Number.isFinite(vFromProp) && vFromProp > 0
-        ? Math.floor(vFromProp)
-        : 0;
+          ? Math.floor(vFromProp)
+          : 0;
     return v;
   }, [id, movieId]);
 
@@ -51,8 +61,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   }, [movieIdNum]);
 
   const IMAGE_BASE = useMemo(
-    () => (process.env.NEXT_PUBLIC_IMAGE_URL ?? "http://localhost:8080").replace(/\/+$/, ""),
-    []
+    () =>
+      (process.env.NEXT_PUBLIC_IMAGE_URL ?? "http://localhost:8080").replace(
+        /\/+$/,
+        "",
+      ),
+    [],
   );
 
   const resolveUrl = useMemo(() => {
@@ -67,7 +81,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const buildReturnUrl = useMemo(() => {
     return () => {
-      if (typeof window === "undefined") return `${pathname || routeMoviePath}#review`;
+      if (typeof window === "undefined")
+        return `${pathname || routeMoviePath}#review`;
       const p = window.location.pathname || pathname || routeMoviePath;
       const s = window.location.search || "";
       return `${p}${s}#review`;
@@ -154,7 +169,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       if (!api?.get) return { data: [] };
       const res = await api.get({
         url: "/public/movies/related",
-        params: { genre: movie?.genre, movieId: movieIdNum, limit: RELATED_LIMIT },
+        params: {
+          genre: movie?.genre,
+          movieId: movieIdNum,
+          limit: RELATED_LIMIT,
+        },
       });
       return res?.data;
     },
@@ -162,17 +181,31 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const relatedMovies = useMemo(() => {
     const raw: any = relatedQuery.data;
-    const list: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
-    return list.filter((x) => Number(x?.id) !== movieIdNum).slice(0, RELATED_LIMIT);
+    const list: any[] = Array.isArray(raw?.data)
+      ? raw.data
+      : Array.isArray(raw)
+        ? raw
+        : [];
+    return list
+      .filter((x) => Number(x?.id) !== movieIdNum)
+      .slice(0, RELATED_LIMIT);
   }, [relatedQuery.data, movieIdNum]);
 
-  const cinemasRaw = useMemo(() => dataMovieCinemaShowtimes.data ?? [], [dataMovieCinemaShowtimes.data]);
+  const cinemasRaw = useMemo(
+    () => dataMovieCinemaShowtimes.data ?? [],
+    [dataMovieCinemaShowtimes.data],
+  );
 
   const cinemas = useMemo(() => {
     return cinemasRaw
       .map((c) => {
-        const list = (((c as any)?.showtimes ?? (c as any)?.showtime ?? []) as IShowtimeItem[]) || [];
-        const showtimes = [...list].sort((a, b) => (a?.startTime || "").localeCompare(b?.startTime || ""));
+        const list =
+          (((c as any)?.showtimes ??
+            (c as any)?.showtime ??
+            []) as IShowtimeItem[]) || [];
+        const showtimes = [...list].sort((a, b) =>
+          (a?.startTime || "").localeCompare(b?.startTime || ""),
+        );
         return { ...c, showtimes };
       })
       .sort((a, b) => (a.cinemaName ?? "").localeCompare(b.cinemaName ?? ""));
@@ -191,14 +224,22 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         e.code = "NEED_LOGIN";
         throw e;
       }
-      return MovieReview.createComment(uid, movieIdNum, ratingInput, commentInput).queryFn();
+      return MovieReview.createComment(
+        uid,
+        movieIdNum,
+        ratingInput,
+        commentInput,
+      ).queryFn();
     },
     onSuccess: async () => {
       setFormError("");
       setNeedLogin(false);
       setCommentInput("");
       setRatingInput(5);
-      await Promise.all([dataMovieReviews.refetch(), dataMovieCountRating.refetch()]);
+      await Promise.all([
+        dataMovieReviews.refetch(),
+        dataMovieCountRating.refetch(),
+      ]);
     },
     onError: (err: any) => {
       if (err?.message === "NEED_LOGIN" || err?.code === "NEED_LOGIN") {
@@ -227,7 +268,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const availableDateKeys = useMemo(() => {
     const set = new Set<string>();
     for (const c of cinemas) {
-      for (const st of (((c as any).showtimes as IShowtimeItem[]) ?? [])) {
+      for (const st of ((c as any).showtimes as IShowtimeItem[]) ?? []) {
         const k = dateKey(st.startTime);
         if (k) set.add(k);
       }
@@ -273,7 +314,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return startOfWeekMonday(new Date());
   }, [availableDateKeys, selectedDate, startOfWeekMonday]);
 
-  const dateTabs = useMemo(() => Array.from({ length: 7 }, (_, i) => addDaysKey(weekBase, i)), [addDaysKey, weekBase]);
+  const dateTabs = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDaysKey(weekBase, i)),
+    [addDaysKey, weekBase],
+  );
 
   useEffect(() => {
     const firstWithShowtime = dateTabs.find((k) => hasShowtimeByDate(k));
@@ -284,7 +328,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const scheduleRows = useMemo(() => {
     return cinemas
       .map((c) => {
-        const showtimes = (((c as any).showtimes as IShowtimeItem[]) ?? []).filter((st) => dateKey(st.startTime) === selectedDate);
+        const showtimes = (
+          ((c as any).showtimes as IShowtimeItem[]) ?? []
+        ).filter((st) => dateKey(st.startTime) === selectedDate);
         return { cinema: c, showtimes };
       })
       .filter((x) => x.showtimes.length > 0);
@@ -303,7 +349,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return (key: string) => {
       const d = new Date(`${key}T00:00:00`);
       if (Number.isNaN(d.getTime())) return "";
-      const en = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(d).toLowerCase();
+      const en = new Intl.DateTimeFormat("en-US", { weekday: "long" })
+        .format(d)
+        .toLowerCase();
       return map[en] ?? "";
     };
   }, []);
@@ -360,14 +408,20 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
           </div>
 
           <div className="flex flex-1 flex-col gap-4 md:gap-6">
-            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">{movie?.title}</h1>
+            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
+              {movie?.title}
+            </h1>
 
-            <p className="max-w-2xl text-sm text-white/75 md:text-base">{movie?.description}</p>
+            <p className="max-w-2xl text-sm text-white/75 md:text-base">
+              {movie?.description}
+            </p>
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
                 <Star className="text-yellow-400" fontSize="small" />
-                <span className="font-extrabold text-white">{reviews_rating?.avgRating ?? 0}</span>
+                <span className="font-extrabold text-white">
+                  {reviews_rating?.avgRating ?? 0}
+                </span>
                 <span className="text-white/60">/ 5</span>
               </div>
 
@@ -413,57 +467,92 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
               {/* Thông Tin Phim */}
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
-                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Thông Tin Phim</h2>
+                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
+                    Thông Tin Phim
+                  </h2>
 
                   <div className="grid gap-4 text-sm text-white/85 md:grid-cols-2">
                     <div className="flex items-start gap-3">
-                      <EventAvailable className="mt-0.5 text-white/70" fontSize="small" />
+                      <EventAvailable
+                        className="mt-0.5 text-white/70"
+                        fontSize="small"
+                      />
                       <span>
                         Khởi chiếu:{" "}
-                        <span className="font-extrabold text-white">{formatDMY(movie?.releaseDate as any)}</span>
+                        <span className="font-extrabold text-white">
+                          {formatDMY(movie?.releaseDate as any)}
+                        </span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Person className="mt-0.5 text-white/70" fontSize="small" />
+                      <Person
+                        className="mt-0.5 text-white/70"
+                        fontSize="small"
+                      />
                       <span>
-                        Đạo diễn: <span className="font-extrabold text-white">{movie?.director}</span>
+                        Đạo diễn:{" "}
+                        <span className="font-extrabold text-white">
+                          {movie?.director}
+                        </span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Schedule className="mt-0.5 text-white/70" fontSize="small" />
+                      <Schedule
+                        className="mt-0.5 text-white/70"
+                        fontSize="small"
+                      />
                       <span>
                         Thời lượng:{" "}
-                        <span className="font-extrabold text-white">{movie?.durationMinutes} phút</span>
+                        <span className="font-extrabold text-white">
+                          {movie?.durationMinutes} phút
+                        </span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Star className="mt-0.5 text-yellow-400" fontSize="small" />
+                      <Star
+                        className="mt-0.5 text-yellow-400"
+                        fontSize="small"
+                      />
                       <span>
                         Đánh giá:{" "}
-                        <span className="font-extrabold text-white">{reviews_rating?.avgRating ?? 0}/5</span>
+                        <span className="font-extrabold text-white">
+                          {reviews_rating?.avgRating ?? 0}/5
+                        </span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Language className="mt-0.5 text-white/70" fontSize="small" />
+                      <Language
+                        className="mt-0.5 text-white/70"
+                        fontSize="small"
+                      />
                       <span>
-                        Ngôn ngữ: <span className="font-extrabold text-white">{movie?.language}</span>
+                        Ngôn ngữ:{" "}
+                        <span className="font-extrabold text-white">
+                          {movie?.language}
+                        </span>
                       </span>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <LocalOffer className="mt-0.5 text-white/70" fontSize="small" />
+                      <LocalOffer
+                        className="mt-0.5 text-white/70"
+                        fontSize="small"
+                      />
                       <span>
-                        Phân loại: <span className="font-extrabold text-white">C18</span>
+                        Phân loại:{" "}
+                        <span className="font-extrabold text-white">C18</span>
                       </span>
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">Diễn viên</h3>
+                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
+                      Diễn viên
+                    </h3>
                     <ul className="flex flex-wrap gap-2 text-sm">
                       {cast_list?.map((actor) => (
                         <li
@@ -477,8 +566,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">Nội Dung Phim</h3>
-                    <p className="text-sm leading-relaxed text-white/75">{movie?.description}</p>
+                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
+                      Nội Dung Phim
+                    </h3>
+                    <p className="text-sm leading-relaxed text-white/75">
+                      {movie?.description}
+                    </p>
                   </div>
                 </div>
               </section>
@@ -488,17 +581,25 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 <div className="p-5 md:p-6 lg:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <h2 className="text-xl font-extrabold md:text-2xl">Lịch Chiếu</h2>
-                      <p className="mt-1 text-xs text-white/55 md:text-sm">Chọn ngày để xem suất chiếu theo rạp.</p>
+                      <h2 className="text-xl font-extrabold md:text-2xl">
+                        Lịch Chiếu
+                      </h2>
+                      <p className="mt-1 text-xs text-white/55 md:text-sm">
+                        Chọn ngày để xem suất chiếu theo rạp.
+                      </p>
                     </div>
 
                     {dataMovieCinemaShowtimes.isFetching ? (
-                      <span className="text-xs font-semibold text-white/55">Đang tải...</span>
+                      <span className="text-xs font-semibold text-white/55">
+                        Đang tải...
+                      </span>
                     ) : null}
                   </div>
 
                   <div className="mt-5">
-                    <div className="text-xs font-extrabold tracking-wide text-white/70 uppercase">Chọn ngày</div>
+                    <div className="text-xs font-extrabold tracking-wide text-white/70 uppercase">
+                      Chọn ngày
+                    </div>
 
                     <div className="mt-3 flex flex-wrap gap-3">
                       {dateTabs.map((k) => {
@@ -515,13 +616,22 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               active
                                 ? "border-red-400/30 bg-red-500/15 text-white shadow-[0_16px_40px_rgba(225,29,46,0.16)]"
                                 : "border-white/10 bg-black/25 text-white/85 hover:border-red-400/20 hover:bg-red-500/10",
-                              has ? "" : "opacity-40 hover:bg-black/25 hover:border-white/10",
+                              has
+                                ? ""
+                                : "opacity-40 hover:bg-black/25 hover:border-white/10",
                             ].join(" ")}
                           >
-                            <div className={["text-[12px] font-extrabold", active ? "text-white/90" : "text-white/55"].join(" ")}>
+                            <div
+                              className={[
+                                "text-[12px] font-extrabold",
+                                active ? "text-white/90" : "text-white/55",
+                              ].join(" ")}
+                            >
                               {weekdayBadge(k)}
                             </div>
-                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">{dayOfMonth(k)}</div>
+                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">
+                              {dayOfMonth(k)}
+                            </div>
                           </button>
                         );
                       })}
@@ -530,13 +640,18 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                   {dataMovieCinemaShowtimes.isError ? (
                     <div className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                      Không tải được danh sách rạp & suất chiếu. Vui lòng thử lại.
+                      Không tải được danh sách rạp & suất chiếu. Vui lòng thử
+                      lại.
                     </div>
                   ) : null}
 
-                  {!dataMovieCinemaShowtimes.isLoading && cinemas.length === 0 ? (
-                    <p className="mt-5 text-sm text-white/55">Chưa có rạp hoặc suất chiếu cho phim này.</p>
-                  ) : scheduleRows.length === 0 && !dataMovieCinemaShowtimes.isLoading ? (
+                  {!dataMovieCinemaShowtimes.isLoading &&
+                  cinemas.length === 0 ? (
+                    <p className="mt-5 text-sm text-white/55">
+                      Chưa có rạp hoặc suất chiếu cho phim này.
+                    </p>
+                  ) : scheduleRows.length === 0 &&
+                    !dataMovieCinemaShowtimes.isLoading ? (
                     <div className="mt-6 rounded-xl border border-white/10 bg-black/25 px-4 py-4 text-sm text-white/65">
                       Không có suất chiếu cho ngày đã chọn.
                     </div>
@@ -544,7 +659,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     <div className="mt-6 space-y-4">
                       {(dataMovieCinemaShowtimes.isLoading
                         ? Array.from({ length: 2 }).map((_, i) => ({
-                            cinema: { cinemaId: i, cinemaName: "Đang tải...", address: "", posterUrl: null } as any,
+                            cinema: {
+                              cinemaId: i,
+                              cinemaName: "Đang tải...",
+                              address: "",
+                              posterUrl: null,
+                            } as any,
                             showtimes: [] as IShowtimeItem[],
                           }))
                         : scheduleRows
@@ -554,7 +674,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         const cinemaName = (c as any)?.cinemaName ?? "";
                         const address = (c as any)?.address ?? "";
                         const posterUrl = (c as any)?.posterUrl ?? null;
-                        const showtimes = (row.showtimes ?? []) as IShowtimeItem[];
+                        const showtimes = (row.showtimes ??
+                          []) as IShowtimeItem[];
 
                         return (
                           <div
@@ -565,11 +686,15 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               <div className="flex items-start gap-4">
                                 <div className="h-16 w-12 overflow-hidden rounded-xl border border-white/10 bg-black/30">
                                   <img
-                                    src={resolveUrl(posterUrl, "/poster/poster.jpg")}
+                                    src={resolveUrl(
+                                      posterUrl,
+                                      "/poster/poster.jpg",
+                                    )}
                                     alt={cinemaName}
                                     className="h-full w-full object-cover"
                                     onError={(e) => {
-                                      const img = e.currentTarget as HTMLImageElement;
+                                      const img =
+                                        e.currentTarget as HTMLImageElement;
                                       if (img.dataset.fallback === "1") return;
                                       img.dataset.fallback = "1";
                                       img.src = "/poster/poster.jpg";
@@ -578,8 +703,14 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 </div>
 
                                 <div className="flex-1">
-                                  <div className="text-base font-extrabold text-white">{cinemaName}</div>
-                                  {address ? <div className="mt-1 text-xs text-white/55 md:text-sm">{address}</div> : null}
+                                  <div className="text-base font-extrabold text-white">
+                                    {cinemaName}
+                                  </div>
+                                  {address ? (
+                                    <div className="mt-1 text-xs text-white/55 md:text-sm">
+                                      {address}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
 
@@ -593,13 +724,19 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 ) : (
                                   showtimes
                                     .slice()
-                                    .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""))
+                                    .sort((a, b) =>
+                                      (a.startTime || "").localeCompare(
+                                        b.startTime || "",
+                                      ),
+                                    )
                                     .map((st) => (
                                       <button
                                         key={st.id}
                                         className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10"
                                       >
-                                        <span className="tabular-nums">{formatHM(st.startTime)}</span>
+                                        <span className="tabular-nums">
+                                          {formatHM(st.startTime)}
+                                        </span>
                                         <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
                                           {st.type}
                                         </span>
@@ -619,27 +756,37 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
               {/* Đánh giá */}
               <section className={Glass} id="review">
                 <div className="p-5 md:p-6 lg:p-7">
-                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">Đánh giá</h2>
+                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
+                    Đánh giá
+                  </h2>
 
                   <div className="mb-6 flex items-center gap-4">
                     <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
                       <Star className="text-yellow-400" fontSize="small" />
-                      <span className="font-extrabold text-white">{reviews_rating?.avgRating ?? 0}</span>
+                      <span className="font-extrabold text-white">
+                        {reviews_rating?.avgRating ?? 0}
+                      </span>
                       <span className="text-white/60">/ 5</span>
                     </div>
 
-                    <span className="text-sm text-white/60">{reviews?.length ?? 0} đánh giá</span>
+                    <span className="text-sm text-white/60">
+                      {reviews?.length ?? 0} đánh giá
+                    </span>
                   </div>
 
                   <div className="mb-6 rounded-2xl border border-white/10 bg-black/25 p-4 backdrop-blur-md">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-white/80">Rating</span>
+                        <span className="text-sm font-extrabold text-white/80">
+                          Rating
+                        </span>
 
                         <div className="relative">
                           <select
                             value={ratingInput}
-                            onChange={(e) => setRatingInput(Number(e.target.value))}
+                            onChange={(e) =>
+                              setRatingInput(Number(e.target.value))
+                            }
                             className="appearance-none rounded-xl border border-white/10 bg-black/25 pl-3 pr-20 py-2 text-sm text-white outline-none"
                           >
                             {[5, 4, 3, 2, 1].map((v) => (
@@ -654,7 +801,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           </span>
 
                           <span className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2">
-                            <Star fontSize="small" className="text-yellow-400" />
+                            <Star
+                              fontSize="small"
+                              className="text-yellow-400"
+                            />
                           </span>
                         </div>
                       </div>
@@ -679,7 +829,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           onClick={onSubmitReview}
                           className="rounded-xl bg-[#E11D2E] px-4 py-2 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.18)] hover:brightness-110 disabled:opacity-60"
                         >
-                          {createCommentMutation.isPending ? "Đang gửi..." : "Gửi"}
+                          {createCommentMutation.isPending
+                            ? "Đang gửi..."
+                            : "Gửi"}
                         </button>
                       </div>
                     </div>
@@ -694,7 +846,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                     {needLogin ? (
                       <div className="mt-3 flex flex-col gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3">
-                        <p className="text-sm font-extrabold text-red-200">Bạn cần đăng nhập để thực hiện chức năng đánh giá.</p>
+                        <p className="text-sm font-extrabold text-red-200">
+                          Bạn cần đăng nhập để thực hiện chức năng đánh giá.
+                        </p>
                         <button
                           type="button"
                           onClick={goLogin}
@@ -705,29 +859,51 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       </div>
                     ) : null}
 
-                    {formError ? <p className="mt-3 text-sm font-extrabold text-red-300">{formError}</p> : null}
+                    {formError ? (
+                      <p className="mt-3 text-sm font-extrabold text-red-300">
+                        {formError}
+                      </p>
+                    ) : null}
                   </div>
 
                   {(reviews?.length ?? 0) === 0 ? (
-                    <p className="text-sm text-white/55">Chưa có đánh giá nào cho phim này.</p>
+                    <p className="text-sm text-white/55">
+                      Chưa có đánh giá nào cho phim này.
+                    </p>
                   ) : (
                     <ul className="space-y-4">
                       {reviews.map((review: any) => (
-                        <li key={review.id} className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md">
+                        <li
+                          key={review.id}
+                          className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md"
+                        >
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-extrabold text-white">Người dùng #{review.userId}</span>
+                            <span className="text-sm font-extrabold text-white">
+                              Người dùng #{review.userId}
+                            </span>
 
                             <div className="flex items-center gap-1 text-xs text-yellow-400">
-                              <Star fontSize="small" className="text-yellow-400" />
-                              <span className="font-extrabold">{review.rating}</span>
+                              <Star
+                                fontSize="small"
+                                className="text-yellow-400"
+                              />
+                              <span className="font-extrabold">
+                                {review.rating}
+                              </span>
                               <span className="text-white/60">/5</span>
                             </div>
                           </div>
 
-                          <p className="text-sm text-white/80">{review.comment}</p>
+                          <p className="text-sm text-white/80">
+                            {review.comment}
+                          </p>
 
                           <p className="mt-2 text-xs text-white/45">
-                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString("vi-VN") : ""}
+                            {review.createdAt
+                              ? new Date(review.createdAt).toLocaleDateString(
+                                  "vi-VN",
+                                )
+                              : ""}
                           </p>
                         </li>
                       ))}
@@ -738,59 +914,52 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </div>
 
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
-              {/* ===== CHỈ CHỈNH PHẦN "ĐẶT VÉ NHANH" BÊN DƯỚI ===== */}
-              <section className="relative overflow-hidden rounded-[28px] bg-black/20 p-4 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
-                {/* glow đỏ hiện đại, KHÔNG border */}
+              <section
+                className={`relative overflow-hidden rounded-[26px] ${beVN?.className ?? ""}`}
+              >
+                {/* glow ngoài (nhẹ, không tạo 2 lớp màu bự) */}
                 <div className="pointer-events-none absolute inset-0 -z-10">
-                  <div className="absolute -inset-16 bg-[radial-gradient(720px_320px_at_50%_25%,rgba(255,45,45,0.55),transparent_60%)] blur-3xl" />
-                  <div className="absolute -inset-16 bg-[radial-gradient(860px_420px_at_50%_120%,rgba(225,29,46,0.42),transparent_65%)] blur-3xl" />
-                  <div className="absolute inset-0 opacity-60 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_40%,rgba(255,255,255,0.04))]" />
+                  <div className="absolute -inset-10 rounded-[34px] bg-[radial-gradient(520px_260px_at_50%_35%,rgba(255,42,42,0.38),transparent_68%)] blur-3xl" />
+                  <div className="absolute -inset-10 rounded-[34px] bg-[radial-gradient(720px_360px_at_50%_120%,rgba(255,42,42,0.22),transparent_72%)] blur-3xl" />
                 </div>
 
-                {/* card glass đỏ + chiều sâu */}
-                <div className="relative overflow-hidden rounded-[24px] bg-[linear-gradient(180deg,rgba(255,70,70,0.12),rgba(28,8,12,0.62)_55%,rgba(0,0,0,0.36))] px-6 py-8 text-center backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_70px_rgba(255,40,40,0.20)]">
-                  {/* layers tạo cảm giác “modern neon” */}
-                  <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute inset-0 opacity-[0.70] bg-[radial-gradient(520px_260px_at_50%_8%,rgba(255,255,255,0.10),transparent_55%)]" />
-                    <div className="absolute inset-0 opacity-[0.55] bg-[radial-gradient(700px_360px_at_50%_120%,rgba(0,0,0,0.70),transparent_60%)]" />
-                    <div className="absolute inset-0 opacity-[0.22] bg-[linear-gradient(to_right,rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.10)_1px,transparent_1px)] bg-[size:22px_22px]" />
-                    <div className="absolute inset-0 opacity-[0.18] bg-[conic-gradient(from_180deg_at_50%_35%,rgba(255,60,60,0.55),transparent_40%,rgba(255,60,60,0.35),transparent_70%)] blur-2xl" />
-                  </div>
+                {/* viền đỏ đều + sáng */}
+                <div className="rounded-[26px] bg-[linear-gradient(135deg,rgba(255,42,42,0.95),rgba(255,42,42,0.35),rgba(255,42,42,0.95))] p-[2px] shadow-[0_0_0_1px_rgba(255,42,42,0.40),0_0_55px_rgba(255,42,42,0.22)]">
+                  {/* nền trong */}
+                  <div className="relative rounded-[24px] bg-[linear-gradient(180deg,rgba(110,10,26,0.96),rgba(46,6,14,0.96))] px-7 py-7 text-center shadow-[0_26px_80px_rgba(0,0,0,0.55)]">
+                    {/* highlight nhẹ phía trên để “đúng chất” ảnh */}
+                    <div className="pointer-events-none absolute inset-0 rounded-[24px] bg-[radial-gradient(520px_240px_at_50%_0%,rgba(255,255,255,0.06),transparent_62%)]" />
 
-                  <div className="relative">
-                    <div className="mx-auto inline-flex items-center justify-center rounded-full bg-white/5 px-4 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
-                      <p className="text-[12px] font-extrabold uppercase tracking-[0.28em] text-white/90 [text-shadow:0_0_26px_rgba(255,60,60,0.40)]">
-                        ĐẶT VÉ NHANH
-                      </p>
-                    </div>
+                    <p className="relative text-[13px] font-extrabold uppercase tracking-[0.34em] text-white/90 [text-shadow:0_0_16px_rgba(255,42,42,0.45)]">
+                      ĐẶT VÉ NHANH
+                    </p>
 
-                    <h3 className="mt-4 text-xl font-extrabold leading-snug text-white [text-shadow:0_0_34px_rgba(255,40,40,0.30)]">
-                      Chọn suất chiếu phù hợp
-                    </h3>
-                    <p className="mx-auto mt-2 max-w-[26ch] text-sm leading-relaxed text-white/70">
-                      Đặt vé trong vài bước, nhanh gọn và tiện lợi.
+                    <p className="relative mx-auto mt-3 max-w-[42ch] text-[14px] font-semibold leading-relaxed text-white/85">
+                      Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.
                     </p>
 
                     <button
                       type="button"
-                      className="group mt-7 inline-flex w-full items-center justify-center rounded-full bg-[linear-gradient(180deg,#FF3B3B,#E11D2E)] px-6 py-4 text-[15px] font-extrabold text-black shadow-[0_22px_80px_rgba(255,55,55,0.55)] transition hover:brightness-110 active:brightness-95"
+                      className="relative mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#FF2A2A] px-5 py-3.5 text-[15px] font-extrabold text-black shadow-[0_18px_48px_rgba(255,42,42,0.45)] transition hover:brightness-110 active:brightness-95"
                     >
-                      <span className="relative">
-                        <span className="absolute -inset-6 -z-10 rounded-full bg-[radial-gradient(240px_120px_at_50%_50%,rgba(255,70,70,0.80),transparent_65%)] opacity-0 blur-2xl transition group-hover:opacity-100" />
-                        Đặt Vé Ngay
-                      </span>
+                      Đặt Vé Ngay
                     </button>
-
-                    <div className="mt-4 text-[11px] font-semibold text-white/55">Chạm để chọn rạp • ngày • suất chiếu</div>
                   </div>
                 </div>
               </section>
+
               {/* ===== KẾT THÚC PHẦN "ĐẶT VÉ NHANH" ===== */}
 
               <section className={`${Glass} p-4`}>
                 <div className="mb-4 flex items-end justify-between gap-3">
-                  <h2 className="text-base font-extrabold md:text-lg">Phim Liên Quan</h2>
-                  {relatedQuery.isFetching ? <span className="text-xs font-semibold text-white/55">Đang tải...</span> : null}
+                  <h2 className="text-base font-extrabold md:text-lg">
+                    Phim Liên Quan
+                  </h2>
+                  {relatedQuery.isFetching ? (
+                    <span className="text-xs font-semibold text-white/55">
+                      Đang tải...
+                    </span>
+                  ) : null}
                 </div>
 
                 {relatedQuery.isError ? (
@@ -800,7 +969,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 ) : relatedQuery.isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2">
+                      <div
+                        key={i}
+                        className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2"
+                      >
                         <div className="h-16 w-12 rounded-lg border border-white/10 bg-black/30" />
                         <div className="flex-1">
                           <div className="h-4 w-2/3 rounded bg-white/10" />
@@ -811,7 +983,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     ))}
                   </div>
                 ) : relatedMovies.length === 0 ? (
-                  <p className="text-sm text-white/55">Chưa có phim liên quan.</p>
+                  <p className="text-sm text-white/55">
+                    Chưa có phim liên quan.
+                  </p>
                 ) : (
                   <div
                     className={[
@@ -828,7 +1002,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   >
                     {relatedMovies.map((item: any) => {
                       const nextId = Number(item?.id);
-                      const safeId = Number.isFinite(nextId) && nextId > 0 ? Math.floor(nextId) : 0;
+                      const safeId =
+                        Number.isFinite(nextId) && nextId > 0
+                          ? Math.floor(nextId)
+                          : 0;
 
                       const title = String(item?.title ?? "");
                       const genre = String(item?.genre ?? "");
@@ -847,7 +1024,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         >
                           <div className="h-16 w-12 overflow-hidden rounded-lg border border-white/10 bg-black/30">
                             <img
-                              src={resolveUrl(poster as any, "/poster/poster.jpg")}
+                              src={resolveUrl(
+                                poster as any,
+                                "/poster/poster.jpg",
+                              )}
                               alt={title}
                               className="h-full w-full object-cover"
                               onError={(e) => {
@@ -860,7 +1040,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           </div>
 
                           <div className="flex flex-1 flex-col">
-                            <p className="line-clamp-2 text-sm font-extrabold text-white">{title}</p>
+                            <p className="line-clamp-2 text-sm font-extrabold text-white">
+                              {title}
+                            </p>
                             <p className="mt-0.5 text-[11px] text-white/55">
                               {genre}
                               {duration > 0 ? ` • ${duration} phút` : ""}
