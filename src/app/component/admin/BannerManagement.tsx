@@ -1,0 +1,88 @@
+"use client";
+
+import { Add, ArrowDropDown, Search } from "@mui/icons-material";
+import CustomPagination from "./table/CustomPagination";
+import BannerTable from "./banner/BannerTable";
+import { useQuery } from "@tanstack/react-query";
+import { Banner } from "@/types/data/home/banner";
+import { useState } from "react";
+import AddBannerModal from "./banner/modal/AddBannerPopup";
+
+export default function BannerManagement() {
+    const [openAddBannerModal, setopenAddBannerModal] = useState(false);
+    const data = useQuery(Banner.getBanner());
+    const banner = data?.data?.data;
+
+    return (
+        <div className=" w-full p-8 font-sans text-zinc-900">
+            <div className=" flex flex-col gap-6">
+                <div className="flex flex-wrap justify-between gap-3">
+                    <div className="flex min-w-72 flex-col gap-3">
+                        <h1 className="text-4xl font-black leading-tight tracking-tight text-zinc-900">
+                            Movie Management
+                        </h1>
+                        <p className="text-zinc-600 text-base font-normal">
+                            Add, Edit , Delete everything on the System.
+                        </p>
+                    </div>
+                </div>
+                {/* --- Toolbar & Filters (Giữ nguyên Tailwind cho layout linh hoạt) --- */}
+                <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-center gap-4">
+                        <div className="flex-1 max-w-lg">
+                            <label className="flex flex-col min-w-40 h-12 w-full">
+                                <div className="flex w-full flex-1 items-stretch rounded-lg h-full shadow-sm">
+                                    <div className="text-zinc-500 flex bg-white items-center justify-center pl-4 rounded-l-lg border border-zinc-300 border-r-0">
+                                        <Search fontSize="small" />
+                                    </div>
+                                    <input
+                                        className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ec131e] border border-zinc-300 border-l-0 bg-white h-full placeholder:text-zinc-500 px-4 pl-2 text-base font-normal"
+                                        placeholder="Search Banner By Name..."
+                                    />
+                                </div>
+                            </label>
+                        </div>
+
+                        <button
+                            onClick={() => setopenAddBannerModal(true)}
+                            className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec131e] text-white gap-2 text-sm font-bold tracking-wide min-w-0 px-5 hover:bg-[#ec131e]/90 transition-colors shadow-sm"
+                        >
+                            <Add fontSize="small" />
+                            <span className="truncate">Add New Banner</span>
+                        </button>
+                    </div>
+
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-zinc-200 px-4 hover:bg-zinc-300 transition-colors">
+                            <p className="text-zinc-800 text-sm font-medium">Tất cả</p>
+                        </button>
+                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
+                            <p className="text-zinc-600 text-sm font-medium">Đang chiếu</p>
+                        </button>
+                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
+                            <p className="text-zinc-600 text-sm font-medium">Sắp chiếu</p>
+                        </button>
+                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
+                            <p className="text-zinc-600 text-sm font-medium">Ngừng chiếu</p>
+                        </button>
+                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 pl-4 pr-3 hover:bg-zinc-200 transition-colors">
+                            <p className="text-zinc-600 text-sm font-medium">Thể loại</p>
+                            <ArrowDropDown className="text-zinc-600" fontSize="small" />
+                        </button>
+                    </div>
+                </div>
+                {/* --- Main Content Area: Table & Pagination --- */}
+                <div className="flex flex-col gap-4">
+                    {/* Component Bảng */}
+                    <BannerTable
+                        banner={banner}
+                    />
+                </div>
+                <AddBannerModal
+                    open={openAddBannerModal}
+                    onClose={() => setopenAddBannerModal(false)}
+                />
+            </div>
+        </div>
+    )
+}

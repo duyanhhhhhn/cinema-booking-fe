@@ -1,6 +1,7 @@
-import { IResponse } from "@/types/core/api";
+import { IHttpError, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
+import { useMutation } from "@tanstack/react-query";
 
 export interface IBanner {
     id: number;
@@ -45,6 +46,19 @@ export class Banner extends Model {
             }
         }
     }
+    static createBanner(payload: FormData) {
+        return this.api.post<IResponse<IBanner>>({
+            url: "/public/banner",
+            data: payload
+        })
+    }
 
 }
 Banner.setup();
+export function useCreateBannerMutation() {
+    return useMutation<IResponse<IBanner>, IHttpError, FormData>({
+        mutationFn: (payload: FormData) => {
+            return Banner.createBanner(payload).then((r) => r.data);
+        },
+    });
+}

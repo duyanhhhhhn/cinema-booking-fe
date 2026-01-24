@@ -1,6 +1,7 @@
-import { IPaginateResponse, IResponse } from "@/types/core/api";
+import { IHttpError, IPaginateResponse, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
+import { useMutation } from "@tanstack/react-query";
 
 
 export interface IPost {
@@ -75,5 +76,18 @@ export class Post extends Model {
             }
         }
     }
+    static createPost(payload: FormData) {
+        return this.api.post<IResponse<IPost>>({
+            url: "/posts/new",
+            data: payload
+        })
+    }
 }
 Post.setup();
+export function useCreatePostMutation() {
+    return useMutation<IResponse<IPost>, IHttpError, FormData>({
+        mutationFn: (payload: FormData) => {
+            return Post.createPost(payload).then((r) => r.data);
+        },
+    });
+}

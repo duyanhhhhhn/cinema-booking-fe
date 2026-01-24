@@ -36,7 +36,7 @@ export default function HomePage() {
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
         {banners.map((banner, i) => (
-          <div key={i} className="relative w-full ">
+          <div key={i} className="relative w-full flex-shrink-0">
             <img
               src={banner.imageUrl}
               className="w-full h-[500px] object-cover"
