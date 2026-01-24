@@ -1,4 +1,4 @@
-import { IPaginateResponse } from "@/types/core/api";
+import { IPaginateResponse, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 
@@ -26,7 +26,7 @@ export interface PostFormData {
     published_at: string;
 }
 export interface IListResponse<T> {
-    list: T[];
+    data: T[];
     is_success: boolean;
     message: string;
 }
@@ -41,23 +41,14 @@ export const initialPostData: PostFormData = {
     published_at: "",
 }
 const modelConfig = {
-    path: '/news',
+    path: '/public/posts',
     modal: 'NewsList'
-}
-export interface IPaginateResponseMod<T> {
-    message: string;
-    data: T[];
-    meta: {
-        page: number;
-        total: number;
-        perPage: number;
-        totalPages: number;
-    };
 }
 export class Post extends Model {
     static queryKeys = {
         paginate: 'POSTS_PAGINATE_QUERY',
-        findOne: 'POSTS_FIND_ONE_QUERY'
+        findOne: 'POSTS_FIND_ONE_QUERY',
+        getRelate: 'POSTS_FIND_RELATE'
     }
     static objects = ObjectsFactory.factory<IPost>(modelConfig, this.queryKeys)
     static getPosts() {
@@ -65,8 +56,8 @@ export class Post extends Model {
             queryKey: [this.queryKeys.paginate],
             queryFn: () => {
                 return this.api
-                    .get<IPaginateResponseMod<IPost>>({
-                        url: '/posts?page=1&size=10',
+                    .get<IPaginateResponse<IPost>>({
+                        url: '/public/posts',
                     })
                     .then(r => r.data)
             }
@@ -77,8 +68,8 @@ export class Post extends Model {
             queryKey: [this.queryKeys.findOne],
             queryFn: () => {
                 return this.api
-                    .get<IPost>({
-                        url: `/posts/${id}`,
+                    .get<IListResponse<IPost>>({
+                        url: `/public/posts/${id}`,
                     })
                     .then(r => r.data)
             }
