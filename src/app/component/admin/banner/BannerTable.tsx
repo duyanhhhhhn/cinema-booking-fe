@@ -60,7 +60,7 @@ export default function BannerTable({ banner }: BannerTableProps) {
                                 align="center"
                                 sx={{ fontWeight: "bold", color: "#3f3f46" }}
                             >
-                                Hành Động
+                                Action
                             </TableCell>
                         </TableRow>
                     </TableHead>

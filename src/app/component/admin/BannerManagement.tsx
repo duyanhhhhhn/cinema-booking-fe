@@ -52,25 +52,6 @@ export default function BannerManagement() {
                             <span className="truncate">Add New Banner</span>
                         </button>
                     </div>
-
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-zinc-200 px-4 hover:bg-zinc-300 transition-colors">
-                            <p className="text-zinc-800 text-sm font-medium">Tất cả</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Đang chiếu</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Sắp chiếu</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Ngừng chiếu</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 pl-4 pr-3 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Thể loại</p>
-                            <ArrowDropDown className="text-zinc-600" fontSize="small" />
-                        </button>
-                    </div>
                 </div>
                 {/* --- Main Content Area: Table & Pagination --- */}
                 <div className="flex flex-col gap-4">
