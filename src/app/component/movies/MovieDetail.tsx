@@ -161,35 +161,18 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   // ====== PHIM LIÊN QUAN: HIỂN THỊ 6 + SCROLL DỌC ======
   const RELATED_LIMIT = 6;
 
-  const relatedQuery = useQuery({
-    queryKey: ["MOVIES_PUBLIC_GENRES", String(movie?.genre ?? ""), movieIdNum],
-    enabled: movieIdNum > 0 && !!movie?.genre,
-    queryFn: async () => {
-      const api = (MoviePublic as any)?.api;
-      if (!api?.get) return { data: [] };
-      const res = await api.get({
-        url: "/public/movies/related",
-        params: {
-          genre: movie?.genre,
-          movieId: movieIdNum,
-          limit: RELATED_LIMIT,
-        },
-      });
-      return res?.data;
-    },
-  });
+const movieGenre = useQuery({
+  ...MoviePublic.getAllMovieGenres(String(movie?.genre ?? ""), RELATED_LIMIT),
+  enabled: movieIdNum > 0 && !!movie?.genre,
+});
+console.log("genre: ", movieGenre);
 
-  const relatedMovies = useMemo(() => {
-    const raw: any = relatedQuery.data;
-    const list: any[] = Array.isArray(raw?.data)
-      ? raw.data
-      : Array.isArray(raw)
-        ? raw
-        : [];
-    return list
-      .filter((x) => Number(x?.id) !== movieIdNum)
-      .slice(0, RELATED_LIMIT);
-  }, [relatedQuery.data, movieIdNum]);
+const relatedMovies = useMemo(() => {
+  const list = movieGenre.data ?? [];
+  return list
+    .filter((x: any) => Number(x?.id) !== movieIdNum)
+    .slice(0, RELATED_LIMIT);
+}, [movieGenre.data, movieIdNum]);
 
   const cinemasRaw = useMemo(
     () => dataMovieCinemaShowtimes.data ?? [],
@@ -384,7 +367,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
         <div
           className="absolute inset-0 bg-cover bg-center opacity-70"
           style={{
-            backgroundImage: `url("${resolveUrl(movie?.bannerUrl, "/poster/poster.jpg")}")`,
+            backgroundImage: `url("${resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}")`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
@@ -413,7 +396,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </h1>
 
             <p className="max-w-2xl text-sm text-white/75 md:text-base">
-              {movie?.description}
+              {movie?.shortDescription}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
@@ -612,7 +595,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             type="button"
                             onClick={() => setSelectedDate(k)}
                             className={[
-                              "min-w-[76px] rounded-xl border px-4 py-3 text-center transition",
+                              "min-w-[76px] rounded-xl border px-4 py-3 text-center transition cursor-pointer",
                               active
                                 ? "border-red-400/30 bg-red-500/15 text-white shadow-[0_16px_40px_rgba(225,29,46,0.16)]"
                                 : "border-white/10 bg-black/25 text-white/85 hover:border-red-400/20 hover:bg-red-500/10",
@@ -955,18 +938,21 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   <h2 className="text-base font-extrabold md:text-lg">
                     Phim Liên Quan
                   </h2>
-                  {relatedQuery.isFetching ? (
+
+                  {movieGenre.isPending ||
+                  movieGenre.isLoading ||
+                  movieGenre.isRefetching ? (
                     <span className="text-xs font-semibold text-white/55">
                       Đang tải...
                     </span>
                   ) : null}
                 </div>
 
-                {relatedQuery.isError ? (
+                {movieGenre.isError ? (
                   <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                     Không tải được phim liên quan.
                   </div>
-                ) : relatedQuery.isLoading ? (
+                ) : movieGenre.isPending || movieGenre.isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
                       <div
@@ -982,7 +968,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       </div>
                     ))}
                   </div>
-                ) : relatedMovies.length === 0 ? (
+                ) : (relatedMovies ?? []).length === 0 ? (
                   <p className="text-sm text-white/55">
                     Chưa có phim liên quan.
                   </p>
@@ -1000,7 +986,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       "[&::-webkit-scrollbar-thumb:hover]:bg-[rgba(255,255,255,0.22)]",
                     ].join(" ")}
                   >
-                    {relatedMovies.map((item: any) => {
+                    {(relatedMovies ?? []).map((item: any) => {
                       const nextId = Number(item?.id);
                       const safeId =
                         Number.isFinite(nextId) && nextId > 0
@@ -1008,9 +994,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           : 0;
 
                       const title = String(item?.title ?? "");
-                      const genre = String(item?.genre ?? "");
+                      const genreName = String(item?.genre ?? "");
                       const duration = Number(item?.durationMinutes) || 0;
-                      const poster = item?.posterUrl ?? null;
+
+                      const poster =
+                        item?.posterUrl ?? item?.poster_url ?? null;
 
                       return (
                         <button
@@ -1024,10 +1012,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         >
                           <div className="h-16 w-12 overflow-hidden rounded-lg border border-white/10 bg-black/30">
                             <img
-                              src={resolveUrl(
-                                poster as any,
-                                "/poster/poster.jpg",
-                              )}
+                              src={resolveUrl(poster)}
                               alt={title}
                               className="h-full w-full object-cover"
                               onError={(e) => {
@@ -1044,7 +1029,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               {title}
                             </p>
                             <p className="mt-0.5 text-[11px] text-white/55">
-                              {genre}
+                              {genreName}
                               {duration > 0 ? ` • ${duration} phút` : ""}
                             </p>
                           </div>
