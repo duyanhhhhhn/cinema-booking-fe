@@ -20,7 +20,7 @@ export default function BannerManagement() {
                 <div className="flex flex-wrap justify-between gap-3">
                     <div className="flex min-w-72 flex-col gap-3">
                         <h1 className="text-4xl font-black leading-tight tracking-tight text-zinc-900">
-                            Movie Management
+                            Banner Management
                         </h1>
                         <p className="text-zinc-600 text-base font-normal">
                             Add, Edit , Delete everything on the System.
@@ -50,25 +50,6 @@ export default function BannerManagement() {
                         >
                             <Add fontSize="small" />
                             <span className="truncate">Add New Banner</span>
-                        </button>
-                    </div>
-
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-zinc-200 px-4 hover:bg-zinc-300 transition-colors">
-                            <p className="text-zinc-800 text-sm font-medium">Tất cả</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Đang chiếu</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Sắp chiếu</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Ngừng chiếu</p>
-                        </button>
-                        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 pl-4 pr-3 hover:bg-zinc-200 transition-colors">
-                            <p className="text-zinc-600 text-sm font-medium">Thể loại</p>
-                            <ArrowDropDown className="text-zinc-600" fontSize="small" />
                         </button>
                     </div>
                 </div>
