@@ -5,5 +5,5 @@ export const metadata = {
     description: "Trang chủ của hệ thống đặt vé xem phim",
 };
 export default function Home() {
-    return < HomePage />;
+    return <HomePage />;
 }

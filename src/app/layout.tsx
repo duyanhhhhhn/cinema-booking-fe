@@ -1,5 +1,4 @@
 import React from "react";
-
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import "@tabler/icons-webfont/dist/tabler-icons.min.css";

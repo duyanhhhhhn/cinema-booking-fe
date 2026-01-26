@@ -1,27 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Chip,
-  Grid,
-  Button,
-  TextField,
-  InputAdornment,
-  colors,
-} from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { IPost, Post } from "@/types/data/post/post";
-import { set } from "react-hook-form";
+import CustomPagination from "../admin/table/CustomPagination";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
   const getCategoryColor = (category) => {
     const colorMap = {
       "Khuyến mãi": "bg-red-500",
@@ -30,24 +17,23 @@ export default function NewsList() {
     };
     return colorMap[category] || "bg-gray-500";
   };
-  const modelConfig = {
-    path: '/news',
-    modal: 'NewsList'
-  }
-  const { data, isLoading, error } = useQuery(Post.getPosts());
+  const { searchQuery } = useRouteQuery();
+  const queryParam = useMemo(() => {
+    return {
+      page: searchQuery.get("page") || 1,
+      perPage: searchQuery.get("perPage") || 6,
+    }
+  }, [searchQuery])
+  const { data, refetch: refetchPost } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam) });
   const firstId = 1;
   const data2 = useQuery(Post.getPostsInfo(firstId));
   var first;
   if (data2 != null && data2?.data != undefined) {
-    first = data2?.data;
+    first = data2?.data?.data.at(0);
   }
   const firstDate = new Date(first?.publishedAt).toLocaleDateString();
   const posts = data?.data ?? [];
   const [sortKey, setSortKey] = useState<'newest' | 'oldest'>('newest');
-  const filteredNews = posts.filter((item) =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
   const searchPosts = useMemo(() => {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;
@@ -74,32 +60,6 @@ export default function NewsList() {
           new Date(b.publishedAt).getTime()
       );
   }, [searchPosts, sortKey]);
-  const paginate = [];
-  paginate.push(
-    <ul key={"paging"} className="flex -space-x-px items-center gap-2 px-8 py-3 rounded-lg text-white font-bold hover:bg-primary hover:border-primary transition-all duration-300 group shadow-lg">
-      {data?.meta?.page > data?.meta?.totalPages && <li>
-        <a href="#" className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-s-base text-sm px-3 h-9 focus:outline-none">Previous</a>
-      </li>}
-      <li>
-        <a href={`/news/${data?.meta?.page}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page}</a>
-      </li>
-      {data?.meta?.page + 1 <= data?.meta?.totalPages && <li>
-        <a href={`/news/${data?.meta?.page + 1}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 1}</a>
-      </li>}
-      {data?.meta?.page + 2 <= data?.meta?.totalPages && <li>
-        <a href={`/news/${data?.meta?.page + 2}`} className="flex items-center justify-center text-fg-brand bg-neutral-tertiary-medium box-border border border-default-medium hover:text-fg-brand font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 2}</a>
-      </li>}
-      {data?.meta?.page + 3 <= data?.meta?.totalPages && <li>
-        <a href={`/news/${data?.meta?.page + 3}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 3}</a>
-      </li>}
-      {data?.meta?.page + 4 <= data?.meta?.totalPages && <li>
-        <a href={`/news/${data?.meta?.page + 4}`} className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm w-9 h-9 focus:outline-none">{data?.meta?.page + 4}</a>
-      </li>}
-      {data?.meta?.page + 5 < data?.meta?.totalPages && <li>
-        <a href="#" className="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-e-base text-sm px-3 h-9 focus:outline-none">Next</a>
-      </li>}
-    </ul>
-  );
   return (
     <>
       <>
@@ -204,7 +164,7 @@ export default function NewsList() {
                     className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                     data-alt="Popcorn buckets and movie tickets on a red background"
                     style={{
-                      backgroundImage: `url(${post?.coverUrl})`,
+                      backgroundImage: `url(${urlImage}${post.coverUrl})`,
                     }}
                   ></div>
                   <div className="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60" />
@@ -229,9 +189,11 @@ export default function NewsList() {
             })}
           </section>
           {/* Pagination */}
-
-          <div className="flex justify-center pt-8 pb-12">
-            {paginate}
+          <div className="flex justify-center pt-8 pb-12 text-white bg-gray-400">
+            <CustomPagination
+              totalItems={data?.meta?.total || 0}
+              itemsPerPage={data?.meta?.perPage || 0}
+            />
           </div>
         </main>
       </>

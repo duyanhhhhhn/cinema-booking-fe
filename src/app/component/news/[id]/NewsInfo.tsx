@@ -1,156 +1,16 @@
 import { Post } from "@/types/data/post/post";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function NewsInfo() {
-    const relateNews = [];
-    const CommentSection = [];
-    const CommentList = [];
-    const ContentArea = [];
-    const LoadCommentsButton = [];
-    const HeadLine = [];
     const param = useParams();
     const id = Number(param.id)
-    const data = useQuery(Post.getPostsInfo(id));
-    let numC = 6;
-    let numTotalC = 10;
-    const date = new Date(data?.data && data?.data.publishedAt).toLocaleString();
-    console.log("Published At:", date);
-    for (let i = 0; i < numC; i++) {
-        CommentList.push(
-            <div key={i} className="flex items-start gap-4">
-                <img
-                    className="size-10 rounded-full object-cover"
-                    data-alt="Avatar"
-                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRadSYabYFU1dIedWCpTwBq8GhfHJsLxTX3-Q&s"
-                />
-                <div className="flex-1">
-                    <div className="bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-1">
-                            <p className="font-semibold text-sm text-gray-900 dark:text-white">
-                                User
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Ngày
-                            </p>
-                        </div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                            Nội dung bình luận
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-    CommentSection.push(
-        <div key="comment-section" className="mt-12 pt-8 border-t border-black/10 dark:border-white/10">
-            <h2 className="text-2xl font-bold text-white dark:text-white mb-6">
-                Bình luận ({numC})
-            </h2>
-            <div className="space-y-6">
-                {/* Comment Form */}
-                <div className="flex items-start gap-4">
-                    <img
-                        className="size-10 rounded-full object-cover"
-                        data-alt="avatar"
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRadSYabYFU1dIedWCpTwBq8GhfHJsLxTX3-Q&s"
-                    />
-                    <div className="flex-1">
-                        <textarea
-                            className="w-full ps-2 pt-2 pb-1 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 focus:border-primary focus:ring-primary placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            placeholder="Viết bình luận của bạn..."
-                            rows={3}
-                            defaultValue={""}
-                        />
-                        <button className="mt-2 flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors" style={{ backgroundColor: "red" }}>
-                            <span className="truncate">Gửi bình luận</span>
-                        </button>
-                    </div>
-                </div>
-                {/* Comments List */}
-                <div className="space-y-8 pt-4">
-                    {/* Comment */}
-                    {CommentList}
-                </div>
-                {LoadCommentsButton}
-            </div>
-        </div>
-    )
-    if (numTotalC >= numC) {
-        LoadCommentsButton.push(
-            <div className="mt-4 flex justify-center items-center">
-                <button className="bg-red-500 rounded-lg w-75 py-3 hover:text-gray-200 hover:bg-red-600 hover:border-white">
-                    <span className="truncate text-white">Tải thêm bình luận</span>
-                </button>
-            </div>
-        )
-    }
-    for (let i = 1; i <= 3; i++) {
-        relateNews.push(
-            <div key={"a" + i} className="flex flex-col bg-white dark:bg-gray-800/50 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                <a href="#">
-                    <img
-                        className="w-full h-40 object-cover"
-                        data-alt=""
-                        src="https://heritagevietnamairlines.cdn.vccloud.vn/wp-content/uploads/2025/02/Godzilla_-King-of-the-Monsters-2019-1024x683.png"
-                    />
-                </a>
-                <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="font-bold text-base leading-snug mb-2 text-gray-900 dark:text-white">
-                        <a
-                            className="hover:text-primary dark:hover:text-primary"
-                            href="#"
-                        >
-                            Phim 1
-                        </a>
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        Thông tin 1
-                    </p>
-                    <div className="mt-auto pt-3">
-                        <span className="text-xs text-gray-500 dark:text-gray-500">
-                            Ngày 1
-                        </span>
-                    </div>
-                </div>
-            </div>
-        )
-    }
 
-    // ContentArea.push(
-    //     <div key="content" className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed space-y-6" style={{ color: "white" }}>
-    //         <p>
-    //             Line 1
-    //         </p>
-    //         <p>
-    //             Line 2
-    //         </p>
-    //         <blockquote className="border-l-4 border-primary pl-4 italic text-gray-600 dark:text-gray-400">
-    //             hightlight
-    //         </blockquote>
-    //         <p>
-    //             Line 3
-    //         </p>
-    //         <figure>
-    //             <img
-    //                 alt="text"
-    //                 className="rounded-lg w-full"
-    //                 src="https://tse2.mm.bing.net/th/id/OIP.Z6maLuRYdANn3IbUITwWjgHaLH?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3"
-    //             />
-    //             <figcaption className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-    //                 Image
-    //             </figcaption>
-    //         </figure>
-    //         <p>
-    //             Line 4
-    //         </p>
-    //     </div>
-    // )
-    ContentArea.push(
-        <div className="text-white">
-            {data?.data && data?.data.content}
-        </div>
-    )
+    const data = useQuery(Post.getPostsInfo(id));
+    const data2 = data?.data?.data;
+
+    const date = new Date(data2 && data2?.at(0).publishedAt).toLocaleString();
     return (
         <>
             <div className="relative flex h-auto min-h-screen w-full flex-col">
@@ -178,13 +38,13 @@ export default function NewsInfo() {
                                 /
                             </span>
                             <span className="text-sm font-medium leading-normal text-gray-300 dark:text-gray-200">
-                                {data?.data && data?.data.category}
+                                {data2?.at(0) && data2?.at(0).category}
                             </span>
                         </div>
 
                         {/* HeadlineText */}
                         <h1 className="text-3xl md:text-4xl font-bold leading-tight text-white dark:text-white tracking-tight text-left pb-3 pt-6">
-                            {data?.data && data?.data.title}
+                            {data2?.at(0) && data2?.at(0).title}
 
                         </h1>
                         {/* MetaText */}
@@ -197,11 +57,13 @@ export default function NewsInfo() {
                             data-alt=""
                             style={{
                                 backgroundImage:
-                                    `url(${data?.data && data?.data.coverUrl})`,
+                                    `url(${data2?.at(0) && data2?.at(0).coverUrl})`,
                             }}
                         />
                         {/*Content Area */}
-                        {ContentArea}
+                        <div key={"content"} className="text-white">
+                            {data2?.at(0) && data2?.at(0).content}
+                        </div>
                         {/* Social Share Buttons */}
                         <div className="mt-10 pt-6 border-t border-black/10 dark:border-white/10 flex items-center gap-4">
                             <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">
@@ -236,16 +98,14 @@ export default function NewsInfo() {
                             </div>
                         </div>
                         {/* Related Articles Section */}
-                        <div className="mt-12 pt-8 border-t border-black/10">
+                        {/* <div className="mt-12 pt-8 border-t border-black/10">
                             <h2 className="text-2xl font-bold text-white">
                                 Bài viết liên quan
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {relateNews}
+                            <div key={"relate"} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
                             </div>
-                        </div>
-                        {/* Comments Section */}
-                        {CommentSection}
+                        </div> */}
                     </div>
                 </main>
             </div>
