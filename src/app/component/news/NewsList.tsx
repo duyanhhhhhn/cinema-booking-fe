@@ -8,6 +8,7 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
   const getCategoryColor = (category) => {
     const colorMap = {
       "Khuyến mãi": "bg-red-500",
@@ -163,7 +164,7 @@ export default function NewsList() {
                     className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                     data-alt="Popcorn buckets and movie tickets on a red background"
                     style={{
-                      backgroundImage: `url(${post?.coverUrl})`,
+                      backgroundImage: `url(${urlImage}${post.coverUrl})`,
                     }}
                   ></div>
                   <div className="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60" />
