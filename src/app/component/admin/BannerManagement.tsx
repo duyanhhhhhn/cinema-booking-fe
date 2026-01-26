@@ -20,7 +20,7 @@ export default function BannerManagement() {
                 <div className="flex flex-wrap justify-between gap-3">
                     <div className="flex min-w-72 flex-col gap-3">
                         <h1 className="text-4xl font-black leading-tight tracking-tight text-zinc-900">
-                            Movie Management
+                            Banner Management
                         </h1>
                         <p className="text-zinc-600 text-base font-normal">
                             Add, Edit , Delete everything on the System.
