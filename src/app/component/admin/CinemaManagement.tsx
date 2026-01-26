@@ -32,8 +32,9 @@ export default function CinemaManagement() {
   }, [searchQuery]);
 
   const { data: cinemasData, refetch: refetchCinemas } = useQuery<CinemaResponse, Error>(
-    Cinema.getCinemaForAdmin(queryParams) as any
+    Cinema.getCinemaForAdmin(queryParams)
   );
+
 
   const filteredCinemas = useMemo(() => {
     if (!cinemasData?.data) return [];
