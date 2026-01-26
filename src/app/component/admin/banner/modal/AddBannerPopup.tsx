@@ -23,7 +23,7 @@ export default function AddBannerModal({ open, onClose }:
         mode: "onChange",
         resolver: yupResolver(createBannerSchema()),
     });
-    const { mutate: createMovie } = useCreateBannerMutation();
+    const { mutate: createBanner } = useCreateBannerMutation();
     const onSubmit = async (data: PostFormData) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
@@ -40,7 +40,7 @@ export default function AddBannerModal({ open, onClose }:
             }
         });
 
-        createMovie(formData, {
+        createBanner(formData, {
             onSuccess: () => {
                 onClose();
                 n.success("Success");
@@ -181,7 +181,7 @@ export default function AddBannerModal({ open, onClose }:
                                 </label>
                                 <div className="relative">
                                     <input
-                                        name="linlUrl"
+                                        name="linkUrl"
                                         {...methods.register("linkUrl")}
                                         type="url"
                                         placeholder="https://www.youtube.com/watch?v=..."

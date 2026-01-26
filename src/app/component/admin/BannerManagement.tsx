@@ -11,7 +11,8 @@ import AddBannerModal from "./banner/modal/AddBannerPopup";
 export default function BannerManagement() {
     const [openAddBannerModal, setopenAddBannerModal] = useState(false);
     const data = useQuery(Banner.getBanner());
-    const banner = data?.data?.data;
+    const banner = data?.data?.data || [];
+    console.log(banner);
 
     return (
         <div className=" w-full p-8 font-sans text-zinc-900">

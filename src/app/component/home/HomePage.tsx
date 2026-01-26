@@ -21,6 +21,8 @@ export default function HomePage() {
   const banners = dataBanner?.data?.data || [];
   const fullslide = [];
   const [index, setIndex] = useState(0)
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/banner/";
+  const urlPost = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
   const total = banners.length;
 
 
@@ -38,7 +40,7 @@ export default function HomePage() {
         {banners.map((banner, i) => (
           <div key={i} className="relative w-full flex-shrink-0">
             <img
-              src={banner.imageUrl}
+              src={`${urlImage}${banner.imageUrl}`}
               className="w-full h-[500px] object-cover"
               alt=""
             />
@@ -117,7 +119,7 @@ export default function HomePage() {
                         className="w-full bg-center bg-no-repeat aspect-video bg-cover"
                         style={{
                           backgroundImage:
-                            `url(${post?.coverUrl})`
+                            `url(${urlPost}${post.coverUrl})`
                         }}>
                       </a>
                       <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
