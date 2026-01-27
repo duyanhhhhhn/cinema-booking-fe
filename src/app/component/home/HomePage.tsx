@@ -21,7 +21,7 @@ export default function HomePage() {
   const banners = dataBanner?.data?.data || [];
   const fullslide = [];
   const [index, setIndex] = useState(0)
-  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/banner/";
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
   const urlPost = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
   const total = banners.length;
 

@@ -10,10 +10,9 @@ import AddBannerModal from "./banner/modal/AddBannerPopup";
 
 export default function BannerManagement() {
     const [openAddBannerModal, setopenAddBannerModal] = useState(false);
-    const data = useQuery(Banner.getBanner());
-    const banner = data?.data?.data || [];
+    const { data, refetch: refetchBanner } = useQuery(Banner.getBanner());
+    const banner = data?.data || [];
     console.log(banner);
-
     return (
         <div className=" w-full p-8 font-sans text-zinc-900">
             <div className=" flex flex-col gap-6">
@@ -58,11 +57,13 @@ export default function BannerManagement() {
                     {/* Component Bảng */}
                     <BannerTable
                         banner={banner}
+                        refetchBanner={refetchBanner}
                     />
                 </div>
                 <AddBannerModal
                     open={openAddBannerModal}
                     onClose={() => setopenAddBannerModal(false)}
+                    refetchBanner={refetchBanner}
                 />
             </div>
         </div>

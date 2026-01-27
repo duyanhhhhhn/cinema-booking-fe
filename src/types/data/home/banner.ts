@@ -18,13 +18,15 @@ export interface BannerFormData {
     link_url: string;
     is_active: boolean;
     position: String;
+    bannerFile: FileList;
 }
 export const initialBannerData: BannerFormData = {
     title: "",
     image_url: "",
     link_url: "",
     is_active: true,
-    position: "HOME"
+    position: "HOME",
+    bannerFile: null,
 };
 const modelConfig = {
     path: '/public/banner',

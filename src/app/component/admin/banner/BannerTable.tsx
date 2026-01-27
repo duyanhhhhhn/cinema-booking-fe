@@ -9,12 +9,13 @@ import DeletePopup from "../../popup/DeletePopup";
 
 interface BannerTableProps {
     banner: IBanner[];
+    refetchBanner: () => void;
 }
-export default function BannerTable({ banner }: BannerTableProps) {
+export default function BannerTable({ banner, refetchBanner }: BannerTableProps) {
     const n = useNotification();
     const [openDeletePopup, setOpenDeletePopup] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/banner/";
+    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
     const { mutate: deleteBanner } = useDeleteBannerMutation();
     const handleClickIconDelete = (id: number) => {
         setSelectedId(id);
@@ -26,6 +27,7 @@ export default function BannerTable({ banner }: BannerTableProps) {
                 onSuccess: () => {
                     setOpenDeletePopup(false);
                     setSelectedId(null);
+                    refetchBanner()
                     n.success('Xoá Banner thành công');
                 },
                 onError: (error) => {
