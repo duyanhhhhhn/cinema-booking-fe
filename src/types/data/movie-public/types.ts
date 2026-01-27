@@ -56,3 +56,13 @@ export type IMovieShowtimeGroup = Omit<ICinemaMovieShowtimeItem, "showtime"> & {
   showtimes?: IShowtimeItem[];
   showtime?: IShowtimeItem[];
 };
+
+
+export interface IMoviePublicGenre {
+  id: number;
+  title: string;
+  posterUrl: string;
+  durationMinutes: number;
+  genre: string;
+  status: MovieStatus;
+}

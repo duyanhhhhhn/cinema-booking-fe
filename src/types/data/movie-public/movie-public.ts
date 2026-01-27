@@ -1,6 +1,6 @@
 import { Model } from "../../core/model";
 import { IPaginateResponse, IResponse } from "../../core/api";
-import { ICinemaMovieShowtimeItem, IMoviePublic, IMovieStatus } from "./types";
+import { ICinemaMovieShowtimeItem, IMoviePublic, IMoviePublicGenre, IMovieStatus } from "./types";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 import { IMovieShowtimeGroup } from "../showtime-public";
 
@@ -73,6 +73,28 @@ export class MoviePublic extends Model {
       },
     };
   }
+
+static getAllMovieGenres(genre: string, limit: number = 8) {
+  return {
+    queryKey: ["MOVIES_PUBLIC_GENRES", genre, limit],
+    queryFn: () => {
+      const g = String(genre ?? "").trim();
+      if (!g) return Promise.resolve([] as IMoviePublicGenre[]);
+
+      const qs = new URLSearchParams({
+        genre: g,
+        limit: String(limit),
+      }).toString();
+
+      return this.api
+        .get<IMoviePublicGenre[]>({
+          url: `/public/movies/related?${qs}`,
+        })
+        .then((r) => r.data);
+    },
+  };
+}
+
 }
 
 MoviePublic.setup();
