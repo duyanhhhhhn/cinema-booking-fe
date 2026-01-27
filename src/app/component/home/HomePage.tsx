@@ -53,9 +53,9 @@ export default function HomePage() {
               <p className="mb-4">
                 Trải nghiệm những thước phim hành động mãn nhãn
               </p>
-              <button className="bg-red-600 px-6 py-3 rounded-lg font-bold">
+              <a href={`${banner.linkUrl}`} className="bg-red-600 px-6 py-3 rounded-lg font-bold">
                 Đặt Vé Ngay
-              </button>
+              </a>
             </div>
           </div>
         ))}

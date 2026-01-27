@@ -11,6 +11,7 @@ import { useNotification } from "@/hooks/useNotification";
 import { useEffect, useState } from "react";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { Banner, BannerFormData, useUpdateBannerMutation } from "@/types/data/home/banner";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useForm } from "react-hook-form";
 
 export default function EditBanner() {
@@ -18,6 +19,7 @@ export default function EditBanner() {
     const { data: bannerData } = useQuery({
         ...Banner.getBannerDetail(Number(id)),
     });
+    const link = "http://localhost:3000"
     const n = useNotification();
     const { mutate: updateBanner } = useUpdateBannerMutation();
     const [previews, setPreviews] = useState<{
@@ -30,8 +32,8 @@ export default function EditBanner() {
     const method = useForm<BannerFormData>({
         defaultValues: {
             title: "",
-            image_url: "",
-            link_url: "",
+            imageUrl: "",
+            linkUrl: "",
             is_active: false,
             position: "HOME",
             bannerFile: null
@@ -41,8 +43,8 @@ export default function EditBanner() {
     useEffect(() => {
         method.reset({
             title: bannerData?.data.title,
-            image_url: bannerData?.data.imageUrl,
-            link_url: bannerData?.data.linkUrl,
+            imageUrl: bannerData?.data.imageUrl,
+            linkUrl: bannerData?.data.linkUrl,
             is_active: bannerData?.data.isActive,
             position: bannerData?.data.position,
         });
@@ -82,11 +84,10 @@ export default function EditBanner() {
     };
     const urlPoster = process.env.NEXT_PUBLIC_IMAGE_URL
     const inputClass =
-        "w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-600 transition-all duration-200 outline-none placeholder:text-gray-400";
+        "w-full mb-8 bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-600 transition-all duration-200 outline-none placeholder:text-gray-400";
 
     const labelClass =
         "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-1";
-
     const handleFileChange = (
         e: React.ChangeEvent<HTMLInputElement>,
         fieldName: "bannerFile"
@@ -96,22 +97,21 @@ export default function EditBanner() {
             const url = URL.createObjectURL(file[0]);
             setPreviews((prev) => ({
                 ...prev,
-                "banner": url,
+                [fieldName === "bannerFile" ? "banner" : "banner"]: url,
             }));
             // Lưu file vào form
             method.setValue(fieldName, file);
         }
     };
-
     const removeImage = (
         e: React.MouseEvent,
-        fieldName: "bannerFile"
+        fieldName: "posterFile" | "bannerFile"
     ) => {
         e.preventDefault();
         e.stopPropagation();
         setPreviews((prev) => ({
             ...prev,
-            "banner": null,
+            [fieldName === "posterFile" ? "poster" : "banner"]: null,
         }));
         (method.setValue as any)(fieldName, null);
     };
@@ -125,6 +125,7 @@ export default function EditBanner() {
 
 
 
+
     return (
         <div className="min-h-screen  font-sans text-gray-900">
             {/* HEADER BREADCRUMB (Thay thế Header cũ) */}
@@ -134,7 +135,7 @@ export default function EditBanner() {
                         <DashboardIcon fontSize="small" /> Dashboard
                     </span>
                     <NavigateNextIcon fontSize="small" />
-                    <span className="hover:text-red-600 cursor-pointer">Banner</span>
+                    <a href="/admin/banners" className="hover:text-red-600 cursor-pointer">Banner</a>
                     <NavigateNextIcon fontSize="small" />
                     <span className="text-gray-900 font-semibold">
                         Detail & Edit
@@ -149,7 +150,7 @@ export default function EditBanner() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                         <div className="flex items-center gap-5">
                             <a
-                                href="/admin/movies"
+                                href="/admin/banners"
                                 className="size-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-600"
                             >
                                 <ArrowBackIcon />
@@ -198,60 +199,91 @@ export default function EditBanner() {
                                         />
                                     </div>
                                 </div>
-                                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-lg font-bold flex items-center gap-2 text-gray-900">
-                                            <span className="text-gray-500">
-                                                <ImageIcon fontSize="small" />
-                                            </span>
-                                            Banner
-                                        </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
+                                        <label className={labelClass}>Link Url</label>
+                                        <input
+                                            name="linkUrl"
+                                            {...method.register("linkUrl")}
+                                            className={inputClass}
+                                            type="text"
+                                        />
                                     </div>
-                                    <div className="relative group aspect-2/3 w-full max-w-[580px] mx-auto rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 hover:border-red-500 transition-all cursor-pointer bg-gray-50">
-                                        {previews.poster ? (
-                                            <div className="relative w-full h-full">
-                                                <img
-                                                    alt="Poster Preview"
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                    src={previews.poster}
-                                                />
-                                                <button
-                                                    onClick={(e) => removeImage(e, "bannerFile")}
-                                                    className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all"
-                                                    title="Xóa ảnh"
-                                                >
-                                                    <DeleteOutlineIcon fontSize="small" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
-                                                <img
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                    src={urlPoster + bannerData?.data.imageUrl}
-                                                />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
-                                                    <span className="text-white mb-2">
-                                                        <CloudUploadIcon fontSize="large" />
-                                                    </span>
-                                                    <span className="text-sm font-bold text-white uppercase tracking-tighter">
-                                                        Upload new Image
-                                                    </span>
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={(e) => handleFileChange(e, "bannerFile")}
-                                                />
-                                            </label>
-                                        )}
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Thể loại</label>
+                                    <div className="relative">
+                                        <select
+                                            className={`${inputClass} appearance-none cursor-pointer`}
+                                            {...method.register("position")}
+                                        >
+                                            <option value={"HOME"}>HOME</option>
+                                            <option value={"MOVIE_DETAIL"}>MOVIE_DETAIL</option>
+                                            <option value={"PROMO"}>PROMO</option>
+                                        </select>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                            <ExpandMoreIcon />
+                                        </span>
                                     </div>
-                                    <p className="text-[11px] text-gray-400 text-center mt-4 italic">
-                                        Định dạng 2:3 (1000x1500px), JPG/PNG
-                                    </p>
+                                    <input type="hidden" {...method.register("imageUrl")}></input>
                                 </div>
                             </div>
                         </div>
+                        <div className="xl:col-span-4 space-y-8">
+                            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-lg font-bold flex items-center gap-2 text-gray-900">
+                                        <span className="text-gray-500">
+                                            <ImageIcon fontSize="small" />
+                                        </span>
+                                        Banner
+                                    </h3>
+                                </div>
+                                <div className="relative group aspect-2/3 w-full max-w-[580px] mx-auto rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 hover:border-red-500 transition-all cursor-pointer bg-gray-50">
+                                    {previews.banner ? (
+                                        <div className="relative w-full h-full">
+                                            <img
+                                                alt="Poster Preview"
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                src={previews.banner}
+                                            />
+                                            <button
+                                                onClick={(e) => removeImage(e, "bannerFile")}
+                                                className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all"
+                                                title="Xóa ảnh"
+                                            >
+                                                <DeleteOutlineIcon fontSize="small" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                                            <img
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                src={urlPoster + bannerData?.data.imageUrl}
+                                            />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
+                                                <span className="text-white mb-2">
+                                                    <CloudUploadIcon fontSize="large" />
+                                                </span>
+                                                <span className="text-sm font-bold text-white uppercase tracking-tighter">
+                                                    Upload new Image
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => handleFileChange(e, "bannerFile")}
+                                            />
+                                        </label>
+                                    )}
+                                </div>
+                                <p className="text-[11px] text-gray-400 text-center mt-4 italic">
+                                    Định dạng 2:3 (1000x1500px), JPG/PNG
+                                </p>
+                            </div>
+                        </div>
+
                     </div>
                 </form>
             </div>

@@ -14,16 +14,16 @@ export interface IBanner {
 }
 export interface BannerFormData {
     title: string;
-    image_url: string;
-    link_url: string;
+    imageUrl: string;
+    linkUrl: string;
     is_active: boolean;
     position: String;
     bannerFile: FileList;
 }
 export const initialBannerData: BannerFormData = {
     title: "",
-    image_url: "",
-    link_url: "",
+    imageUrl: "",
+    linkUrl: "",
     is_active: true,
     position: "HOME",
     bannerFile: null,
