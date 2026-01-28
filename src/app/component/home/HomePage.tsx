@@ -2,12 +2,11 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { IPost, Post } from "@/types/data/post/post";
 import { CreditCard, LocationOn, Phone } from "@mui/icons-material";
-import { Banner } from "@/types/data/home/banner";
 import MovieStatus from "./MovieComponent/MovieStatus";
+import BannerSlide from "./MovieComponent/BannerSlide";
 
 type MovieStatus = "NOW_SHOWING" | "COMING_SOON" | "ENDED" | string;
 
@@ -15,86 +14,7 @@ export default function HomePage() {
   const { isAuthenticated } = useAuth();
   const data1 = useQuery(Post.getPosts());
   const posts = data1?.data?.data || [];
-  const dataBanner = useQuery({
-    ...Banner.objects.paginateQueryFactory()
-  })
-  const banners = dataBanner?.data?.data || [];
-  const fullslide = [];
-  const [index, setIndex] = useState(0)
-  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
-  const urlPost = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
-  const total = banners.length;
-
-
-  const next = () => setIndex((prev) => (prev + 1) % total);
-  const prev = () => setIndex((prev) => (prev - 1 + total) % total);
-
-  fullslide.push(
-    <div key={"slide"} className="relative w-full overflow-hidden">
-
-      {/* SLIDES */}
-      <div
-        className="flex transition-transform duration-700 ease-in-out"
-        style={{ transform: `translateX(-${index * 100}%)` }}
-      >
-        {banners.map((banner, i) => (
-          <div key={i} className="relative w-full flex-shrink-0">
-            <img
-              src={`${urlImage}${banner.imageUrl}`}
-              className="w-full h-[500px] object-cover"
-              alt=""
-            />
-
-            {/* TEXT */}
-            <div className="absolute bottom-10 left-10 text-white max-w-xl">
-              <h1 className="text-4xl font-bold mb-2">
-                Phim Bom Tấn Của Tuần
-              </h1>
-              <p className="mb-4">
-                Trải nghiệm những thước phim hành động mãn nhãn
-              </p>
-              <a href={`${banner.linkUrl}`} className="bg-red-600 px-6 py-3 rounded-lg font-bold">
-                Đặt Vé Ngay
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* PREV */}
-      <button
-        onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2
-                   bg-black/50 p-3 rounded-full text-white z-10
-                   hover:bg-black/70 transition"
-      >
-        ❮
-      </button>
-
-      {/* NEXT */}
-      <button
-        onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2
-                   bg-black/50 p-3 rounded-full text-white z-10
-                   hover:bg-black/70 transition"
-      >
-        ❯
-      </button>
-
-      {/* INDICATORS */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
-        {banners.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setIndex(i)}
-            className={`w-3 h-3 rounded-full transition
-              ${i === index ? "bg-red-500" : "bg-white/50"}
-            `}
-          />
-        ))}
-      </div>
-    </div>
-  );
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
   return (
     <>
       <div
@@ -104,7 +24,7 @@ export default function HomePage() {
         <div className="layout-container flex h-full grow flex-col">
           <main className="flex flex-1 justify-center py-5 sm:py-8">
             <div className="layout-content-container flex flex-col max-w-7xl flex-1 px-4 sm:px-10">
-              {fullslide}
+              <BannerSlide />
 
               <MovieStatus />
 
@@ -119,7 +39,7 @@ export default function HomePage() {
                         className="w-full bg-center bg-no-repeat aspect-video bg-cover"
                         style={{
                           backgroundImage:
-                            `url(${urlPost}${post.coverUrl})`
+                            `url(${urlImage}${post.coverUrl})`
                         }}>
                       </a>
                       <div className="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">

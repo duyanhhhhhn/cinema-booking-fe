@@ -31,6 +31,11 @@ export interface IListResponse<T> {
     is_success: boolean;
     message: string;
 }
+export enum Category {
+    HOME = "HOME",
+    MOVIE_DETAIL = "MOVIE DETAIL",
+    PROMO = "PROMOTION"
+}
 export const initialPostData: PostFormData = {
     title: "",
     slug: "",

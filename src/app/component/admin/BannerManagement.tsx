@@ -5,12 +5,21 @@ import CustomPagination from "./table/CustomPagination";
 import BannerTable from "./banner/BannerTable";
 import { useQuery } from "@tanstack/react-query";
 import { Banner } from "@/types/data/home/banner";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AddBannerModal from "./banner/modal/AddBannerPopup";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function BannerManagement() {
     const [openAddBannerModal, setopenAddBannerModal] = useState(false);
-    const { data, refetch: refetchBanner } = useQuery(Banner.getBanner());
+    const { searchQuery } = useRouteQuery();
+    const queryParams = useMemo(() => {
+        return {
+            page: 1,
+            perPage: 10
+        }
+    }, [searchQuery])
+
+    const { data, refetch: refetchBanner } = useQuery({ ...Banner.objects.paginateQueryFactory(queryParams) });
     const banner = data?.data || [];
     return (
         <div className=" w-full p-8 font-sans text-zinc-900">
@@ -59,6 +68,10 @@ export default function BannerManagement() {
                         refetchBanner={refetchBanner}
                     />
                 </div>
+                {/*<CustomPagination
+                    itemsPerPage={data?.meta.perPage || 0}
+                    totalItems={data?.meta.total || 0}
+                />*/}
                 <AddBannerModal
                     open={openAddBannerModal}
                     onClose={() => setopenAddBannerModal(false)}
