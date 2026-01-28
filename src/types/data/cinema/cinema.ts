@@ -5,8 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 
 export class Cinema extends Model {
   static queryKey = {
-    list: (page: number, perPage: number) =>
-      ["CINEMA", "LIST", page, perPage] as const,
+    list: (page: number, perPage: number, search = "") =>
+      ["CINEMA", "LIST", page, perPage, search] as const,
   };
 
   static getAllCinemas(params: { page: number; perPage: number }) {
@@ -33,15 +33,19 @@ export class Cinema extends Model {
     };
   }
 
-  static getCinemaForAdmin(params: { page: number; perPage: number }) {
-    const { page, perPage } = params;
+  static getCinemaForAdmin(params: {
+    page: number;
+    perPage: number;
+    search?: string;
+  }) {
+    const { page, perPage, search } = params;
     return {
-      queryKey: this.queryKey.list(page, perPage),
+      queryKey: this.queryKey.list(page, perPage, search),
       queryFn: async () => {
         console.log("FETCH cinemas for admin params =", { page, perPage });
         const res = await this.api.get<IPaginateResponse<ICinema>>({
           url: "/cinemas",
-          params: { page, perPage },
+          params: { page, perPage, search },
         });
         console.log(
           "FETCH done",
@@ -67,10 +71,14 @@ export class Cinema extends Model {
       data: payload,
     });
   }
-  static deleteCinema(id: number) {
-    return this.api.delete<ICinema>({
-      url: `/cinemas/${id}`,
-    });
+  // Ngưng hoạt động
+  static deactivateCinema(id: number) {
+    return this.api.delete<ICinema>({ url: `/cinemas/${id}` });
+  }
+
+  // Kích hoạt lại
+  static activeCinema(id: number) {
+    return this.api.put<ICinema>({ url: `/cinemas/${id}/activate` });
   }
 
   static updateImageCinema(id: number, payload: FormData) {
@@ -82,11 +90,15 @@ export class Cinema extends Model {
 }
 Cinema.setup();
 
-export function useDeleteCinemaMutation() {
+export function useDeactivateCinemaMutation() {
   return useMutation<ICinema, Error, number>({
-    mutationFn: (id: number) => {
-      return Cinema.deleteCinema(id).then((r) => r.data);
-    },
+    mutationFn: (id: number) => Cinema.deactivateCinema(id).then((r) => r.data),
+  });
+}
+
+export function useActivateCinemaMutation() {
+  return useMutation<ICinema, Error, number>({
+    mutationFn: (id: number) => Cinema.activeCinema(id).then((r) => r.data),
   });
 }
 export function useCreateCinemaMutation() {
@@ -109,8 +121,12 @@ export function useGetAllCinemasQuery(page: number, perPage: number) {
   return Cinema.getAllCinemas({ page, perPage });
 }
 
-export function useGetCinemaForAdminQuery(page: number, perPage: number) {
-  return Cinema.getCinemaForAdmin({ page, perPage });
+export function useGetCinemaForAdminQuery(
+  page: number,
+  perPage: number,
+  search?: string,
+) {
+  return Cinema.getCinemaForAdmin({ page, perPage, search });
 }
 
 export function useUpdateImageCinemaMutation() {
