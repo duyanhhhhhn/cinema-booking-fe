@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Be_Vietnam_Pro } from "next/font/google";
+import { useTicketDetail } from "./TicketComponent/TicketDetail.logic";
 
 const beVietnam = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -11,155 +11,12 @@ const beVietnam = Be_Vietnam_Pro({
   display: "swap",
 });
 
-type TicketStatus = "completed" | "upcoming" | "cancelled";
-
-type TicketDetailModel = {
-  id: string;
-  status: TicketStatus;
-  poster: string;
-  movie: string;
-  quote: string;
-  tags: string[];
-  cinemaName: string;
-  cinemaAddressLines: string[];
-  roomLabel: string;
-  timeRange: string;
-  dateLabel: string;
-  seats: string[];
-  bookingAt: string;
-  paymentMethod: string;
-  items: { qty: number; name: string; price: string }[];
-  total: string;
-};
-
 export default function TicketDetail({ code }: { code: string }) {
   const router = useRouter();
-  const [copied, setCopied] = useState(false);
-
-  const ticket = useMemo<TicketDetailModel>(() => {
-    const mock: TicketDetailModel[] = [
-      {
-        id: "MAVE123456",
-        status: "upcoming",
-        poster: "/poster/poster.jpg",
-        movie: "Oppenheimer",
-        quote: "“Thế giới sẽ nhớ mãi ngày hôm nay.”",
-        tags: ["T18", "IMAX 2D", "180 phút"],
-        cinemaName: "CinemaHub Quận 1",
-        cinemaAddressLines: [
-          "Tầng 3",
-          "Bitexco Financial Tower,",
-          "2 Hải Triều, Bến Nghé,",
-          "Quận 1, TP.HCM",
-        ],
-        roomLabel: "PHÒNG CHIẾU 04 (IMAX)",
-        timeRange: "19:45 - 22:45",
-        dateLabel: "Thứ sáu, 20/12/2023",
-        seats: ["G7", "G8"],
-        bookingAt: "14:22 - 18/12/2023",
-        paymentMethod: "Thanh toán Ví MoMo",
-        items: [
-          { qty: 1, name: "Combo Bắp Rang Bơ Phô Mai Lớn", price: "85.000đ" },
-          { qty: 2, name: "Coca Cola 600ml", price: "60.000đ" },
-          { qty: 2, name: "Vé Người Lớn (G7, G8)", price: "110.000đ" },
-        ],
-        total: "255.000đ",
-      },
-      {
-        id: "BK001234",
-        status: "upcoming",
-        poster: "/poster/poster.jpg",
-        movie: "Avengers: Secret Wars",
-        quote: "“Avengers assemble.”",
-        tags: ["T16", "2D", "150 phút"],
-        cinemaName: "CineMax Hồ Chí Minh",
-        cinemaAddressLines: ["Quận 10, TP.HCM"],
-        roomLabel: "PHÒNG 03",
-        timeRange: "18:00 - 20:30",
-        dateLabel: "Thứ bảy, 20/01/2026",
-        seats: ["A5", "A6"],
-        bookingAt: "09:10 - 12/01/2026",
-        paymentMethod: "Thanh toán Ví MoMo",
-        items: [
-          { qty: 1, name: "Combo Đôi", price: "99.000đ" },
-          { qty: 2, name: "Vé Người Lớn (A5, A6)", price: "260.000đ" },
-        ],
-        total: "359.000đ",
-      },
-    ];
-
-    return (
-      mock.find((x) => x.id.toLowerCase() === code.toLowerCase()) ?? {
-        id: code,
-        status: "upcoming",
-        poster: "/poster/poster.jpg",
-        movie: "Không tìm thấy vé (demo)",
-        quote: "Vui lòng kiểm tra lại mã vé.",
-        tags: ["—"],
-        cinemaName: "—",
-        cinemaAddressLines: ["—"],
-        roomLabel: "—",
-        timeRange: "—",
-        dateLabel: "—",
-        seats: ["—"],
-        bookingAt: "—",
-        paymentMethod: "—",
-        items: [{ qty: 1, name: "Không có dữ liệu", price: "0đ" }],
-        total: "0đ",
-      }
-    );
-  }, [code]);
-
-  const statusUI = useMemo(() => {
-    if (ticket.status === "completed")
-      return {
-        label: "ĐÃ SỬ DỤNG",
-        cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-      };
-    if (ticket.status === "cancelled")
-      return {
-        label: "ĐÃ HỦY",
-        cls: "bg-rose-500/10 text-rose-300 border-rose-500/20",
-      };
-    return {
-      label: "CHƯA SỬ DỤNG",
-      cls: "bg-sky-500/10 text-sky-300 border-sky-500/20",
-    };
-  }, [ticket.status]);
-
-  const qrUrl = useMemo(() => {
-    const v = encodeURIComponent(ticket.id);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${v}`;
-  }, [ticket.id]);
-
-  const onShare = async () => {
-    const text = `Mã vé: ${ticket.id}`;
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    try {
-      // @ts-ignore
-      if (navigator?.share) {
-        // @ts-ignore
-        await navigator.share({ title: "Vé xem phim", text, url });
-        return;
-      }
-    } catch {}
-    try {
-      await navigator.clipboard.writeText(url || text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  const onDownload = () => {
-    window.print();
-  };
+  const { vm, statusUI, qrUrl, copied, onShare, onDownload } = useTicketDetail(code);
 
   return (
-    <div
-      className={`min-h-screen bg-[#0B0C0F] text-white ${beVietnam.className} antialiased`}
-    >
+    <div className={`min-h-screen bg-[#0B0C0F] text-white ${beVietnam.className} antialiased`}>
       <div className="mx-auto max-w-7xl px-6 py-10 md:px-12 2xl:max-w-[1400px]">
         <div className="mb-6 flex items-center gap-3 text-white/60">
           <button
@@ -182,8 +39,8 @@ export default function TicketDetail({ code }: { code: string }) {
               <div className="rounded-2xl bg-white/5 p-2">
                 <div className="overflow-hidden rounded-xl bg-black/30">
                   <img
-                    src={ticket.poster}
-                    alt={ticket.movie}
+                    src={vm.poster}
+                    alt={vm.movie}
                     className="h-[340px] w-full object-cover md:h-[420px]"
                   />
                 </div>
@@ -191,7 +48,7 @@ export default function TicketDetail({ code }: { code: string }) {
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  {ticket.tags.map((t) => (
+                  {vm.tags.map((t) => (
                     <span
                       key={t}
                       className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-extrabold text-white/80"
@@ -202,11 +59,11 @@ export default function TicketDetail({ code }: { code: string }) {
                 </div>
 
                 <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-                  {ticket.movie}
+                  {vm.movie}
                 </h1>
 
                 <p className="mt-2 text-sm font-medium italic text-white/55">
-                  {ticket.quote}
+                  {vm.quote}
                 </p>
 
                 <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -215,10 +72,10 @@ export default function TicketDetail({ code }: { code: string }) {
                       Rạp chiếu
                     </div>
                     <div className="mt-2 text-sm font-extrabold text-white">
-                      {ticket.cinemaName}
+                      {vm.cinemaName}
                     </div>
                     <div className="mt-1 space-y-0.5 text-xs font-medium text-white/50">
-                      {ticket.cinemaAddressLines.map((x, i) => (
+                      {vm.cinemaAddressLines.map((x, i) => (
                         <div key={i}>{x}</div>
                       ))}
                     </div>
@@ -235,7 +92,7 @@ export default function TicketDetail({ code }: { code: string }) {
                       Phòng
                     </div>
                     <div className="mt-2 text-sm font-extrabold text-white">
-                      {ticket.roomLabel}
+                      {vm.roomLabel}
                     </div>
 
                     <div className="mt-5 grid grid-cols-2 gap-4">
@@ -244,10 +101,10 @@ export default function TicketDetail({ code }: { code: string }) {
                           Thời gian
                         </div>
                         <div className="mt-1 text-sm font-extrabold text-white">
-                          {ticket.timeRange}
+                          {vm.timeRange}
                         </div>
                         <div className="mt-0.5 text-xs font-medium text-white/50">
-                          {ticket.dateLabel}
+                          {vm.dateLabel}
                         </div>
                       </div>
 
@@ -256,7 +113,7 @@ export default function TicketDetail({ code }: { code: string }) {
                           Ghế
                         </div>
                         <div className="mt-1 text-sm font-extrabold text-red-400">
-                          {ticket.seats.join(", ")}
+                          {vm.seats.join(", ")}
                         </div>
                       </div>
                     </div>
@@ -270,7 +127,7 @@ export default function TicketDetail({ code }: { code: string }) {
                   </div>
 
                   <div className="mt-4 space-y-3">
-                    {ticket.items.map((it, idx) => (
+                    {vm.items.map((it, idx) => (
                       <div
                         key={idx}
                         className="flex items-center justify-between gap-4 text-sm"
@@ -293,7 +150,7 @@ export default function TicketDetail({ code }: { code: string }) {
                       Tổng thanh toán
                     </div>
                     <div className="text-2xl font-black tracking-tight text-red-500">
-                      {ticket.total}
+                      {vm.total}
                     </div>
                   </div>
                 </div>
@@ -335,16 +192,16 @@ export default function TicketDetail({ code }: { code: string }) {
                   Mã xác thực (booking code)
                 </div>
                 <div className="mt-2 text-xl font-black tracking-[0.12em] text-white">
-                  {ticket.id}
+                  {vm.bookingCode}
                 </div>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
                   onClick={onDownload}
-                  disabled={ticket.status === "cancelled"}
+                  disabled={vm.disabledDownload}
                   className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-extrabold transition ${
-                    ticket.status === "cancelled"
+                    vm.disabledDownload
                       ? "border-white/5 bg-white/5 text-white/30 cursor-not-allowed"
                       : "border-white/10 bg-white/5 text-white hover:bg-white/8"
                   }`}
@@ -365,11 +222,11 @@ export default function TicketDetail({ code }: { code: string }) {
               <div className="mt-7 space-y-3 border-t border-white/5 pt-5 text-xs">
                 <div className="flex items-center justify-between gap-4">
                   <div className="font-semibold text-white/40">Đặt vào lúc:</div>
-                  <div className="font-extrabold text-white/70">{ticket.bookingAt}</div>
+                  <div className="font-extrabold text-white/70">{vm.bookingAt}</div>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="font-semibold text-white/40">Hình thức:</div>
-                  <div className="font-extrabold text-white/70">{ticket.paymentMethod}</div>
+                  <div className="font-extrabold text-white/70">{vm.paymentMethod}</div>
                 </div>
               </div>
             </div>
