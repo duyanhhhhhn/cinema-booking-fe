@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tickets } from "@/types/data/tickets/tickets";
-import type { ITicket } from "@/types/data/tickets/type";
+import type { IBookingDetail } from "@/types/data/tickets/type";
 
 type TicketStatusUI = "completed" | "upcoming" | "cancelled";
 
@@ -12,27 +12,6 @@ const splitSeats = (seats: string) =>
     .split(/[,\s]+/g)
     .map((s) => s.trim())
     .filter(Boolean);
-
-const formatDateLabel = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(d);
-};
-
-const formatTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(d);
-};
 
 const formatVnd = (value: number) => {
   const n = Number(value);
@@ -54,7 +33,7 @@ const buildPosterSrc = (posterUrl: string) => {
   return `${base}/media/${posterUrl}`;
 };
 
-const toStatusUI = (s?: ITicket["status"]): TicketStatusUI => {
+const toStatusUI = (s?: IBookingDetail["status"]): TicketStatusUI => {
   if (s === "PAID") return "completed";
   if (s === "CANCELLED" || s === "FAILED") return "cancelled";
   return "upcoming";
@@ -62,48 +41,53 @@ const toStatusUI = (s?: ITicket["status"]): TicketStatusUI => {
 
 export type TicketDetailVM = {
   bookingCode: string;
+  id: number | null;
+  checkin: boolean;
   status: TicketStatusUI;
-  statusRaw?: ITicket["status"];
+  statusRaw?: IBookingDetail["status"];
   statusLabel: string;
+
   poster: string;
   movie: string;
   quote: string;
   tags: string[];
+
   cinemaName: string;
   cinemaAddressLines: string[];
   roomLabel: string;
+
   timeRange: string;
   dateLabel: string;
   seats: string[];
+
   bookingAt: string;
   paymentMethod: string;
+
   items: { qty: number; name: string; price: string }[];
   total: string;
+
+  qrData: string;
   disabledDownload: boolean;
+
+  raw?: IBookingDetail;
 };
 
 export function useTicketDetail(code: string) {
   const [copied, setCopied] = useState(false);
 
-  const ticketList = useQuery({
-    ...Tickets.getAllTicketMe(1, 200, "", "", "", undefined),
+  const detailQuery = useQuery({
+    ...Tickets.getMyBookingDetailByCode(code),
+    enabled: !!code,
     retry: false,
   });
 
-  const ticket = useMemo<ITicket | null>(() => {
-    const raw = ticketList.data as any;
-    const list = (raw?.data ?? []) as ITicket[];
-    return (
-      list.find(
-        (x) =>
-          String(x.bookingCode || "").toLowerCase() ===
-          String(code || "").toLowerCase()
-      ) ?? null
-    );
-  }, [ticketList.data, code]);
+  const detail = useMemo<IBookingDetail | null>(() => {
+    const raw = detailQuery.data as any;
+    return (raw?.data ?? null) as IBookingDetail | null;
+  }, [detailQuery.data]);
 
   const statusUI = useMemo(() => {
-    const st = toStatusUI(ticket?.status);
+    const st = toStatusUI(detail?.status);
     if (st === "completed")
       return {
         label: "ĐÃ SỬ DỤNG",
@@ -118,12 +102,14 @@ export function useTicketDetail(code: string) {
       label: "CHƯA SỬ DỤNG",
       cls: "bg-sky-500/10 text-sky-300 border-sky-500/20",
     };
-  }, [ticket?.status]);
+  }, [detail?.status]);
 
   const vm = useMemo<TicketDetailVM>(() => {
-    if (!ticket) {
+    if (!detail) {
       return {
         bookingCode: code,
+        id: null,
+        checkin: false,
         status: "upcoming",
         statusRaw: undefined,
         statusLabel: "—",
@@ -141,39 +127,72 @@ export function useTicketDetail(code: string) {
         paymentMethod: "—",
         items: [{ qty: 1, name: "Không có dữ liệu", price: "0đ" }],
         total: "0đ",
+        qrData: code,
         disabledDownload: true,
+        raw: undefined,
       };
     }
 
-    const st = toStatusUI(ticket.status);
+    const st = toStatusUI(detail.status);
+
+    const tags: string[] = [];
+    if (detail.ageRating) tags.push(detail.ageRating);
+    if (detail.format) tags.push(detail.format);
+    if (detail.durationMinutes && Number.isFinite(detail.durationMinutes))
+      tags.push(`${detail.durationMinutes} phút`);
+    if (!tags.length) tags.push("—");
+
+    const timeRange =
+      detail.startTime && detail.endTime
+        ? `${detail.startTime} - ${detail.endTime}`
+        : detail.startTime || detail.endTime || "—";
 
     return {
-      bookingCode: ticket.bookingCode,
+      bookingCode: detail.bookingCode,
+      id: detail.id,
+      checkin: !!detail.checkin,
       status: st,
-      statusRaw: ticket.status,
-      statusLabel: ticket.statusLabel || ticket.status,
-      poster: buildPosterSrc(ticket.posterUrl),
-      movie: ticket.movieTitle,
-      quote: "",
-      tags: ["—"],
-      cinemaName: ticket.cinemaName,
-      cinemaAddressLines: ["—"],
-      roomLabel: ticket.roomName ? `PHÒNG ${ticket.roomName}` : "—",
-      timeRange: ticket.startTime ? `${formatTime(ticket.startTime)}` : "—",
-      dateLabel: ticket.startTime ? formatDateLabel(ticket.startTime) : "—",
-      seats: splitSeats(ticket.seats),
-      bookingAt: "—",
-      paymentMethod: "—",
-      items: [{ qty: 1, name: "—", price: "0đ" }],
-      total: formatVnd(ticket.totalPrice),
-      disabledDownload: ticket.status === "CANCELLED" || ticket.status === "FAILED",
+      statusRaw: detail.status,
+      statusLabel: detail.statusLabel || detail.status,
+
+      poster: buildPosterSrc(detail.posterUrl),
+      movie: detail.movieTitle,
+      quote: detail.tagline || "",
+      tags,
+
+      cinemaName: detail.cinemaName,
+      cinemaAddressLines: splitSeats(detail.cinemaAddress).length
+        ? [detail.cinemaAddress]
+        : [detail.cinemaAddress || "—"],
+
+      roomLabel: detail.roomName ? `PHÒNG ${detail.roomName}` : "—",
+
+      timeRange,
+      dateLabel: detail.showDate || "—",
+      seats: splitSeats(detail.seatCodes),
+
+      bookingAt: detail.createdAt || "—",
+      paymentMethod: detail.paymentMethod || "—",
+
+      items: (detail.items || []).length
+        ? detail.items.map((it) => ({
+            qty: it.quantity,
+            name: it.name,
+            price: formatVnd(it.price),
+          }))
+        : [{ qty: 1, name: "Không có dữ liệu", price: "0đ" }],
+
+      total: formatVnd(detail.totalPrice),
+      qrData: detail.qrData || detail.bookingCode,
+      disabledDownload: detail.status === "CANCELLED" || detail.status === "FAILED",
+      raw: detail,
     };
-  }, [ticket, code]);
+  }, [detail, code]);
 
   const qrUrl = useMemo(() => {
-    const v = encodeURIComponent(vm.bookingCode || code);
+    const v = encodeURIComponent(vm.qrData || vm.bookingCode || code);
     return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${v}`;
-  }, [vm.bookingCode, code]);
+  }, [vm.qrData, vm.bookingCode, code]);
 
   const onShare = async () => {
     const text = `Mã vé: ${vm.bookingCode || code}`;
@@ -204,7 +223,7 @@ export function useTicketDetail(code: string) {
     copied,
     onShare,
     onDownload,
-    isLoading: ticketList.isLoading,
-    isError: ticketList.isError,
+    isLoading: detailQuery.isLoading,
+    isError: detailQuery.isError,
   };
 }

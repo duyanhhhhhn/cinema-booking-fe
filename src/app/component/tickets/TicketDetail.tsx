@@ -28,7 +28,7 @@ export default function TicketDetail({ code }: { code: string }) {
           </button>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_460px] 2xl:grid-cols-[1fr_520px]">
+        <div className="grid gap-8 lg:grid-cols-[1fr_560px] 2xl:grid-cols-[1fr_620px]">
           <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-[#121318] shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
             <div className="pointer-events-none absolute inset-0 opacity-70">
               <div className="absolute -left-24 -top-24 h-64 w-64 rounded-full bg-red-500/10 blur-3xl" />
