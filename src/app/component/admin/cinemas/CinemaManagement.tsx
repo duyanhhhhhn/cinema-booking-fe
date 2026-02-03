@@ -3,13 +3,13 @@ import React, { useMemo, useState } from "react";
 import { Search, Add } from "@mui/icons-material";
 import { useDebounce } from "use-debounce";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import CinemaTable from "./cinemas/CinemaTable";
-import CustomPagination from "./table/CustomPagination";
-import AddCinemaPopup from "./cinemas/modal/AddCinemaPopup";
+import CinemaTable from "./CinemaTable";
+import CustomPagination from "../table/CustomPagination";
+import AddCinemaPopup from "./modal/AddCinemaPopup";
 import { ICinema } from "@/types/data/cinema";
 import { useGetCinemaForAdminQuery } from "@/types/data/cinema";
 import { useQuery } from "@tanstack/react-query";
-import EditCinemaPopup from "./cinemas/modal/EditCinemaPopup";
+import EditCinemaPopup from "./modal/EditCinemaPopup";
 
 export default function CinemaManagement() {
   const [openAddCinemaModal, setOpenAddCinemaModal] = useState(false);

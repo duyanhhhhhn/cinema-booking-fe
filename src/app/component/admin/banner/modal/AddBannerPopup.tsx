@@ -10,8 +10,8 @@ import { createBannerSchema } from "@/types/data/post/schema/banner";
 import { initialBannerData, useCreateBannerMutation } from "@/types/data/home/banner";
 import { PostFormData } from "@/types/data/post/post";
 
-export default function AddBannerModal({ open, onClose }:
-    { open: boolean, onClose: () => void }) {
+export default function AddBannerModal({ open, onClose, refetchBanner }:
+    { open: boolean, onClose: () => void, refetchBanner: () => void }) {
     const n = useNotification();
     const [previews, setPreviews] = useState<{
         banner: string | null;
@@ -39,12 +39,13 @@ export default function AddBannerModal({ open, onClose }:
                 }
             }
         });
-
+        formData.delete("bannerUrl");
         createBanner(formData, {
             onSuccess: () => {
                 onClose();
                 n.success("Success");
                 methods.reset();
+                refetchBanner();
             },
             onError: (error) => {
                 n.error(error.message);

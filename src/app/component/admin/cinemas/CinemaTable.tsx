@@ -25,11 +25,6 @@ import dayjs from "dayjs";
 interface CinemaTableProps {
   cinemas: ICinema[];
   refetchCinemas: () => void;
-}
-
-interface CinemaTableProps {
-  cinemas: ICinema[];
-  refetchCinemas: () => void;
   onEditCinema: (cinema: ICinema) => void; // thêm callback
 }
 

@@ -1,4 +1,4 @@
-import CinemaManagement from "@/app/component/admin/CinemaManagement";
+import CinemaManagement from "@/app/component/admin/cinemas/CinemaManagement";
 
 export const metadata = {
   title: "Quản lý rạp chiếu - Admin",

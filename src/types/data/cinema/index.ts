@@ -1,2 +1,2 @@
 export * from "./types";
-export * from "./cinema";
+export * from "@/types/data/cinema/cinema";

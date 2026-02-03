@@ -21,7 +21,7 @@ export default function HomePage() {
   const banners = dataBanner?.data?.data || [];
   const fullslide = [];
   const [index, setIndex] = useState(0)
-  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/banner/";
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
   const urlPost = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
   const total = banners.length;
 
@@ -53,9 +53,9 @@ export default function HomePage() {
               <p className="mb-4">
                 Trải nghiệm những thước phim hành động mãn nhãn
               </p>
-              <button className="bg-red-600 px-6 py-3 rounded-lg font-bold">
+              <a href={`${banner.linkUrl}`} className="bg-red-600 px-6 py-3 rounded-lg font-bold">
                 Đặt Vé Ngay
-              </button>
+              </a>
             </div>
           </div>
         ))}

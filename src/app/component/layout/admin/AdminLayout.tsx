@@ -88,8 +88,8 @@ const menuItems = [
     icon: <PersonIcon />,
     path: "/admin/user-management",
     children: [
-      { text: "Quản lý người dùng", path: "/admin/user-management" },
-      { text: "Nhân viên và phân quyền", path: "/admin/staff-management" },
+      { text: "Quản lý người dùng", path: "/admin/users" },
+      { text: "Nhân viên và phân quyền", path: "/admin/staffs" },
     ],
   },
   {
@@ -148,7 +148,11 @@ const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
           }}
         />
         {hasChildren ? (
-          open ? <ExpandLess sx={{ color: "gray" }} /> : <ExpandMore sx={{ color: "gray" }} />
+          open ? (
+            <ExpandLess sx={{ color: "gray" }} />
+          ) : (
+            <ExpandMore sx={{ color: "gray" }} />
+          )
         ) : null}
       </ListItemButton>
 
@@ -158,7 +162,11 @@ const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
             {item.children.map((child: any) => {
               const isChildActive = pathname === child.path;
               return (
-                <Link key={child.path} href={child.path} style={{ textDecoration: "none" }}>
+                <Link
+                  key={child.path}
+                  href={child.path}
+                  style={{ textDecoration: "none" }}
+                >
                   <ListItemButton
                     sx={{
                       pl: 4,
@@ -191,10 +199,14 @@ const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
 };
 
 // --- MAIN ADMIN LAYOUT ---
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  
+
   // 1. Logic Auth & Menu từ code cũ
   const { user, logout } = useAuth(); // Lấy thông tin user
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -220,7 +232,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleProfileNavigate = () => {
@@ -246,31 +258,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     >
       {/* 1. Logo Section */}
       <Box sx={{ px: 3, pt: 3, textAlign: "center" }}>
-        <Box sx={{ width: 100, height: 100, mx: "auto", position: 'relative' }}>
-             <Image src="/logo/logo_cinema.png" alt="logo" fill style={{ objectFit: 'contain'}} />
-         </Box>
+        <Box sx={{ width: 100, height: 100, mx: "auto", position: "relative" }}>
+          <Image
+            src="/logo/logo_cinema.png"
+            alt="logo"
+            fill
+            style={{ objectFit: "contain" }}
+          />
+        </Box>
       </Box>
 
       {/* 2. Label Menu */}
       <Box sx={{ px: 3, pb: 1, pt: 2 }}>
-        <Typography variant="caption" sx={{ color: "#8fa1cc", fontWeight: "bold", letterSpacing: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{ color: "#8fa1cc", fontWeight: "bold", letterSpacing: 1 }}
+        >
           MENU
         </Typography>
       </Box>
 
       {/* 3. Danh sách Menu (Phần này sẽ cuộn nhưng không hiện thanh scroll) */}
-      <List 
-        component="nav" 
-        sx={{ 
-          px: 1, 
+      <List
+        component="nav"
+        sx={{
+          px: 1,
           // Logic để cuộn
-          overflowY: "auto", 
+          overflowY: "auto",
           flex: 1,
-          
+
           // --- CSS ĐỂ ẨN THANH CUỘN ---
           "&::-webkit-scrollbar": { display: "none" }, // Ẩn trên Chrome/Safari/Edge
-          "scrollbarWidth": "none",                    // Ẩn trên Firefox
-          "-ms-overflow-style": "none",                // Ẩn trên IE cũ
+          scrollbarWidth: "none", // Ẩn trên Firefox
+          "-ms-overflow-style": "none", // Ẩn trên IE cũ
         }}
       >
         {menuItems.map((item) => (
@@ -282,7 +302,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f4f6f8" }}>
-      
       {/* 1. APP BAR (HEADER) - Lấy style trắng từ code cũ */}
       <AppBar
         position="fixed"
@@ -291,7 +310,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
           bgcolor: "#fff", // Màu trắng như code cũ
-          color: "#000",   // Chữ đen
+          color: "#000", // Chữ đen
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)", // Shadow nhẹ
         }}
       >
@@ -308,44 +327,53 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </IconButton>
 
           {/* Tiêu đề trang */}
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: '#303f9f' }}>
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1, fontWeight: "bold", color: "#303f9f" }}
+          >
             Quản trị hệ thống
           </Typography>
 
           {/* Phần bên phải: Notification & Profile (Code cũ) */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {/* Notification */}
             <IconButton>
               <Badge badgeContent={4} color="error">
-                <NotificationsIcon sx={{ color: '#555' }} />
+                <NotificationsIcon sx={{ color: "#555" }} />
               </Badge>
             </IconButton>
 
             {/* User Profile */}
             <Box
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 1.5, 
-                cursor: 'pointer',
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                cursor: "pointer",
                 p: 0.5,
                 borderRadius: 1,
-                '&:hover': { bgcolor: '#f5f5f5' }
+                "&:hover": { bgcolor: "#f5f5f5" },
               }}
               onClick={handleProfileClick}
             >
-              <Avatar 
-                sx={{ bgcolor: '#303f9f', width: 36, height: 36, fontSize: 16 }}
+              <Avatar
+                sx={{ bgcolor: "#303f9f", width: 36, height: 36, fontSize: 16 }}
                 src={user?.avatar}
               >
                 {user?.fullName ? user.fullName.charAt(0).toUpperCase() : "A"}
               </Avatar>
-              <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+              <Box
+                sx={{ display: { xs: "none", sm: "block" }, textAlign: "left" }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                >
                   {user?.fullName}
                 </Typography>
-                <Typography variant="caption" sx={{ color: 'gray' }}>
+                <Typography variant="caption" sx={{ color: "gray" }}>
                   {user?.email}
                 </Typography>
               </Box>
@@ -390,7 +418,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Divider />
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                  <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
+                  <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
                 </ListItemIcon>
                 <Typography color="error">Đăng xuất</Typography>
               </MenuItem>
@@ -413,7 +441,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth, border: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+              border: "none",
+            },
           }}
         >
           {drawerContent}
@@ -424,7 +456,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           variant="permanent"
           sx={{
             display: { xs: "none", md: "block" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth, borderRight: "1px solid rgba(255,255,255,0.1)" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+              borderRight: "1px solid rgba(255,255,255,0.1)",
+            },
           }}
           open
         >

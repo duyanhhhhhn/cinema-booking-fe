@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import { Add, ArrowDropDown, Search } from "@mui/icons-material";
-import CustomPagination from "./table/CustomPagination";
-import BannerTable from "./banner/BannerTable";
-import { useQuery } from "@tanstack/react-query";
-import { Banner } from "@/types/data/home/banner";
+import { Post } from "@/types/data/post/post"
+import { useQuery } from "@tanstack/react-query"
+import PostTable from "./post/PostTable";
 import { useState } from "react";
-import AddBannerModal from "./banner/modal/AddBannerPopup";
+import AddPostModal from "./post/modal/AddPostModal";
+import { Add, Search } from "@mui/icons-material";
 
-export default function BannerManagement() {
-    const [openAddBannerModal, setopenAddBannerModal] = useState(false);
-    const { data, refetch: refetchBanner } = useQuery(Banner.getBanner());
-    const banner = data?.data || [];
+export default function PostManagement() {
+    const [openAddPostModal, setOpenAddPostModal] = useState(false);
+    const { data, refetch: refetchPost } = useQuery(Post.getPosts());
+    const posts = data?.data || [];
+    console.log(posts)
     return (
         <div className=" w-full p-8 font-sans text-zinc-900">
             <div className=" flex flex-col gap-6">
                 <div className="flex flex-wrap justify-between gap-3">
                     <div className="flex min-w-72 flex-col gap-3">
                         <h1 className="text-4xl font-black leading-tight tracking-tight text-zinc-900">
-                            Banner Management
+                            Post Management
                         </h1>
                         <p className="text-zinc-600 text-base font-normal">
                             Add, Edit , Delete everything on the System.
@@ -36,33 +36,33 @@ export default function BannerManagement() {
                                     </div>
                                     <input
                                         className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ec131e] border border-zinc-300 border-l-0 bg-white h-full placeholder:text-zinc-500 px-4 pl-2 text-base font-normal"
-                                        placeholder="Search Banner By Name..."
+                                        placeholder="Search Post By Title..."
                                     />
                                 </div>
                             </label>
                         </div>
 
                         <button
-                            onClick={() => setopenAddBannerModal(true)}
+                            onClick={() => setOpenAddPostModal(true)}
                             className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-[#ec131e] text-white gap-2 text-sm font-bold tracking-wide min-w-0 px-5 hover:bg-[#ec131e]/90 transition-colors shadow-sm"
                         >
                             <Add fontSize="small" />
-                            <span className="truncate">Add New Banner</span>
+                            <span className="truncate">Add New Post</span>
                         </button>
                     </div>
                 </div>
                 {/* --- Main Content Area: Table & Pagination --- */}
                 <div className="flex flex-col gap-4">
                     {/* Component Bảng */}
-                    <BannerTable
-                        banner={banner}
-                        refetchBanner={refetchBanner}
+                    <PostTable
+                        post={posts}
+                        refetchPost={refetchPost}
                     />
                 </div>
-                <AddBannerModal
-                    open={openAddBannerModal}
-                    onClose={() => setopenAddBannerModal(false)}
-                    refetchBanner={refetchBanner}
+                <AddPostModal
+                    open={openAddPostModal}
+                    onClose={() => setOpenAddPostModal(false)}
+                    refetchPost={refetchPost}
                 />
             </div>
         </div>

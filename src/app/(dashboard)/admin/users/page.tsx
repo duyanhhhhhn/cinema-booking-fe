@@ -1,4 +1,4 @@
-import UserManagement from "@/app/component/admin/UserManagement";
+import UserManagement from "@/app/component/admin/user/UserManagement";
 
 export const metadata = {
   title: "Quản lý người dùng - Admin",
@@ -8,4 +8,3 @@ export const metadata = {
 export default function AdminUsersPage() {
   return <UserManagement />;
 }
-

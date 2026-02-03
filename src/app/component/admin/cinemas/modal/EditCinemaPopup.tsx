@@ -186,7 +186,7 @@ export default function EditCinemaPopup({
 
               {/* Ảnh */}
               <div>
-                <label className={labelClass}>Ảnh đại diện</label>
+                <label className={labelClass}>Ảnh rạp chiếu</label>
                 <div className="relative w-full h-64 border-2 border-dashed border-zinc-300 rounded-lg hover:bg-zinc-50 hover:border-[#ec131e] transition-all group cursor-pointer bg-zinc-50/50">
                   {previewImage ? (
                     <div className="relative w-full h-full overflow-hidden rounded-lg">
@@ -216,7 +216,7 @@ export default function EditCinemaPopup({
                       </span>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png,image/jpeg,image/webp"
                         className="hidden"
                         {...methods.register("imageUrl", {
                           onChange: handleFileChange,
