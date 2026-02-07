@@ -1,6 +1,6 @@
 import { Model } from "@/types/core/model";
 import { IPaginateResponse } from "@/types/core/api";
-import { IUser } from "./type";
+import { IUser, IStaff } from "./type";
 import { useMutation } from "@tanstack/react-query";
 
 export class User extends Model {
@@ -29,9 +29,9 @@ export class User extends Model {
     const { page, perPage, search } = params;
     return {
       queryKey: this.queryKeys.list(page, perPage, search),
-      queryFn: async (): Promise<IPaginateResponse<IUser[]>> => {
-        const res = await this.api.get<IPaginateResponse<IUser[]>>({
-          url: "/users/staff",
+      queryFn: async (): Promise<IPaginateResponse<IStaff[]>> => {
+        const res = await this.api.get<IPaginateResponse<IStaff[]>>({
+          url: "/users/staffs",
           params: { page, perPage, search },
         });
         return res.data;
