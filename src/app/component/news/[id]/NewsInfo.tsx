@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 export default function NewsInfo() {
     const param = useParams();
     const id = Number(param.id)
-
+    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
     const data = useQuery(Post.getPostsInfo(id));
     const data2 = data?.data?.data;
 
@@ -57,7 +57,7 @@ export default function NewsInfo() {
                             data-alt=""
                             style={{
                                 backgroundImage:
-                                    `url(${data2?.at(0) && data2?.at(0).coverUrl})`,
+                                    `url(${data2?.at(0) && urlImage + data2?.at(0).coverUrl})`,
                             }}
                         />
                         {/*Content Area */}

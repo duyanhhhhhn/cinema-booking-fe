@@ -8,7 +8,7 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media/post/";
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
   const getCategoryColor = (category) => {
     const colorMap = {
       "Khuyến mãi": "bg-red-500",
@@ -75,7 +75,7 @@ export default function NewsList() {
                   data-alt="Cinematic shot of a desert landscape from a new movie"
                   style={{
                     backgroundImage:
-                      `url(${first?.coverUrl})`,
+                      `url(${urlImage}${first?.coverUrl})`,
                   }}
                 ></div>
                 {/* Badge for mobile */}

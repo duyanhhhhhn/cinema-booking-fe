@@ -4,7 +4,7 @@ import { Link } from "@mui/material";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1a1a1a] border-t border-gray-800 mt-16">
+    <footer className="bg-[#1a1a1a] border-t border-gray-800 ">
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div>

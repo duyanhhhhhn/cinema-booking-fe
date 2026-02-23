@@ -40,25 +40,25 @@ export default function MovieDetailPage() {
   // Hàm chuyển đổi YouTube URL thành embed URL
   const getYouTubeEmbedUrl = (url: string | undefined): string | null => {
     if (!url) return null;
-    
+
     // Các pattern YouTube URL
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
       /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
         return `https://www.youtube.com/embed/${match[1]}`;
       }
     }
-    
+
     // Nếu đã là embed URL
     if (url.includes('youtube.com/embed/')) {
       return url;
     }
-    
+
     return null;
   };
 
@@ -95,10 +95,10 @@ export default function MovieDetailPage() {
       format: movieData?.data.format,
       status: movieData?.data.status,
       shortDescription: movieData?.data.shortDescription,
-      releaseDate: movieData?.data.releaseDate 
+      releaseDate: movieData?.data.releaseDate
         ? dayjs(movieData.data.releaseDate).format("YYYY-MM-DD")
         : "",
-      endDate: movieData?.data.endDate 
+      endDate: movieData?.data.endDate
         ? dayjs(movieData.data.endDate).format("YYYY-MM-DD")
         : "",
       posterFile: null,
@@ -135,8 +135,8 @@ export default function MovieDetailPage() {
         }
       }
     });
-   formData.delete("posterUrl");
-   formData.delete("bannerUrl");
+    formData.delete("posterUrl");
+    formData.delete("bannerUrl");
     updateMovie(
       { id: Number(id), payload: formData },
       {
@@ -150,10 +150,10 @@ export default function MovieDetailPage() {
       }
     );
   };
-  
+
   const trailerUrl = method.watch("trailerUrl") || movieData?.data.trailerUrl;
   const embedUrl = getYouTubeEmbedUrl(trailerUrl);
-  
+
   const urlPoster = process.env.NEXT_PUBLIC_IMAGE_URL
   const inputClass =
     "w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-600 transition-all duration-200 outline-none placeholder:text-gray-400";
@@ -197,7 +197,7 @@ export default function MovieDetailPage() {
       if (previews.banner) URL.revokeObjectURL(previews.banner);
     };
   }, [previews]);
- 
+
 
   // State giả lập
   return (
@@ -317,13 +317,12 @@ export default function MovieDetailPage() {
                     <label className={labelClass}>Trạng thái phát hành</label>
                     <div className="relative">
                       <select
-                        className={`${inputClass} appearance-none cursor-pointer font-medium ${
-                          method.watch("status") === "NOW_SHOWING"
+                        className={`${inputClass} appearance-none cursor-pointer font-medium ${method.watch("status") === "NOW_SHOWING"
                             ? "text-green-600"
                             : method.watch("status") === "COMING_SOON"
-                            ? "text-orange-500"
-                            : "text-gray-500"
-                        }`}
+                              ? "text-orange-500"
+                              : "text-gray-500"
+                          }`}
                         {...method.register("status")}
                         defaultValue={movieData?.data.status}
                       >
@@ -414,7 +413,7 @@ export default function MovieDetailPage() {
                         alt="Poster"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         src={urlPoster + movieData?.data.posterUrl}
-                        />
+                      />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
                         <span className="text-white mb-2">
                           <CloudUploadIcon fontSize="large" />

@@ -78,7 +78,13 @@ export class Post extends Model {
     }
     static createPost(payload: FormData) {
         return this.api.post<IResponse<IPost>>({
-            url: "/posts/new",
+            url: "/admin/posts/new",
+            data: payload
+        })
+    }
+    static updatePost(id: Number, payload: FormData) {
+        return this.api.put<IResponse<IPost>>({
+            url: `/admin/posts/${id}`,
             data: payload
         })
     }
@@ -88,6 +94,13 @@ export function useCreatePostMutation() {
     return useMutation<IResponse<IPost>, IHttpError, FormData>({
         mutationFn: (payload: FormData) => {
             return Post.createPost(payload).then((r) => r.data);
+        },
+    });
+}
+export function useUpdatePostMutation() {
+    return useMutation<IResponse<IPost>, IHttpError, { id: Number, payload: FormData }>({
+        mutationFn: ({ id, payload }: { id: Number, payload: FormData }) => {
+            return Post.updatePost(id, payload).then((r) => r.data);
         },
     });
 }
