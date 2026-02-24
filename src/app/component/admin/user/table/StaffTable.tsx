@@ -105,7 +105,7 @@ export default function StaffTable({
                 <TableCell>{staff.email}</TableCell>
                 <TableCell>{staff.phone}</TableCell>
                 <TableCell>
-                  {cinemaMap.get(String(staff.cinemaId).trim()) || "-"}
+                  {cinemaMap.get(String(staff.cinemaId)) ?? "-"}
                 </TableCell>
                 <TableCell>{renderStatusChip(staff.isActive)}</TableCell>
                 <TableCell>
