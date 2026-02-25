@@ -14,6 +14,7 @@ export default function HomePage() {
   const { isAuthenticated } = useAuth();
   const data1 = useQuery(Post.getPosts());
   const posts = data1?.data?.data || [];
+  console.log("Posts data:", posts);
   const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
   return (
     <>
