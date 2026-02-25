@@ -1,69 +1,207 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect } from "react";
-import { useBooking } from "@/contexts/BookingContext";
-import OrderSummary from "./OrderSummary";
-import { Combo } from "@/types/data/booking/booking";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setStep, setCombos, resetBooking } from "@/store/bookingSlice";
+import { selectBooking, selectHoldExpiresAt } from "@/store/selectors";
+import { useNotification } from "@/hooks/useNotification";
+import {  useQuery, useQueryClient } from "@tanstack/react-query";
+import { Seat } from "@/types/data/seat/seat";
+import {
+  ICalculateBookingFeeForm,
+  ICombo,
+  useCalculateBookingFeeMutation,
+  useReleaseSeatMutation,
+} from "@/types/data/booking/booking";
 import StepIndicator from "./StepIndicator";
+import BookingSidebar from "./BookingSidebar";
+import {
+  ArrowBack,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from "@mui/icons-material";
+import ConfirmBackStep from "../popup/ConfirmBackStep";
+import { Combo, IComboItem } from "@/types/data/combo/combo";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
 
-const availableCombos: Combo[] = [
-  {
-    id: "combo1",
-    name: "Combo Bắp Nước Lớn",
-    description: "1 Bắp lớn + 2 Nước ngọt lớn (Coca/Pepsi/7Up)",
-    price: 129000,
-    image:
-      "https://images.pexels.com/photos/3850838/pexels-photo-3850838.jpeg?auto=compress&cs=tinysrgb&w=400",
+const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_URL || "";
+
+/** Map item từ API (chỉ COMBO) sang ICombo dùng trong booking */
+function mapApiComboToBooking(item: IComboItem): ICombo {
+  const base = IMAGE_BASE.replace(/\/$/, "");
+  const image =
+    item.imageUrl?.startsWith("http") || !item.imageUrl
+      ? item.imageUrl || ""
+      : `${base}${item.imageUrl.startsWith("/") ? item.imageUrl : `/${item.imageUrl}`}`;
+  return {
+    id: String(item.id),
+    name: item.name,
+    description: item.description ?? "",
+    price: item.price,
+    image,
     quantity: 0,
-  },
-  {
-    id: "combo2",
-    name: "Combo Bạn Bè",
-    description: "2 Bắp vừa + 2 Nước ngọt vừa + 1 Snack",
-    price: 159000,
-    image:
-      "https://images.pexels.com/photos/7234388/pexels-photo-7234388.jpeg?auto=compress&cs=tinysrgb&w=400",
-    quantity: 0,
-  },
-  {
-    id: "combo3",
-    name: "Combo Couple",
-    description: "1 Bắp lớn + 2 Nước ngọt vừa",
-    price: 109000,
-    image:
-      "https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg?auto=compress&cs=tinysrgb&w=400",
-    quantity: 0,
-  },
-];
+  };
+}
+
+function formatRemaining(secondsLeft: number): string {
+  if (secondsLeft <= 0) return "00:00";
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 
 export default function ComboSelectionStep() {
-  const { bookingState, setCombos, setStep } = useBooking();
-  const [combos, setCombosLocal] = useState<Combo[]>(
-    bookingState.combos.length > 0 ? bookingState.combos : availableCombos
-  );
-  const [timer, setTimer] = useState("08:45");
+  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+  const { searchQuery, serializeQuery } = useRouteQuery();
+  const params = useMemo(() => {
+    return serializeQuery({
+      page: Number(searchQuery.get("page")) || 1,
+      perPage: Number(searchQuery.get("perPage")) || 10,
+      filterType:  "Combo",
+    });
+  }, [searchQuery, serializeQuery]);
+
+  const { data: combosData } = useQuery({
+    ...Combo.getCombos(params),
+  });
+
+  const apiComboList = useMemo(() => {
+    const raw = combosData?.data?.data;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((item: IComboItem) => item.type === "COMBO")
+      .map(mapApiComboToBooking);
+  }, [combosData?.data?.data]);
+
+  const n = useNotification();
+  const bookingState = useAppSelector(selectBooking);
+  const holdExpiresAt = useAppSelector(selectHoldExpiresAt);
+  const [combos, setCombosLocal] = useState<ICombo[]>([]);
+
+  const [openConfirmBackStep, setOpenConfirmBackStep] = useState(false);
+  const { mutate: releaseSeat } = useReleaseSeatMutation();
+  const [now, setNow] = useState(() => Date.now());
+
+  const remainingSeconds = useMemo(() => {
+    if (!holdExpiresAt) return null;
+    const end = new Date(holdExpiresAt).getTime();
+    return Math.max(0, Math.floor((end - now) / 1000));
+  }, [holdExpiresAt, now]);
+
+  const timer =
+    remainingSeconds != null ? formatRemaining(remainingSeconds) : "—";
+
+  const prevApiIdsRef = useRef<string>("");
+  useEffect(() => {
+    if (apiComboList.length === 0) return;
+    const ids = apiComboList.map((c) => c.id).join(",");
+    if (prevApiIdsRef.current === ids) return;
+    prevApiIdsRef.current = ids;
+    const merged =
+      bookingState.combos.length > 0
+        ? apiComboList.map((apiCombo) => {
+            const fromStore = bookingState.combos.find((c) => c.id === apiCombo.id);
+            return fromStore ? { ...apiCombo, quantity: fromStore.quantity } : apiCombo;
+          })
+        : apiComboList;
+    queueMicrotask(() => {
+      setCombosLocal(merged);
+      dispatch(setCombos(merged));
+    });
+  }, [apiComboList, bookingState.combos, dispatch]);
+
+  useEffect(() => {
+    if (holdExpiresAt == null) return;
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [holdExpiresAt]);
+
+  const hasExpiredRef = useRef(false);
+  useEffect(() => {
+    if (
+      remainingSeconds !== null &&
+      remainingSeconds <= 0 &&
+      !hasExpiredRef.current
+    ) {
+      hasExpiredRef.current = true;
+      dispatch(resetBooking());
+      queryClient.removeQueries({ queryKey: [Seat.queryKeys.getSeatMap] });
+      n.error("Hết thời gian giữ ghế. Vui lòng đặt vé lại.");
+      window.location.href = "/";
+    }
+  }, [remainingSeconds, dispatch, queryClient, n]);
 
   const updateQuantity = (comboId: string, change: number) => {
-    setCombosLocal((prev) =>
-      prev.map((combo) => {
+    setCombosLocal((prev) => {
+      const next = prev.map((combo) => {
         if (combo.id === comboId) {
           const newQuantity = Math.max(0, combo.quantity + change);
           return { ...combo, quantity: newQuantity };
         }
         return combo;
-      })
-    );
+      });
+      dispatch(setCombos(next));
+      return next;
+    });
   };
 
   const handleProceed = () => {
-    setCombos(combos);
-    setStep(3);
+    const seatIds = bookingState.heldSeatIds ?? [];
+    if (seatIds.length === 0) {
+      n.error("Không có thông tin ghế. Vui lòng quay lại bước chọn ghế.");
+      return;
+    }
+    const combosPayload = combos
+      .filter((c) => c.quantity > 0)
+      .map((c) => ({
+        id: c.id,
+        comboId: c.id,
+        productId: c.id,
+        quantity: c.quantity,
+      }));
+    const payload: ICalculateBookingFeeForm = {
+      showtimeId: Number(bookingState.showtimeId),
+      seatIds,
+      combos: combosPayload,
+      voucherCode: "",
+    };
+    dispatch(setCombos(combos));
+    caculateBookingFee(payload, {
+      onSuccess: () => {
+        n.success("Thành công chuyển đến thanh toán.");
+        dispatch(setStep(3));
+      },
+      onError: (error) => {
+        n.error(error.message);
+      },
+    });
   };
 
   const handleBack = () => {
-    setCombos(combos);
-    setStep(1);
+    const showtimeIdNum = Number(bookingState.showtimeId);
+    releaseSeat(
+      {
+        showtimeId: showtimeIdNum,
+        seatIds: bookingState.heldSeatIds ?? [],
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: [Seat.queryKeys.getSeatMap, showtimeIdNum],
+          });
+          dispatch(setStep(1));
+        },
+        onError: (error) => {
+          n.error(error.message);
+        },
+      },
+    );
   };
+  const { mutate: caculateBookingFee } = useCalculateBookingFeeMutation();
 
   return (
     <div className="min-h-screen bg-[#0f0f1e]">
@@ -79,9 +217,14 @@ export default function ComboSelectionStep() {
               <p className="text-gray-400">
                 Chọn combo đồ ăn & thức uống yêu thích của bạn.
               </p>
+              <button
+                onClick={() => setOpenConfirmBackStep(true)}
+                className="text-white cursor-pointer text-sm bg-[#1a1a2e] p-4 rounded-lg mr-4"
+              >
+                <ArrowBack />
+              </button>
 
               <div className="bg-[#1a1a2e] rounded-lg p-4 mt-4 inline-flex items-center gap-2">
-                {/* <Clock className="w-4 h-4 text-red-500" /> */}
                 <span className="text-white text-sm">
                   Ghế đang được giữ trong
                 </span>
@@ -95,7 +238,7 @@ export default function ComboSelectionStep() {
                   key={combo.id}
                   className="bg-[#1a1a2e] rounded-xl p-6 flex items-center gap-6"
                 >
-                  <div className="w-24 h-24 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-24 h-24 bg-gray-700 rounded-lg overflow-hidden shrink-0">
                     <img
                       src={combo.image}
                       alt={combo.name}
@@ -119,9 +262,9 @@ export default function ComboSelectionStep() {
                     <button
                       onClick={() => updateQuantity(combo.id, -1)}
                       disabled={combo.quantity === 0}
-                      className="w-10 h-10 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      className="cursor-pointer w-10 h-10 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      {/* <Minus className="w-5 h-5" /> */}
+                      <KeyboardArrowLeft />
                     </button>
 
                     <span className="text-white text-xl font-bold w-8 text-center">
@@ -130,9 +273,9 @@ export default function ComboSelectionStep() {
 
                     <button
                       onClick={() => updateQuantity(combo.id, 1)}
-                      className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition"
+                      className="cursor-pointer w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition"
                     >
-                      {/* <PlusIcon className="w-5 h-5" /> */}
+                      <KeyboardArrowRight />
                     </button>
                   </div>
                 </div>
@@ -141,39 +284,19 @@ export default function ComboSelectionStep() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="mb-6 bg-[#1a1a2e] rounded-lg p-4">
-              <div className="flex gap-4">
-                <img
-                  src="https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Movie poster"
-                  className="w-24 h-32 object-cover rounded-lg"
-                />
-                <div className="flex-1">
-                  <h3 className="text-white font-bold mb-3">
-                    Doraemon: Nobita và Bản Giao Hưởng Địa Cầu
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <span>CGV Vincom Center</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <span>Thứ Hai, 27/05/2024</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <span>19:30 - Phòng chiếu 4</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <OrderSummary
-              onProceed={handleProceed}
-              onBack={handleBack}
-              proceedLabel="Tiếp tục"
-              showMovieInfo={false}
+            <BookingSidebar
+              step={2}
+              actionButton={{
+                label: "TIẾP TỤC",
+                onClick: handleProceed,
+              }}
             />
           </div>
+          <ConfirmBackStep
+            open={openConfirmBackStep}
+            onClose={() => setOpenConfirmBackStep(false)}
+            onConfirm={handleBack}
+          />
         </div>
       </div>
     </div>

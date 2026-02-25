@@ -39,6 +39,20 @@ export class Cinema extends Model {
     };
   }
 
+  static getCinemaForAdmin(params: { page: number; perPage: number }) {
+    return {
+      queryKey: ["GET_CINEMAS_FOR_ADMIN_QUERY", params.page, params.perPage],
+      queryFn: () => {
+        return this.api
+          .get<IPaginateResponse<ICinema>>({
+            url: "/cinemas",
+            params,
+          })
+          .then((r) => r.data);
+      },
+    };
+  }
+
   static createCinema(payload: FormData) {
     return this.api.post<IResponse<ICinema>>({
       url: "/cinemas",

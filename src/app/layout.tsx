@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 import ClientLayoutWrapper from "./component/layout/ClientLayoutWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import StoreProvider from "@/providers/StoreProvider";
 import { GlobalRouteGuard } from "@/guards";
 import { Metadata } from "next";
 
@@ -22,15 +23,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html >
       <body className={`${outfit.className} `}>
         <QueryProvider>
-          <AuthProvider>
-            <GlobalRouteGuard>
-              <ClientLayoutWrapper>
-                {children}
-              </ClientLayoutWrapper>
-              <ToastContainer
+          <StoreProvider>
+            <AuthProvider>
+              <GlobalRouteGuard>
+                  <ClientLayoutWrapper>
+                  {children}
+                </ClientLayoutWrapper>
+                <ToastContainer
                 position="top-right"
                 autoClose={5000}
                 hideProgressBar={false}
@@ -41,9 +43,10 @@ export default function RootLayout({
                 draggable
                 pauseOnHover
                 theme="light"
-              />
-            </GlobalRouteGuard>
-          </AuthProvider>
+                />
+              </GlobalRouteGuard>
+            </AuthProvider>
+          </StoreProvider>
         </QueryProvider>
       </body>
     </html>

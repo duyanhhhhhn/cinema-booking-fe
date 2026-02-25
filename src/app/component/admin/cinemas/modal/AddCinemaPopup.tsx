@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Fade, Backdrop } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined"; 
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline"; 
+import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useForm } from "react-hook-form";
 import { useNotification } from "@/hooks/useNotification";
 import { ICinema, useCreateCinemaMutation } from "@/types/data/cinema";
@@ -62,10 +62,10 @@ export default function AddCinemaModal({
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value && value.constructor === File) {
-  formData.append(key, value as File);
-} else if (value !== undefined && value !== null) {
-  formData.append(key, String(value));
-}
+        formData.append(key, value as File);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
     });
 
     createCinema(formData, {
@@ -167,7 +167,7 @@ export default function AddCinemaModal({
 
               {/* Ảnh */}
               <div>
-                <label className={labelClass}>Ảnh đại diện</label>
+                <label className={labelClass}>Ảnh rạp chiếu</label>
                 <div className="relative w-full h-64 border-2 border-dashed border-zinc-300 rounded-lg hover:bg-zinc-50 hover:border-[#ec131e] transition-all group cursor-pointer bg-zinc-50/50">
                   {previewImage ? (
                     <div className="relative w-full h-full overflow-hidden rounded-lg">
@@ -197,7 +197,7 @@ export default function AddCinemaModal({
                       </span>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png,image/jpeg,image/webp"
                         className="hidden"
                         {...methods.register("imageUrl", {
                           onChange: handleFileChange,
