@@ -6,19 +6,25 @@ import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useForm } from "react-hook-form";
 import { useNotification } from "@/hooks/useNotification";
-import { ICinema, useCreateCinemaMutation } from "@/types/data/cinema";
+import { ICinema, useUpdateCinemaMutation } from "@/types/data/cinema";
 
-interface AddCinemaModalProps {
+interface EditCinemaPopupProps {
   open: boolean;
   onClose: () => void;
-  refetchCinemas: () => void;
+  cinema?: ICinema | null;
+  refetchCinemas?: () => void;
+  onSuccess?: () => void;
+  // allow extra prop from staff management without error
+  staff?: unknown;
 }
 
-export default function AddCinemaModal({
+export default function EditCinemaPopup({
   open,
   onClose,
+  cinema,
   refetchCinemas,
-}: AddCinemaModalProps) {
+  onSuccess,
+}: EditCinemaPopupProps) {
   const n = useNotification();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -33,14 +39,24 @@ export default function AddCinemaModal({
     mode: "onChange",
   });
 
-  const { mutate: createCinema } = useCreateCinemaMutation();
+  const { mutate: updateCinema } = useUpdateCinemaMutation();
 
   useEffect(() => {
-    if (!open) {
+    if (open && cinema) {
+      // Điền dữ liệu ban đầu
+      methods.reset({
+        name: cinema.name,
+        description: cinema.description,
+        address: cinema.address,
+        phone: cinema.phone,
+        imageUrl: null,
+      });
+      setPreviewImage(cinema.imageUrl || null);
+    } else if (!open) {
       setTimeout(() => setPreviewImage(null), 0);
       methods.reset();
     }
-  }, [open, methods]);
+  }, [open, cinema, methods]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,6 +75,8 @@ export default function AddCinemaModal({
   };
 
   const onSubmit = async (data: Partial<ICinema>) => {
+    if (!cinema) return;
+
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value && value.constructor === File) {
@@ -68,18 +86,22 @@ export default function AddCinemaModal({
       }
     });
 
-    createCinema(formData, {
-      onSuccess: () => {
-        onClose();
-        n.success("Thêm rạp chiếu thành công");
-        methods.reset();
-        setPreviewImage(null);
-        refetchCinemas();
+    updateCinema(
+      { id: cinema.id, payload: formData },
+      {
+        onSuccess: () => {
+          onClose();
+          n.success("Cập nhật rạp chiếu thành công");
+          methods.reset();
+          setPreviewImage(null);
+          if (refetchCinemas) refetchCinemas();
+          if (onSuccess) onSuccess();
+        },
+        onError: (error: any) => {
+          n.error(error.message);
+        },
       },
-      onError: (error: any) => {
-        n.error(error.message);
-      },
-    });
+    );
   };
 
   const inputClass =
@@ -102,7 +124,9 @@ export default function AddCinemaModal({
         <div className="relative w-full max-w-2xl rounded-xl bg-white border border-zinc-200 shadow-2xl flex flex-col max-h-[90vh] outline-none font-sans">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
-            <h3 className="text-xl font-bold text-zinc-900">Thêm Rạp Chiếu</h3>
+            <h3 className="text-xl font-bold text-zinc-900">
+              Chỉnh sửa Rạp Chiếu
+            </h3>
             <button
               onClick={onClose}
               className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded-full hover:bg-zinc-100"
@@ -114,7 +138,7 @@ export default function AddCinemaModal({
           {/* Form Body */}
           <div className="p-6 overflow-y-auto custom-scrollbar">
             <form
-              id="add-cinema-form"
+              id="edit-cinema-form"
               onSubmit={methods.handleSubmit(onSubmit)}
               className="grid grid-cols-1 gap-6"
             >
@@ -221,10 +245,10 @@ export default function AddCinemaModal({
             </button>
             <button
               type="submit"
-              form="add-cinema-form"
+              form="edit-cinema-form"
               className="rounded-lg bg-[#ec131e] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#ec131e]/90 transition-colors shadow-lg shadow-red-500/30 cursor-pointer"
             >
-              Thêm Rạp
+              Cập nhật Rạp
             </button>
           </div>
         </div>
