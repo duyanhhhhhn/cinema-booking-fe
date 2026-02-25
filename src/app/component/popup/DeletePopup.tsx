@@ -1,95 +1,72 @@
-import { Close, Delete, Info, Warning } from "@mui/icons-material";
+import {  WarningAmber } from "@mui/icons-material";
 import { Dialog, Fade } from "@mui/material";
 
-export default function DeletePopup({open,onClose, onConfirm, description}: {open: boolean, onClose: () => void, onConfirm: () => void, description: string}) {
-    
+interface ConfirmBackPopupProps {
+    open: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+export default function ConfirmBackPopup({ open, onClose, onConfirm }: ConfirmBackPopupProps) {
     return (
-      <Dialog
-        open={open}
-        onClose={onClose}
-        closeAfterTransition
-        slotProps={{
-          backdrop: {
-            timeout: 500,
-            className: "bg-black/70 backdrop-blur-sm", // Tailwind backdrop
-          },
-        }}
-        // Tùy chỉnh Paper (cái hộp modal) để khớp với thiết kế
-        PaperProps={{
-          className:
-            "bg-[#2f1a1b] text-white border border-white/10 rounded-2xl max-w-md w-full m-4 shadow-2xl overflow-hidden font-sans",
-          style: { backgroundColor: "#2f1a1b" }, // Fallback inline style
-        }}
-      >
-        <Fade in={open}>
-          <div className="relative flex flex-col gap-0">
-            {/* Decorative Accent Line at top */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-[#ec131e] to-transparent opacity-50"></div>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            closeAfterTransition
+            slotProps={{
+                backdrop: {
+                    timeout: 500,
+                    className: "bg-black/90 backdrop-blur-sm", // Backdrop tối và mờ hơn theo design
+                },
+            }}
+            PaperProps={{
+                className: "bg-[#121212] text-white border border-white/10 rounded-2xl max-w-sm w-full m-4 shadow-2xl overflow-hidden font-sans",
+                style: { backgroundColor: "#121212", backgroundImage: 'none' }, 
+            }}
+        >
+            <Fade in={open}>
+                <div className="relative p-8 flex flex-col items-center">
+                    {/* Icon Cảnh báo (Center) */}
+                    <div className="mb-6">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                            <WarningAmber 
+                                className="text-[#ea2a33]" 
+                                style={{ fontSize: 40 }} 
+                            />
+                        </div>
+                    </div>
 
-            {/* Close Button (Top Right) */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ec131e]/50"
-            >
-              <Close fontSize="small" />
-            </button>
+                    {/* Nội dung chữ (Căn giữa 100%) */}
+                    <div className="text-center mb-8">
+                        <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
+                            Xác nhận quay lại
+                        </h3>
+                        <p className="text-slate-400 text-[15px] leading-relaxed">
+                            Nếu quay trở lại, ghế của bạn sẽ không được giữ nữa. Bạn có chắc chắn muốn thoát khỏi quy trình đặt vé không?
+                        </p>
+                    </div>
 
-            {/* Modal Content */}
-            <div className="p-6 pb-0 flex flex-col items-center text-center sm:items-start sm:text-left sm:flex-row sm:gap-5">
-              {/* Warning Icon Wrapper */}
-              <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 sm:w-12 sm:h-12 mb-4 sm:mb-0 border border-[#ec131e]/20">
-                <Warning
-                  className="text-[#ec131e]"
-                  style={{ fontSize: 28 }}
-                />
-              </div>
+                    {/* Nút hành động (Stacked dọc theo design) */}
+                    <div className="w-full flex flex-col gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose} // Tiếp tục đặt vé = đóng popup
+                            className="w-full py-3.5 px-6 rounded-xl bg-[#ea2a33] text-white font-bold text-sm transition-all hover:bg-red-700 active:scale-[0.98] shadow-[0_4px_12px_rgba(234,42,51,0.3)] flex items-center justify-center gap-2"
+                        >
+                            <span className="material-icons text-lg">confirmation_number</span>
+                            Tiếp tục đặt vé
+                        </button>
 
-              {/* Text Content */}
-              <div className="flex-1 pt-1">
-                <h3 className="text-xl font-bold text-white leading-6 mb-2">
-                  Xác nhận xóa
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    {description}
-                  </p>
-
-                  {/* Warning Note */}
-                  <div className="mt-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10 flex gap-2 items-start text-left">
-                    <Info
-                      className="text-red-400/90 mt-0.5"
-                      style={{ fontSize: 18 }}
-                    />
-                    <p className="text-sm text-red-400/90">
-                      Hành động này không thể hoàn tác và dữ liệu sẽ bị mất vĩnh
-                      viễn.
-                    </p>
-                  </div>
+                        <button
+                            type="button"
+                            onClick={onConfirm} // Thoát = thực hiện hành động xác nhận
+                            className="w-full py-3.5 px-6 rounded-xl bg-[#1a1a1a] text-slate-400 font-bold text-sm border border-white/5 transition-all hover:bg-white/5 hover:text-white active:scale-[0.98]"
+                        >
+                            Thoát
+                        </button>
+                    </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Modal Actions (Footer) */}
-            <div className="bg-black/20 px-6 py-4 mt-6 sm:flex sm:flex-row-reverse sm:gap-3 border-t border-white/5">
-              <button
-                type="button"
-                onClick={onConfirm}
-                className="w-full inline-flex justify-center items-center rounded-lg border border-transparent bg-[#ec131e] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-[#221011] sm:w-auto transition-all"
-              >
-                <Delete className="mr-2" style={{ fontSize: 20 }} />
-                Xóa
-              </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-3 inline-flex w-full justify-center items-center rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-bold text-gray-300 shadow-sm hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-[#221011] sm:mt-0 sm:w-auto transition-all"
-              >
-                Hủy
-              </button>
-            </div>
-          </div>
-        </Fade>
-      </Dialog>
+            </Fade>
+        </Dialog>
     );
 }
