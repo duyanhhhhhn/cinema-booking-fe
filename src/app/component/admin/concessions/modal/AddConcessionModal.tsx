@@ -11,6 +11,7 @@ import { Backdrop, Box, Fade, Modal } from "@mui/material";
 import { useMemo, useState } from "react";
 import { set, useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
+import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 
 export default function AddConcessionModal({ open, onClose, refetchCombo }: {
     open: boolean, onClose: () => void,
@@ -37,7 +38,7 @@ export default function AddConcessionModal({ open, onClose, refetchCombo }: {
     const methods = useForm<any>({
         defaultValues: initialComboData,
         mode: "onChange",
-        resolver: yupResolver(createBannerSchema()),
+        resolver: yupResolver(createVoucherSchema()),
     });
     const increase = (id: number) => {
         setCart((prev) =>
@@ -166,6 +167,7 @@ export default function AddConcessionModal({ open, onClose, refetchCombo }: {
                     {/* Form Body */}
                     <div className="bg-white backdrop-blur-sm z-50 flex items-center justify-center p-4">
                         <form
+                            method="post"
                             onSubmit={methods.handleSubmit(onSubmit)}
                             className="bg-surface-dark border w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
                             <div className="px-6 pt-4">
