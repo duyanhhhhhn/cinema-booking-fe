@@ -1,7 +1,7 @@
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
-import type { ITicket } from "./type";
-import type { IPaginateResponse } from "@/types/core/api";
+import type { IBookingDetail, ITicket } from "./type";
+import type { IPaginateResponse, IResponse } from "@/types/core/api";
 
 const modelConfig = {
   path: "users/me/bookings",
@@ -11,6 +11,7 @@ const modelConfig = {
 export class Tickets extends Model {
   static queryKeys = {
     all: "ME_TICKETS_ALL_QUERY",
+    detail: "ME_TICKETS_DETAIL_QUERY"
   };
 
    static {
@@ -39,4 +40,16 @@ export class Tickets extends Model {
   };
 }
 
+  static getMyBookingDetailByCode(code: string) {
+    return {
+      queryKey: [this.queryKeys.detail, code],
+      queryFn: () => {
+        return this.api
+          .get<IResponse<IBookingDetail>>({
+            url: `/users/me/bookings/${encodeURIComponent(code)}`,
+          })
+          .then((r) => r.data);
+      },
+    };
+  }
 }
