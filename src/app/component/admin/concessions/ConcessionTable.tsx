@@ -3,6 +3,8 @@
 import { Combo, ICombo } from "@/types/data/concession/combo";
 import { useQuery } from "@tanstack/react-query";
 import CustomPagination from "../table/CustomPagination";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 
 interface IConcessionTableProps {
@@ -71,8 +73,8 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                                 {
                                                     item.type === "COMBO" &&
                                                     <div className="bg-background-dark/50 border border-border-dark/50 rounded-lg p-2 flex flex-col gap-1.5">
-                                                        <p className="text-[10px] uppercase font-bold tracking-wider mb-0.5">
-                                                            Sản phẩm thành phần
+                                                        <p className="text-[10px] px-5 uppercase font-bold tracking-wider mb-0.5 border-b-1">
+                                                            Combo gồm
                                                         </p>
                                                         {
                                                             item.itemList.map((comboItem, index) => (
@@ -95,32 +97,26 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                 </TableCell>
                                 <TableCell className="p-4 font-medium">{item.price.toLocaleString()} đ</TableCell>
                                 <TableCell className="p-4">
-                                    <div className="relative inline-flex text-center cursor-pointer">
-                                        <input
-                                            defaultChecked={false}
-                                            className="sr-only peer"
-                                            type="checkbox"
-                                            defaultValue=""
-                                        />
-                                        <div className="w-9 h-5 bg-border-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
-                                    </div>
+                                    <button className="flex border rounded-lg p-1">
+                                        {item.isActive == true && <p>ACTIVE</p>}
+                                    </button>
                                 </TableCell>
                                 <TableCell className="p-4">
                                     <div className="flex items-center gap-2">
                                         <button
-                                            className="hover:bg-background-dark text-red-500 rounded-lg"
+                                            className="bg-yellow-500 text-white rounded-md p-1"
                                             title="Chỉnh sửa"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
-                                                edit
+                                                <EditIcon></EditIcon>
                                             </span>
                                         </button>
                                         <button
-                                            className="hover:bg-background-dark rounded-lg transition-colors"
+                                            className="bg-red-500 text-white rounded-md transition-colors p-1"
                                             title="Xóa"
                                         >
                                             <span className="text-[20px]">
-                                                delete
+                                                <DeleteIcon></DeleteIcon>
                                             </span>
                                         </button>
                                     </div>

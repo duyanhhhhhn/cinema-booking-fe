@@ -38,7 +38,7 @@ export default function NewsList() {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;
     return posts.filter((post) =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.title.toLowerCase().includes(searchTerm.toLocaleLowerCase()) ||
       post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
