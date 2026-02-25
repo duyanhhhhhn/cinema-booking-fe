@@ -6,7 +6,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { createBannerSchema } from "@/types/data/post/schema/banner";
+import { createBannerSchema } from "@/types/data/home/schema/banner";
 import { initialBannerData, useCreateBannerMutation } from "@/types/data/home/banner";
 import { PostFormData } from "@/types/data/post/post";
 

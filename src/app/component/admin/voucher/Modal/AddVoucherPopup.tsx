@@ -1,6 +1,6 @@
 "use client"
 import { useNotification } from "@/hooks/useNotification";
-import { createBannerSchema } from "@/types/data/post/schema/banner";
+import { createBannerSchema } from "@/types/data/home/schema/banner";
 import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 import { initialVoucherData, useCreateVoucherMutation, VoucherFormData } from "@/types/data/voucher/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";

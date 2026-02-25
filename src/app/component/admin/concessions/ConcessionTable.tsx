@@ -95,7 +95,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                 </TableCell>
                                 <TableCell className="p-4 font-medium">{item.price.toLocaleString()} đ</TableCell>
                                 <TableCell className="p-4">
-                                    <div className="relative inline-flex items-center cursor-pointer">
+                                    <div className="relative inline-flex text-center cursor-pointer">
                                         <input
                                             defaultChecked={false}
                                             className="sr-only peer"
@@ -119,7 +119,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                             className="hover:bg-background-dark rounded-lg transition-colors"
                                             title="Xóa"
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">
+                                            <span className="text-[20px]">
                                                 delete
                                             </span>
                                         </button>

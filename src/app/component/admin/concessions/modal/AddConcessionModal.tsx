@@ -2,7 +2,6 @@
 
 import { useNotification } from "@/hooks/useNotification";
 import { CartItem, Combo, ICombo, IComboData, initialComboData, useCreateComboMutation } from "@/types/data/concession/combo";
-import { createBannerSchema } from "@/types/data/post/schema/banner";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";

@@ -81,6 +81,11 @@ export class Schedule extends Model {
             data: payload,
         });
     }
+    static delete(id: number) {
+        return this.api.delete<IResponse<ISchedule>>({
+            url: `/staff/schedules/${id}`
+        })
+    }
 }
 Schedule.setup();
 export function useCreateScheduleMutation() {
@@ -96,4 +101,11 @@ export function useEditScheduleMutation(id: number) {
             return Schedule.edit(id, payload).then((r) => r.data);
         },
     });
+}
+export function useDeleteScheduleMutation() {
+    return useMutation<IResponse<ISchedule>, IHttpError, number>({
+        mutationFn: (id) => {
+            return Schedule.delete(id).then((r) => r.data)
+        }
+    })
 }

@@ -47,6 +47,17 @@ export class Combo extends Model {
             data: payload
         })
     }
+    static editCombo(id: number, payload: FormData) {
+        return this.api.put<IResponse<ICombo>>({
+            url: `/combo/${id}`,
+            data: payload
+        })
+    }
+    static deleteCombo(id: number) {
+        return this.api.delete<IResponse<ICombo>>({
+            url: `/combo/${id}`,
+        })
+    }
 }
 Combo.setup();
 export function useCreateComboMutation() {
@@ -55,5 +66,19 @@ export function useCreateComboMutation() {
             return Combo.createCombo(payload).then((r) => r.data);
         },
     });
+}
+export function useEditComboMutation() {
+    return useMutation<IResponse<ICombo>, IHttpError, { payload: FormData, id: number }>({
+        mutationFn: ({ id, payload }: { id: number, payload: FormData }) => {
+            return Combo.createCombo(payload).then((r) => r.data);
+        }
+    })
+}
+export function useDeleteComboMutation() {
+    return useMutation<IResponse<ICombo>, IHttpError, number>({
+        mutationFn: (id: number) => {
+            return Combo.deleteCombo(id).then((r) => r.data)
+        }
+    })
 }
 

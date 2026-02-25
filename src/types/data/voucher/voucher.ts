@@ -61,6 +61,11 @@ export class Voucher extends Model {
             data: payload,
         })
     }
+    static deleteVoucher(id: Number) {
+        return this.api.delete<IResponse<IVoucher>>({
+            url: `/vouchers/${id}`
+        })
+    }
 }
 Voucher.setup();
 export function useCreateVoucherMutation() {
@@ -76,4 +81,11 @@ export function useUpdateVoucherMutation() {
             return Voucher.editVoucher(id, payload).then((r) => r.data);
         },
     });
+}
+export function useDeleteVoucherMutation() {
+    return useMutation<IResponse<IVoucher>, IHttpError, number>({
+        mutationFn: (id) => {
+            return Voucher.deleteVoucher(id).then((r) => r.data);
+        }
+    })
 }
