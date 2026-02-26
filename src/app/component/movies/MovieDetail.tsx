@@ -44,6 +44,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [needLogin, setNeedLogin] = useState(false);
   const [formError, setFormError] = useState<string>("");
 
+  const [reviewPage, setReviewPage] = useState(1);
+  const reviewPerPage = 5;
+
   const movieIdNum = useMemo(() => {
     const vFromParams = Number(id);
     const vFromProp = Number(movieId);
@@ -55,6 +58,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
           : 0;
     return v;
   }, [id, movieId]);
+
+  useEffect(() => {
+    setReviewPage(1);
+  }, [movieIdNum]);
 
   const routeMoviePath = useMemo(() => {
     return movieIdNum > 0 ? `/movies/${movieIdNum}` : "/movies";
@@ -140,8 +147,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   });
 
   const dataMovieReviews = useQuery({
-    ...MovieReview.getAllReviewByMovieId(movieIdNum),
+    ...MovieReview.getAllReviewByMovieId(movieIdNum, reviewPage, reviewPerPage),
     enabled: movieIdNum > 0,
+    placeholderData: (prev) => prev,
   });
 
   const dataMovieCountRating = useQuery({
@@ -155,24 +163,76 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   });
 
   const movie = dataMovieDetail.data?.data;
-  const reviews = dataMovieReviews.data?.data;
+
+  const reviewsRes: any = dataMovieReviews.data;
+  const reviews = (reviewsRes?.data ?? []) as any[];
+  const reviewsMeta: any = reviewsRes?.meta ?? {};
+
+  const reviewsTotal = Number(reviewsMeta?.total ?? reviews.length);
+  const reviewsPerPageMeta = Number(reviewsMeta?.perPage ?? reviewPerPage);
+
+  const serverTotalPages = Number(reviewsMeta?.totalPages ?? 0);
+  const reviewsTotalPages = Math.max(
+    1,
+    serverTotalPages ||
+      Math.ceil(reviewsTotal / (reviewsPerPageMeta || reviewPerPage)),
+  );
+
+  useEffect(() => {
+    if (serverTotalPages > 0 && reviewPage > serverTotalPages) {
+      setReviewPage(serverTotalPages);
+    }
+  }, [reviewPage, serverTotalPages]);
+
   const reviews_rating = dataMovieCountRating.data?.data;
 
-  // ====== PHIM LIÊN QUAN: HIỂN THỊ 6 + SCROLL DỌC ======
+  const getReviewerName = useMemo(() => {
+    return (review: any) => {
+      const first =
+        review?.first_name ??
+        review?.firstName ??
+        review?.userFirstName ??
+        review?.user_first_name ??
+        null;
+
+      const last =
+        review?.last_name ??
+        review?.lastName ??
+        review?.userLastName ??
+        review?.user_last_name ??
+        null;
+
+      const composed = [first, last].filter(Boolean).join(" ").trim();
+      if (composed) return composed;
+
+      const full =
+        review?.full_name ??
+        review?.userFullName ??
+        review?.fullName ??
+        review?.user_full_name ??
+        review?.name ??
+        null;
+
+      const name = String(full ?? "").trim();
+      const uid = review?.userId ?? review?.user_id ?? "";
+      return name || `Người dùng #${uid}`;
+    };
+  }, []);
+
   const RELATED_LIMIT = 6;
 
-const movieGenre = useQuery({
-  ...MoviePublic.getAllMovieGenres(String(movie?.genre ?? ""), RELATED_LIMIT),
-  enabled: movieIdNum > 0 && !!movie?.genre,
-});
-console.log("genre: ", movieGenre);
+  const movieGenre = useQuery({
+    ...MoviePublic.getAllMovieGenres(String(movie?.genre ?? ""), RELATED_LIMIT),
+    enabled: movieIdNum > 0 && !!movie?.genre,
+  });
+  console.log("genre: ", movieGenre);
 
-const relatedMovies = useMemo(() => {
-  const list = movieGenre.data ?? [];
-  return list
-    .filter((x: any) => Number(x?.id) !== movieIdNum)
-    .slice(0, RELATED_LIMIT);
-}, [movieGenre.data, movieIdNum]);
+  const relatedMovies = useMemo(() => {
+    const list = movieGenre.data ?? [];
+    return list
+      .filter((x: any) => Number(x?.id) !== movieIdNum)
+      .slice(0, RELATED_LIMIT);
+  }, [movieGenre.data, movieIdNum]);
 
   const cinemasRaw = useMemo(
     () => dataMovieCinemaShowtimes.data ?? [],
@@ -219,6 +279,7 @@ const relatedMovies = useMemo(() => {
       setNeedLogin(false);
       setCommentInput("");
       setRatingInput(5);
+      setReviewPage(1);
       await Promise.all([
         dataMovieReviews.refetch(),
         dataMovieCountRating.refetch(),
@@ -357,6 +418,24 @@ const relatedMovies = useMemo(() => {
   const Glass =
     "rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
 
+  const pageWindow = useMemo(() => {
+    const total = reviewsTotalPages;
+    const current = reviewPage;
+    if (total <= 1) return [] as number[];
+
+    const windowSize = 5;
+    const half = Math.floor(windowSize / 2);
+
+    let start = Math.max(1, current - half);
+    let end = Math.min(total, start + windowSize - 1);
+
+    start = Math.max(1, end - windowSize + 1);
+
+    const pages: number[] = [];
+    for (let p = start; p <= end; p++) pages.push(p);
+    return pages;
+  }, [reviewsTotalPages, reviewPage]);
+
   return (
     <main className="relative min-h-screen bg-[#0B0C0F] text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
@@ -367,7 +446,10 @@ const relatedMovies = useMemo(() => {
         <div
           className="absolute inset-0 bg-cover bg-center opacity-70"
           style={{
-            backgroundImage: `url("${resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}")`,
+            backgroundImage: `url("${resolveUrl(
+              movie?.posterUrl,
+              "/poster/poster.jpg",
+            )}")`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
@@ -446,8 +528,6 @@ const relatedMovies = useMemo(() => {
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col gap-10 lg:flex-row">
             <div className="flex-1 space-y-10">
-              {/* ==== (GIỮ NGUYÊN CÁC SECTION BÊN TRÁI CỦA BẠN) ==== */}
-              {/* Thông Tin Phim */}
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
                   <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
@@ -559,7 +639,9 @@ const relatedMovies = useMemo(() => {
                 </div>
               </section>
 
-              {/* Lịch Chiếu */}
+              {/* =========================
+                  ✅ KHÔI PHỤC: LỊCH CHIẾU (UI)
+                 ========================= */}
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -653,16 +735,23 @@ const relatedMovies = useMemo(() => {
                         : scheduleRows
                       ).map((row: any) => {
                         const c = row.cinema as IMovieShowtimeGroup;
-                        const cinemaId = (c as any)?.cinemaId;
-                        const cinemaName = (c as any)?.cinemaName ?? "";
+                        const cinemaId =
+                          (c as any)?.cinemaId ?? (c as any)?.id ?? "";
+                        const cinemaName =
+                          (c as any)?.cinemaName ?? (c as any)?.name ?? "";
                         const address = (c as any)?.address ?? "";
-                        const posterUrl = (c as any)?.posterUrl ?? null;
+                        const posterUrl =
+                          (c as any)?.posterUrl ??
+                          (c as any)?.imageUrl ??
+                          (c as any)?.image_url ??
+                          null;
+
                         const showtimes = (row.showtimes ??
                           []) as IShowtimeItem[];
 
                         return (
                           <div
-                            key={cinemaId}
+                            key={cinemaId || cinemaName}
                             className="rounded-2xl border border-white/10 bg-black/25 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                           >
                             <div className="p-4 md:p-5">
@@ -712,7 +801,7 @@ const relatedMovies = useMemo(() => {
                                         b.startTime || "",
                                       ),
                                     )
-                                    .map((st) => (
+                                    .map((st: any) => (
                                       <button
                                         key={st.id}
                                         className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10"
@@ -720,9 +809,12 @@ const relatedMovies = useMemo(() => {
                                         <span className="tabular-nums">
                                           {formatHM(st.startTime)}
                                         </span>
-                                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
-                                          {st.type}
-                                        </span>
+
+                                        {st.type ? (
+                                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
+                                            {st.type}
+                                          </span>
+                                        ) : null}
                                       </button>
                                     ))
                                 )}
@@ -736,7 +828,6 @@ const relatedMovies = useMemo(() => {
                 </div>
               </section>
 
-              {/* Đánh giá */}
               <section className={Glass} id="review">
                 <div className="p-5 md:p-6 lg:p-7">
                   <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
@@ -753,7 +844,7 @@ const relatedMovies = useMemo(() => {
                     </div>
 
                     <span className="text-sm text-white/60">
-                      {reviews?.length ?? 0} đánh giá
+                      {reviewsTotal} đánh giá
                     </span>
                   </div>
 
@@ -849,48 +940,142 @@ const relatedMovies = useMemo(() => {
                     ) : null}
                   </div>
 
-                  {(reviews?.length ?? 0) === 0 ? (
+                  {dataMovieReviews.isLoading ? (
+                    <p className="text-sm text-white/55">Đang tải đánh giá...</p>
+                  ) : reviews.length === 0 ? (
                     <p className="text-sm text-white/55">
                       Chưa có đánh giá nào cho phim này.
                     </p>
                   ) : (
-                    <ul className="space-y-4">
-                      {reviews.map((review: any) => (
-                        <li
-                          key={review.id}
-                          className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md"
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-extrabold text-white">
-                              Người dùng #{review.userId}
-                            </span>
-
-                            <div className="flex items-center gap-1 text-xs text-yellow-400">
-                              <Star
-                                fontSize="small"
-                                className="text-yellow-400"
-                              />
-                              <span className="font-extrabold">
-                                {review.rating}
+                    <>
+                      <ul className="space-y-4">
+                        {reviews.map((review: any) => (
+                          <li
+                            key={review.id}
+                            className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md"
+                          >
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-sm font-extrabold text-white">
+                                {getReviewerName(review)}
                               </span>
-                              <span className="text-white/60">/5</span>
+
+                              <div className="flex items-center gap-1 text-xs text-yellow-400">
+                                <Star
+                                  fontSize="small"
+                                  className="text-yellow-400"
+                                />
+                                <span className="font-extrabold">
+                                  {review.rating}
+                                </span>
+                                <span className="text-white/60">/5</span>
+                              </div>
                             </div>
+
+                            <p className="text-sm text-white/80">
+                              {review.comment}
+                            </p>
+
+                            <p className="mt-2 text-xs text-white/45">
+                              {review.createdAt
+                                ? new Date(review.createdAt).toLocaleDateString(
+                                    "vi-VN",
+                                  )
+                                : ""}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {reviewsTotalPages > 1 ? (
+                        <div className="mt-6 flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setReviewPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={
+                              reviewPage <= 1 || dataMovieReviews.isFetching
+                            }
+                            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-white/85 hover:bg-white/10 disabled:opacity-50"
+                          >
+                            Trước
+                          </button>
+
+                          <div className="flex items-center gap-2">
+                            {pageWindow[0] > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => setReviewPage(1)}
+                                disabled={dataMovieReviews.isFetching}
+                                className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm font-extrabold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                              >
+                                1
+                              </button>
+                            ) : null}
+
+                            {pageWindow[0] > 2 ? (
+                              <span className="px-1 text-white/45">…</span>
+                            ) : null}
+
+                            {pageWindow.map((p) => {
+                              const active = p === reviewPage;
+                              return (
+                                <button
+                                  key={p}
+                                  type="button"
+                                  onClick={() => setReviewPage(p)}
+                                  disabled={dataMovieReviews.isFetching}
+                                  className={[
+                                    "rounded-lg border px-3 py-2 text-sm font-extrabold",
+                                    active
+                                      ? "border-red-400/30 bg-red-500/20 text-white"
+                                      : "border-white/10 bg-black/25 text-white/80 hover:bg-white/5",
+                                    dataMovieReviews.isFetching
+                                      ? "opacity-50"
+                                      : "",
+                                  ].join(" ")}
+                                >
+                                  {p}
+                                </button>
+                              );
+                            })}
+
+                            {pageWindow[pageWindow.length - 1] <
+                            reviewsTotalPages - 1 ? (
+                              <span className="px-1 text-white/45">…</span>
+                            ) : null}
+
+                            {pageWindow[pageWindow.length - 1] <
+                            reviewsTotalPages ? (
+                              <button
+                                type="button"
+                                onClick={() => setReviewPage(reviewsTotalPages)}
+                                disabled={dataMovieReviews.isFetching}
+                                className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm font-extrabold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                              >
+                                {reviewsTotalPages}
+                              </button>
+                            ) : null}
                           </div>
 
-                          <p className="text-sm text-white/80">
-                            {review.comment}
-                          </p>
-
-                          <p className="mt-2 text-xs text-white/45">
-                            {review.createdAt
-                              ? new Date(review.createdAt).toLocaleDateString(
-                                  "vi-VN",
-                                )
-                              : ""}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setReviewPage((p) =>
+                                Math.min(reviewsTotalPages, p + 1),
+                              )
+                            }
+                            disabled={
+                              reviewPage >= reviewsTotalPages ||
+                              dataMovieReviews.isFetching
+                            }
+                            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-white/85 hover:bg-white/10 disabled:opacity-50"
+                          >
+                            Sau
+                          </button>
+                        </div>
+                      ) : null}
+                    </>
                   )}
                 </div>
               </section>
@@ -900,17 +1085,13 @@ const relatedMovies = useMemo(() => {
               <section
                 className={`relative overflow-hidden rounded-[26px] ${beVN?.className ?? ""}`}
               >
-                {/* glow ngoài (nhẹ, không tạo 2 lớp màu bự) */}
                 <div className="pointer-events-none absolute inset-0 -z-10">
                   <div className="absolute -inset-10 rounded-[34px] bg-[radial-gradient(520px_260px_at_50%_35%,rgba(255,42,42,0.38),transparent_68%)] blur-3xl" />
                   <div className="absolute -inset-10 rounded-[34px] bg-[radial-gradient(720px_360px_at_50%_120%,rgba(255,42,42,0.22),transparent_72%)] blur-3xl" />
                 </div>
 
-                {/* viền đỏ đều + sáng */}
                 <div className="rounded-[26px] bg-[linear-gradient(135deg,rgba(255,42,42,0.95),rgba(255,42,42,0.35),rgba(255,42,42,0.95))] p-[2px] shadow-[0_0_0_1px_rgba(255,42,42,0.40),0_0_55px_rgba(255,42,42,0.22)]">
-                  {/* nền trong */}
                   <div className="relative rounded-[24px] bg-[linear-gradient(180deg,rgba(110,10,26,0.96),rgba(46,6,14,0.96))] px-7 py-7 text-center shadow-[0_26px_80px_rgba(0,0,0,0.55)]">
-                    {/* highlight nhẹ phía trên để “đúng chất” ảnh */}
                     <div className="pointer-events-none absolute inset-0 rounded-[24px] bg-[radial-gradient(520px_240px_at_50%_0%,rgba(255,255,255,0.06),transparent_62%)]" />
 
                     <p className="relative text-[13px] font-extrabold uppercase tracking-[0.34em] text-white/90 [text-shadow:0_0_16px_rgba(255,42,42,0.45)]">
@@ -930,8 +1111,6 @@ const relatedMovies = useMemo(() => {
                   </div>
                 </div>
               </section>
-
-              {/* ===== KẾT THÚC PHẦN "ĐẶT VÉ NHANH" ===== */}
 
               <section className={`${Glass} p-4`}>
                 <div className="mb-4 flex items-end justify-between gap-3">
@@ -997,8 +1176,7 @@ const relatedMovies = useMemo(() => {
                       const genreName = String(item?.genre ?? "");
                       const duration = Number(item?.durationMinutes) || 0;
 
-                      const poster =
-                        item?.posterUrl ?? item?.poster_url ?? null;
+                      const poster = item?.posterUrl ?? item?.poster_url ?? null;
 
                       return (
                         <button
