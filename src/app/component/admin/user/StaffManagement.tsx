@@ -16,7 +16,6 @@ import AddStaffPopup from "./modal/AddStaffPopup";
 import EditStaffPopup from "./modal/EditStaffPopup";
 
 export default function StaffManagement() {
-  // ❌ Không dùng isAdmin/isManagement/isStaff từ useAuth
   const { user } = useAuth();
 
   const router = useRouter();
@@ -52,6 +51,13 @@ export default function StaffManagement() {
 
   const [openAdd, setOpenAdd] = useState(false);
   const [editStaff, setEditStaff] = useState<IStaff | null>(null);
+  const [selectedCinema, setSelectedCinema] = useState<number | null>(null);
+
+  // Sync selected cinema from URL (so filter persists on refresh / share)
+  React.useEffect(() => {
+    const val = searchParams.get("cinemaId");
+    setSelectedCinema(val ? Number(val) : null);
+  }, [searchParams]);
 
   // Lấy query params từ URL
   const queryParams = useMemo(() => {
@@ -68,6 +74,7 @@ export default function StaffManagement() {
     queryParams.page,
     queryParams.perPage,
     queryParams.search,
+    selectedCinema,
   );
 
   const { data: staffData, refetch } = useQuery({
@@ -75,17 +82,25 @@ export default function StaffManagement() {
     enabled: !!user && (userIsAdmin || userIsManager), // 🔹 sửa chỗ này
   });
 
-  // 🔹 Lọc dữ liệu FE nếu backend chưa filter
+  // 🔹 FIXED: filter theo rạp nếu backend chưa filter
   const staffs: IStaff[] = useMemo(() => {
-    let data = Array.isArray(staffData?.data) ? staffData.data.flat() : [];
+    let data: IStaff[] = Array.isArray(staffData?.data)
+      ? staffData.data.flat()
+      : [];
 
-    // MANAGER chỉ thấy STAFF
-    if (!userIsAdmin && user) {
-      data = data.filter((s) => s.cinemaId == String(user?.id));
+    // Nếu là MANAGER, chỉ hiện staff của rạp của họ
+    if (userIsManager) {
+      const userCinemaId = (user as any)?.cinemaId;
+      if (userCinemaId != null) {
+        data = data.filter((s) => String(s.cinemaId) === String(userCinemaId));
+      }
+    } else if (selectedCinema != null) {
+      // ADMIN: filter theo selectedCinema nếu có
+      data = data.filter((s) => String(s.cinemaId) === String(selectedCinema));
     }
-    console.log("Fetched staffs:", data);
+
     return data;
-  }, [staffData?.data, userIsAdmin, user]);
+  }, [staffData?.data, selectedCinema, userIsManager, user]);
 
   // Cập nhật query params trên URL
   const updateQueryParams = (
@@ -123,11 +138,33 @@ export default function StaffManagement() {
             placeholder="Tìm kiếm..."
             className="flex-1 px-3 h-12 border rounded-lg"
           />
-
+          {userIsAdmin && (
+            <select
+              value={selectedCinema ?? ""}
+              onChange={(e) => {
+                // update local state and URL so query + paging update correctly
+                setSelectedCinema(
+                  e.target.value ? Number(e.target.value) : null,
+                );
+                updateQueryParams({
+                  page: 1,
+                  cinemaId: e.target.value ? Number(e.target.value) : null,
+                });
+              }}
+              className="px-3 h-12 border rounded-lg"
+            >
+              <option value="">Tất cả rạp</option>
+              {cinemaData?.data?.map((cinema) => (
+                <option key={cinema.id} value={cinema.id}>
+                  {cinema.name}
+                </option>
+              ))}
+            </select>
+          )}
           {/* 🔹 ADMIN add Manager/Staff, MANAGER chỉ add Staff */}
           <button
             onClick={() => setOpenAdd(true)}
-            className="px-4 py-2 bg-[#ec131e] text-white rounded-lg font-bold"
+            className="px-4 py-2 bg-[#ec131e] text-white rounded-lg font-bold whitespace-nowrap flex items-center justify-center"
           >
             {userIsAdmin ? "Thêm Manager / Staff" : "Thêm Staff"}
           </button>

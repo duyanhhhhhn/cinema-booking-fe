@@ -5,33 +5,24 @@ import { useMutation } from "@tanstack/react-query";
 
 export class User extends Model {
   static queryKeys = {
-    list: (page: number, perPage: number, search = "") =>
-      ["USER", "LIST", page, perPage, search] as const,
+    listUsers: (page: number, perPage: number, search = "") =>
+      ["USER", "LIST_USERS", page, perPage, search] as const,
+    listStaffs: (
+      page: number,
+      perPage: number,
+      search = "",
+      cinemaId?: number | null,
+    ) => ["USER", "LIST_STAFFS", page, perPage, search, cinemaId] as const,
   };
 
-  // ======== USERS ========
+  // ======== USERS (Khách hàng) ========
   static getUsers(params: { page: number; perPage: number; search?: string }) {
     const { page, perPage, search } = params;
     return {
-      queryKey: this.queryKeys.list(page, perPage, search),
+      queryKey: this.queryKeys.listUsers(page, perPage, search),
       queryFn: async (): Promise<IPaginateResponse<IUser[]>> => {
         const res = await this.api.get<IPaginateResponse<IUser[]>>({
           url: "/users/customers",
-          params: { page, perPage, search },
-        });
-        return res.data; // res.data là IPaginateResponse<IUser[]>
-      },
-    };
-  }
-
-  // ======== STAFF ========
-  static getStaffs(params: { page: number; perPage: number; search?: string }) {
-    const { page, perPage, search } = params;
-    return {
-      queryKey: this.queryKeys.list(page, perPage, search),
-      queryFn: async (): Promise<IPaginateResponse<IStaff[]>> => {
-        const res = await this.api.get<IPaginateResponse<IStaff[]>>({
-          url: "/users/staffs",
           params: { page, perPage, search },
         });
         return res.data;
@@ -39,12 +30,34 @@ export class User extends Model {
     };
   }
 
+  // ======== STAFF (Staff + Manager) ========
+  static getStaffs(params: {
+    page: number;
+    perPage: number;
+    search?: string;
+    cinemaId?: number | null;
+  }) {
+    const { page, perPage, search, cinemaId } = params;
+    return {
+      queryKey: this.queryKeys.listStaffs(page, perPage, search, cinemaId),
+      queryFn: async (): Promise<IPaginateResponse<IStaff[]>> => {
+        const res = await this.api.get<IPaginateResponse<IStaff[]>>({
+          url: "/users/staffs",
+          params: { page, perPage, search, cinemaId },
+        });
+        return res.data;
+      },
+    };
+  }
+
+  // ======== CREATE / UPDATE STAFF ========
   static createStaff(payload: FormData) {
-    return this.api.post<IUser>({ url: "/users/manage", data: payload });
+    // Backend sẽ tự xác định roleId và position từ payload
+    return this.api.post<IStaff>({ url: "/users/manage", data: payload });
   }
 
   static updateStaff(id: number, payload: FormData) {
-    return this.api.put<IUser>({ url: `/users/manage/${id}`, data: payload });
+    return this.api.put<IStaff>({ url: `/users/manage/${id}`, data: payload });
   }
 
   // ======== LOCK/UNLOCK ========
@@ -56,16 +69,18 @@ export class User extends Model {
   }
 
   static lockStaff(id: number) {
-    return this.api.put<IUser>({ url: `/users/manage/${id}/lock` });
+    return this.api.put<IStaff>({ url: `/users/manage/${id}/lock` });
   }
   static unlockStaff(id: number) {
-    return this.api.put<IUser>({ url: `/users/manage/${id}/unlock` });
+    return this.api.put<IStaff>({ url: `/users/manage/${id}/unlock` });
   }
 }
 
 User.setup();
 
 // ======= REACT QUERY HOOKS =======
+
+// Lock / Unlock
 export function useLockUserMutation() {
   return useMutation<IUser, Error, number>({
     mutationFn: (id) => User.lockUser(id).then((res) => res.data),
@@ -79,18 +94,18 @@ export function useUnlockUserMutation() {
 }
 
 export function useLockStaffMutation() {
-  return useMutation<IUser, Error, number>({
+  return useMutation<IStaff, Error, number>({
     mutationFn: (id) => User.lockStaff(id).then((res) => res.data),
   });
 }
 
 export function useUnlockStaffMutation() {
-  return useMutation<IUser, Error, number>({
+  return useMutation<IStaff, Error, number>({
     mutationFn: (id) => User.unlockStaff(id).then((res) => res.data),
   });
 }
 
-// ======= QUERY HOOKS =======
+// Query Hooks
 export function useGetUsersQuery(
   page: number,
   perPage: number,
@@ -103,18 +118,20 @@ export function useGetStaffsQuery(
   page: number,
   perPage: number,
   search?: string,
+  cinemaId?: number | null,
 ) {
-  return User.getStaffs({ page, perPage, search });
+  return User.getStaffs({ page, perPage, search, cinemaId });
 }
 
+// Mutations
 export function useCreateStaffMutation() {
-  return useMutation<IUser, Error, FormData>({
+  return useMutation<IStaff, Error, FormData>({
     mutationFn: (payload) => User.createStaff(payload).then((res) => res.data),
   });
 }
 
 export function useUpdateStaffMutation() {
-  return useMutation<IUser, Error, { id: number; payload: FormData }>({
+  return useMutation<IStaff, Error, { id: number; payload: FormData }>({
     mutationFn: ({ id, payload }) =>
       User.updateStaff(id, payload).then((res) => res.data),
   });
