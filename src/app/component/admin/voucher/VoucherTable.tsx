@@ -1,7 +1,9 @@
 "use client";
 
 import { IVoucher } from "@/types/data/voucher/voucher";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import EditVoucherModal from "./Modal/EditVoucherPopup";
+import { useState } from "react";
 
 interface IVoucherTableProps {
     voucher: IVoucher[];
@@ -9,6 +11,8 @@ interface IVoucherTableProps {
 }
 
 export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableProps) {
+    const [openEditVoucherModal, setEditVoucherModal] = useState(false);
+
     return <>
         <TableContainer className="overflow-x-auto">
             <Table className="w-full text-left border-collapse">
@@ -52,6 +56,7 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                                     <button
                                         className="hover:bg-background-dark text-red-500 rounded-lg border"
                                         title="Chỉnh sửa"
+                                        onClick={() => setEditVoucherModal(true)}
                                     >
                                         <span className="material-symbols-outlined text-[20px]">
                                             edit
@@ -66,6 +71,11 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                                         </span>
                                     </button>
                                 </div>
+                                <EditVoucherModal
+                                    open={openEditVoucherModal} onClose={() => setEditVoucherModal(false)}
+                                    refetchVoucher={refetchVoucher}
+                                    id={item.id}
+                                ></EditVoucherModal>
                             </TableCell>
                         </TableRow>
                     ))}

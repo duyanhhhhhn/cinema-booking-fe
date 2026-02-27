@@ -49,6 +49,18 @@ export class Voucher extends Model {
         getRelate: 'VOUCHERS_FIND_RELATE'
     }
     static objects = ObjectsFactory.factory<IVoucher>(modelConfig, this.queryKeys)
+    static voucherInfo(id: number) {
+        return {
+            queryKey: [this.queryKeys.findOne],
+            queryFn: () => {
+                return this.api
+                    .get<IVoucher>({
+                        url: `/public/vouchers/${id}`,
+                    })
+                    .then((res) => res.data);
+            }
+        }
+    }
     static createVoucher(payload: FormData) {
         return this.api.post<IResponse<IVoucher>>({
             url: "/vouchers",
