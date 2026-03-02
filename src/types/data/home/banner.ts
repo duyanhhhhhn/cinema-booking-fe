@@ -67,7 +67,7 @@ export class Banner extends Model {
     }
     static updateBanner(id: number, payload: FormData) {
         return this.api.put<IResponse<IBanner>>({
-            url: `/banner/${id}`,
+            url: `/admin/banner/${id}`,
             data: payload
         })
     }
