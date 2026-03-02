@@ -3,15 +3,43 @@
 import { Post } from "@/types/data/post/post"
 import { useQuery } from "@tanstack/react-query"
 import PostTable from "./post/PostTable";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AddPostModal from "./post/modal/AddPostModal";
 import { Add, Search } from "@mui/icons-material";
+import CustomPagination from "./table/CustomPagination";
 
 export default function PostManagement() {
+    const [searchTerm, setSearchTerm] = useState("");
     const [openAddPostModal, setOpenAddPostModal] = useState(false);
     const { data, refetch: refetchPost } = useQuery(Post.getPosts());
     const posts = data?.data || [];
-    console.log(posts)
+    const [sortKey, setSortKey] = useState<'newest' | 'oldest'>('newest');
+    const searchPosts = useMemo(() => {
+        if (!posts.length) return [];
+        if (searchTerm === "") return posts;
+        return posts.filter((post) =>
+            post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            post.category.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [posts, searchTerm]);
+    const sortedPosts = useMemo(() => {
+        if (!searchPosts.length) return [];
+
+        const sorted = [...searchPosts];
+
+        return sortKey === 'newest'
+            ? sorted.sort(
+                (a, b) =>
+                    new Date(b.publishedAt).getTime() -
+                    new Date(a.publishedAt).getTime()
+            )
+            : sorted.sort(
+                (a, b) =>
+                    new Date(a.publishedAt).getTime() -
+                    new Date(b.publishedAt).getTime()
+            );
+    }, [searchPosts, sortKey]);
     return (
         <div className=" w-full p-8 font-sans text-zinc-900">
             <div className=" flex flex-col gap-6">
@@ -37,6 +65,7 @@ export default function PostManagement() {
                                     <input
                                         className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ec131e] border border-zinc-300 border-l-0 bg-white h-full placeholder:text-zinc-500 px-4 pl-2 text-base font-normal"
                                         placeholder="Search Post By Title..."
+                                        onChange={e => setSearchTerm(e.target.value)}
                                     />
                                 </div>
                             </label>
@@ -55,10 +84,14 @@ export default function PostManagement() {
                 <div className="flex flex-col gap-4">
                     {/* Component Bảng */}
                     <PostTable
-                        post={posts}
+                        post={sortedPosts}
                         refetchPost={refetchPost}
                     />
                 </div>
+                <CustomPagination
+                    itemsPerPage={data?.meta.perPage || 0}
+                    totalItems={data?.meta.total || 0}
+                />
                 <AddPostModal
                     open={openAddPostModal}
                     onClose={() => setOpenAddPostModal(false)}

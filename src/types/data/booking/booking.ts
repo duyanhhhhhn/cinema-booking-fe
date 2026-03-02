@@ -1,9 +1,17 @@
+import { IHttpError, IResponse } from "@/types/core/api";
+import { Model } from "@/types/core/model";
+import { useMutation } from "@tanstack/react-query";
+
 export interface MovieBooking {
   movie: string;
   showtime: string;
   cinema: string;
   seats: string;
   totalPrice: number;
+}
+export interface IHoldBookingForm {
+  showtimeId: number 
+  seatIds: number[];
 }
 
 export interface Seat {
@@ -13,7 +21,7 @@ export interface Seat {
   price: number;
 }
 
-export interface Combo {
+export interface ICombo {
   id: string;
   name: string;
   description: string;
@@ -24,18 +32,131 @@ export interface Combo {
 
 export interface BookingState {
   step: number;
+  showtimeId: string | null;
   movie: string;
   showtime: string;
   cinema: string;
+  /** Dùng cho sidebar step 2/3 khi không còn data từ API */
+  moviePosterUrl?: string;
+  genre?: string;
+  duration?: number;
+  roomName?: string;
+  startTime?: string;
   seats: string[];
+  /** Map seatId (code hoặc row+number) -> giá từ API */
+  seatPriceMap: Record<string, number>;
   paymentMethod: 'momo' | 'vnpay' | null;
-  combos: Combo[];
+  combos: ICombo[];
   bookingFee: number;
+  /** Thời điểm hết hạn giữ ghế (ISO string từ API hold-seat) */
+  holdExpiresAt?: string;
+  holdToken?: string;
+  /** Id ghế (number) đã gửi khi hold – dùng cho calculate fee / create booking */
+  heldSeatIds?: number[];
 }
-
+export type IReleaseSeatForm = IHoldBookingForm;
 export type PaymentMethod = {
   id: 'momo' | 'vnpay';
   name: string;
   description: string;
   icon: string;
 };
+
+export interface ICreateBookingForm {
+  userId: string;
+  showtimeId: number;
+  seatIds: number[];
+  combos?: IComboBooking[];
+  voucherCode: string;
+  paymentMethod: string;
+}
+export type ICalculateBookingFeeForm = Omit<ICreateBookingForm, 'paymentMethod' | 'userId'>;
+
+export interface IComboBooking {
+  id: string;
+  comboId: string;
+  productId: string;
+  quantity: number;
+}
+
+/** Response từ API create booking (có paymentUrl để chuyển sang cổng thanh toán) */
+export interface ICreateBookingResponse {
+  bookingId: number;
+  bookingCode: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentUrl: string | null;
+  message?: string;
+  showtimeId?: number;
+  userId?: number;
+  totalPrice?: number;
+  discountAmount?: number;
+  createdAt?: string | null;
+}
+
+export class Booking extends Model {
+  static queryKeys = {
+    holdBooking: "HOLD_BOOKING_QUERY",
+  };
+  static holdBooking(payload: IHoldBookingForm) {
+    return this.api.post<IResponse<Booking>>({
+      url: "/booking/hold-seat",
+      data: payload,
+    });
+  }
+  static caculateBookingFee(payload: ICalculateBookingFeeForm) {
+    return this.api.post<IResponse<number>>({
+      url: "/bookings/calculate",
+      data: payload,
+    });
+  }
+  static createBooking(payload: ICreateBookingForm) {
+    return this.api.post<IResponse<ICreateBookingResponse>>({
+      url: "/bookings/create",
+      data: payload,
+    });
+  };
+  static releaseSeat(payload: IReleaseSeatForm) {
+    return this.api.post<IResponse<ICreateBookingResponse>>({
+      url: "/booking/release-seat",
+      data: payload,
+    });
+  }
+}
+
+Booking.setup();
+
+export function useHoldBookingMutation() {
+  return useMutation<IResponse<Booking>, IHttpError, IHoldBookingForm>({
+    mutationFn: (payload: IHoldBookingForm) => {
+      return Booking.holdBooking(payload).then((r) => r.data);
+    },
+  });
+}
+export function useCalculateBookingFeeMutation() {
+  return useMutation<IResponse<number>, IHttpError, ICalculateBookingFeeForm>({
+    mutationFn: (payload: ICalculateBookingFeeForm) => {
+      return Booking.caculateBookingFee(payload).then((r) => r.data);
+    },
+  });
+}
+export function useCreateBookingMutation() {
+  return useMutation<
+    ICreateBookingResponse,
+    IHttpError,
+    ICreateBookingForm
+  >({
+    mutationFn: async (payload: ICreateBookingForm) => {
+      const res = await Booking.createBooking(payload);
+      const body = res.data as IResponse<ICreateBookingResponse>;
+      return body.data ?? (body as unknown as ICreateBookingResponse);
+    },
+  });
+}
+export function useReleaseSeatMutation() {
+  return useMutation<IResponse<ICreateBookingResponse>, IHttpError, IReleaseSeatForm>({
+    mutationFn: (payload: IReleaseSeatForm) => {
+      return Booking.releaseSeat(payload).then((r) => r.data);
+    },
+  });
+}

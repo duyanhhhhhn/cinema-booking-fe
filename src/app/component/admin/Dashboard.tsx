@@ -1,5 +1,6 @@
 "use client";
 
+import IRevenue, { Revenue } from "@/types/data/revenue/revenue";
 import {
   Box,
   Grid,
@@ -8,12 +9,50 @@ import {
   Typography,
   Button,
 } from "@mui/material";
+import Chart from "chart.js/auto";
+import { useQuery } from "@tanstack/react-query";
+import { Dataset } from "@mui/icons-material";
+import { useEffect, useRef } from "react";
+import { Schedule } from "@/types/data/staff/schedule";
 
 export default function Dashboard() {
+  const today = new Date().toISOString().slice(0, 10);
+  const revenueByDate = useQuery(Revenue.getRevenueByDate(today));
+  const thisWeekSchedules = useQuery(Schedule.getThisWeekSchedules());
+  console.log("thisWeekSchedules", thisWeekSchedules?.data);
+  const rev: IRevenue[] = revenueByDate?.data ?? [];
+  console.log(rev);
+  const todayRevenue = rev.length > 0 ? rev[0].revenue : 0;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const labels = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  const data = {
+    labels: labels,
+    datasets: [{
+      label: "Doanh thu",
+      data: revenueByDate?.data || [0, 0, 0, 0, 0, 0, 0],
+      fill: false,
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
+    }]
+  }
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const chart = new Chart(canvasRef.current, {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      }
+    });
+    return () => {
+      chart.destroy();
+    }
+  }, []);
   const stats = [
     {
       title: "Tổng doanh thu hôm nay",
-      value: "25,450,000",
+      value: todayRevenue,
       currency: "đ",
       icon: "ti ti-currency-dollar",
       color: "bg-teal-500",
@@ -81,14 +120,13 @@ export default function Dashboard() {
                   <div className={`${stat.color} p-3 rounded-lg`}>
                     <i className={`${stat.icon} text-white text-2xl`}></i>
                   </div>
-                  <div className={`text-sm font-semibold ${
-                    stat.trend === "up" ? "text-green-600" : "text-red-600"
-                  }`}>
+                  <div className={`text-sm font-semibold ${stat.trend === "up" ? "text-green-600" : "text-red-600"
+                    }`}>
                     {stat.change}
                   </div>
                 </div>
                 <Typography variant="h4" className="font-bold mb-1">
-                  {formatPrice(stat.value)}
+                  {stat.value}
                 </Typography>
                 <Typography variant="body2" className="text-gray-600">
                   {stat.title}
@@ -185,9 +223,7 @@ export default function Dashboard() {
                 Doanh thu 7 ngày qua
               </Typography>
               <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-                <Typography variant="body2" className="text-gray-500">
-                  Biểu đồ sẽ được hiển thị ở đây (Chart.js/Recharts)
-                </Typography>
+                <canvas style={{ height: 300 }} ref={canvasRef} id="revenueChart"></canvas>
               </div>
             </CardContent>
           </Card>
@@ -200,13 +236,14 @@ export default function Dashboard() {
               </Typography>
               <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
                 <Typography variant="body2" className="text-gray-500">
-                  Biểu đồ sẽ được hiển thị ở đây (Pie Chart)
+                  <canvas></canvas>
                 </Typography>
               </div>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
     </Box>
   );
 }

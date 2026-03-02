@@ -2,7 +2,10 @@
 
 import { useNotification } from "@/hooks/useNotification";
 import { IPost } from "@/types/data/post/post";
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Delete, Edit } from "@mui/icons-material";
+import { Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import dayjs from "dayjs";
+import Link from "next/link";
 
 interface PostTableProp {
     post: IPost[],
@@ -11,7 +14,7 @@ interface PostTableProp {
 
 export default function PostTable({ post, refetchPost }: PostTableProp) {
     const n = useNotification();
-    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
+    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
 
     return (
         <>
@@ -90,7 +93,23 @@ export default function PostTable({ post, refetchPost }: PostTableProp) {
                                     {item.published}
                                 </TableCell>
                                 <TableCell>
-                                    {item.publishedAt}
+                                    {dayjs(item.publishedAt).format("DD/MM/YYYY")}
+                                </TableCell>
+                                <TableCell>
+                                    <Box display="flex" justifyContent="center" gap={1}>
+                                        <Link href={`/admin/posts/${item.id}`}>
+                                            <IconButton size="small" sx={{ color: "#52525b" }}>
+                                                <Edit fontSize="small" />
+                                            </IconButton>
+                                        </Link>
+
+                                        <IconButton
+                                            size="small"
+                                            color="error"
+                                        >
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}

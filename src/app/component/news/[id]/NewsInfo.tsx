@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 export default function NewsInfo() {
     const param = useParams();
     const id = Number(param.id)
-    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
+    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
     const data = useQuery(Post.getPostsInfo(id));
     const data2 = data?.data?.data;
 

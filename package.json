@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.5.0",
+    "react-redux": "^9.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.2",
@@ -21,6 +23,7 @@
     "dayjs": "^1.11.19",
     "lodash": "^4.17.21",
     "next": "16.0.1",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.69.0",
@@ -39,5 +42,19 @@
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
-  }
+  },
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duyanhhhhhn/cinema-booking-fe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/duyanhhhhhn/cinema-booking-fe/issues"
+  },
+  "homepage": "https://github.com/duyanhhhhhn/cinema-booking-fe#readme"
 }

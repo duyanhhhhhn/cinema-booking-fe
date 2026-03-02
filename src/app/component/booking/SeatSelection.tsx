@@ -1,226 +1,291 @@
 "use client";
 
-import { useState } from "react";
-import { useBooking } from "@/contexts/BookingContext";
-import OrderSummary from "./OrderSummary";
-import StepIndicator from "./StepIndicator";
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Seat } from "@/types/data/seat/seat";
+import dayjs from "dayjs";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setSeats, setSeatPriceMap, setStep, setMovieInfo, setHoldInfo } from "@/store/bookingSlice";
+import { selectBookingSeats } from "@/store/selectors";
+import BookingSidebar from "./BookingSidebar";
+import { useHoldBookingMutation } from "@/types/data/booking/booking";
+import { useNotification } from "@/hooks/useNotification";
+import { validateSeatRules } from "@/utils/seat-check";
+import NoteSeat from "./NoteSeat";
 
-const seatLayout = [
-  {
-    row: "A",
-    seats: Array.from({ length: 10 }, (_, i) => ({
-      number: i + 1,
-      type: "standard" as const,
-    })),
-  },
-  {
-    row: "B",
-    seats: [
-      ...Array.from({ length: 2 }, (_, i) => ({
-        number: i + 1,
-        type: "standard" as const,
-      })),
-      ...Array.from({ length: 2 }, (_, i) => ({
-        number: i + 3,
-        type: "booked" as const,
-      })),
-      ...Array.from({ length: 7 }, (_, i) => ({
-        number: i + 5,
-        type: "standard" as const,
-      })),
-    ],
-  },
-  {
-    row: "C",
-    seats: Array.from({ length: 14 }, (_, i) => ({
-      number: i + 1,
-      type: "vip" as const,
-    })),
-  },
-  {
-    row: "D",
-    seats: Array.from({ length: 14 }, (_, i) => ({
-      number: i + 1,
-      type: "vip" as const,
-    })),
-  },
-  {
-    row: "E",
-    seats: [
-      ...Array.from({ length: 2 }, (_, i) => ({
-        number: i + 1,
-        type: "couple" as const,
-      })),
-      { number: 3, type: "couple" as const },
-      { number: 4, type: "selected" as const },
-      { number: 5, type: "booked" as const },
-      { number: 6, type: "couple" as const },
-      { number: 7, type: "couple" as const },
-    ],
-  },
-];
+export default function SeatSelection() {
+  const dispatch = useAppDispatch();
+  const seatsFromStore = useAppSelector(selectBookingSeats);
+  const { mutate: holdBooking } = useHoldBookingMutation();
+  const n = useNotification();
 
-const seatTypes = [
-  { label: "Ghế thường", color: "bg-gray-600", key: "standard" },
-  { label: "Ghế VIP", color: "bg-yellow-500", key: "vip" },
-  { label: "Ghế đôi", color: "bg-pink-400", key: "couple" },
-  { label: "Đang chọn", color: "bg-red-600", key: "selected" },
-  { label: "Đã chọn", color: "bg-teal-500", key: "booked" },
-  { label: "Đã đặt", color: "bg-red-800", key: "reserved" },
-];
-
-export default function SeatSelectionStep() {
-  const { bookingState, setSeats, setStep } = useBooking();
   const [selectedSeats, setSelectedSeats] = useState<string[]>(
-    bookingState.seats
+    seatsFromStore.length > 0 ? seatsFromStore : []
   );
-  const [timer, setTimer] = useState("10:00");
+  
+  const { showtimeId } = useParams();
 
-  const handleSeatClick = (row: string, number: number, type: string) => {
-    if (type === "booked") return;
+  const toggleSeat = (seatId: string) => {
+    if (!dataSeatMap?.seatMap) return;
+    const next = selectedSeats.includes(seatId)
+      ? selectedSeats.filter((s) => s !== seatId)
+      : [...selectedSeats, seatId];
+    const validation = validateSeatRules(dataSeatMap.seatMap, next);
+    if (!validation.valid) {
+      n.error(validation.message);
+      return;
+    }
+    setSelectedSeats(next);
+    dispatch(setSeats(next));
+  };
+  const showtimeIdNum = showtimeId != null ? Number(showtimeId) : NaN;
+  const isValidShowtimeId = !isNaN(showtimeIdNum) && showtimeIdNum > 0;
+  const { data: dataSeatMap } = useQuery({
+    ...Seat.getSeatMap(showtimeIdNum),
+    enabled: isValidShowtimeId,
+    refetchOnMount: "always",
+    staleTime: 0,
+  });
 
-    const seatId = `${row}${number}`;
-    setSelectedSeats((prev) => {
-      if (prev.includes(seatId)) {
-        return prev.filter((s) => s !== seatId);
-      }
-      return [...prev, seatId];
+  useEffect(() => {
+    if (!dataSeatMap?.seatMap) return;
+    const map: Record<string, number> = {};
+    dataSeatMap.seatMap.forEach((row) => {
+      row.seats?.forEach((seat) => {
+        const seatId = seat.code || `${row.rowLabel}${seat.number}`;
+        map[seatId] = seat.price ?? 0;
+      });
     });
-  };
+    dispatch(setSeatPriceMap(map));
+  }, [dataSeatMap, dispatch]);
 
-  const handleProceed = () => {
-    if (selectedSeats.length > 0) {
-      setSeats(selectedSeats);
-      setStep(2);
+
+  const handleContinue = () => {
+    if (!dataSeatMap?.seatMap) return;
+
+    const validation = validateSeatRules(dataSeatMap.seatMap, selectedSeats);
+    if (!validation.valid) {
+      n.error(validation.message);
+      return;
     }
-  };
 
-  const handleBack = () => {
-    setStep(3);
-  };
+    const codeToId = new Map<string, number>();
+    dataSeatMap.seatMap.forEach((row) => {
+      row.seats?.forEach((seat) => {
+        const code = seat.code || `${row.rowLabel}${seat.number}`;
+        codeToId.set(code, seat.id);
+      });
+    });
 
-  const getSeatColor = (type: string, row: string, number: number) => {
-    const seatId = `${row}${number}`;
-    if (selectedSeats.includes(seatId)) return "bg-teal-500 text-white";
+    const seatIds = selectedSeats
+      .map((code) => codeToId.get(code))
+      .filter((id): id is number => id != null);
 
-    switch (type) {
-      case "standard":
-        return "bg-gray-600 text-white hover:bg-gray-500";
-      case "vip":
-        return "bg-yellow-500 text-gray-900 hover:bg-yellow-400";
-      case "couple":
-        return "bg-pink-400 text-white hover:bg-pink-300";
-      case "booked":
-        return "bg-red-800 text-gray-400 cursor-not-allowed";
-      case "selected":
-        return "bg-red-600 text-white";
-      default:
-        return "bg-gray-600 text-white";
+    if (seatIds.length !== selectedSeats.length) {
+      n.error("Không thể xác định mã ghế. Vui lòng thử lại.");
+      return;
     }
+
+    dispatch(setSeats(selectedSeats));
+    holdBooking(
+      {
+        showtimeId: Number(showtimeId),
+        seatIds,
+      },
+      {
+        onSuccess: (data) => {
+          const res = data as unknown as {
+            expiresAt?: string;
+            holdToken?: string;
+            message?: string;
+          };
+          if (res.expiresAt) {
+            dispatch(
+              setHoldInfo({
+                expiresAt: res.expiresAt,
+                holdToken: res.holdToken,
+                heldSeatIds: seatIds,
+              })
+            );
+          }
+          n.success(res.message ?? "Đặt ghế thành công.");
+          if (dataSeatMap) {
+            dispatch(
+              setMovieInfo({
+                movie: dataSeatMap.movieTitle,
+                showtime: dayjs(dataSeatMap.startTime).format("HH:mm"),
+                cinema: dataSeatMap.cinemaName,
+                moviePosterUrl: dataSeatMap.moviePosterUrl,
+                genre: dataSeatMap.genre,
+                duration: dataSeatMap.duration,
+                roomName: dataSeatMap.roomName,
+                startTime: dataSeatMap.startTime,
+              })
+            );
+          }
+          dispatch(setStep(2));
+        },
+        onError: (error) => {
+          n.error(error.message || "Đặt ghế thất bại");
+        },
+      }
+    );
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f1e]">
-      <StepIndicator currentStep={1} />
+    <main className="min-h-screen bg-[#121212] text-slate-200 p-4 md:p-8">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* CỘT TRÁI: SƠ ĐỒ GHẾ */}
+        <div className="lg:col-span-8 bg-[#1e1e1e] rounded-xl shadow-2xl border border-[#2e2e2e] p-6 md:p-8">
+          {/* Màn hình */}
+          <div className="text-center mb-16">
+            <div className="h-2 w-[85%] mx-auto bg-linear-to-b from-[#ef4444] to-transparent rounded-[50%/100%_100%_0_0] shadow-[0_-15px_30px_-5px_rgba(239,68,68,0.3)] mb-4"></div>
+            <p className="text-slate-500 text-sm font-semibold tracking-widest uppercase">
+              MÀN HÌNH CHIẾU
+            </p>
+          </div>
 
-      <div className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h1 className="text-white text-4xl font-bold mb-4">Chọn Ghế</h1>
+          {/* Grid ghế ngồi */}
+          <div className="flex flex-col gap-4 items-center overflow-x-auto pb-6">
+            <div className="grid gap-3 min-w-[600px]">
+              {dataSeatMap?.seatMap.map((row) => {
+                const standardSeats = row.seats?.filter(
+                  (s) => s.type !== "COUPLE"
+                );
 
-              <div className="bg-[#1a1a2e] rounded-lg p-4 mb-6 inline-flex items-center gap-2">
-                {/* <Clock className="w-4 h-4 text-red-500" /> */}
-                <span className="text-white text-sm">
-                  Ghế đang được giữ trong
-                </span>
-                <span className="text-red-500 font-bold">{timer}</span>
-              </div>
+                if (!standardSeats || standardSeats.length === 0) {
+                  return null;
+                }
+
+                return (
+                  <div key={row.rowLabel} className="flex gap-2.5 items-center">
+                    <span className="w-4 text-xs font-bold text-slate-600 mr-2">
+                      {row.rowLabel}
+                    </span>
+
+                    {standardSeats.map((seat) => {
+                      const seatId =
+                        seat.code || `${row.rowLabel}${seat.number}`;
+
+                      const isSelected = selectedSeats.includes(seatId);
+
+                      const isAvailable =
+                        String(seat.status).toUpperCase() === "AVAILABLE";
+
+                      let seatStyle =
+                        "bg-[#2a2a2a] text-slate-500 border-b-4 border-black/30";
+
+                      if (!isAvailable) {
+                        seatStyle =
+                          "bg-slate-700 text-slate-500 border-b-4 border-slate-800 cursor-not-allowed";
+                      } else if (isSelected) {
+                        seatStyle =
+                          "bg-[#dc2626] text-white border-b-4 border-red-900 shadow-[0_0_10px_#ef4444]";
+                      } else if (seat.type === "VIP") {
+                        seatStyle =
+                          "bg-[#991b1b] text-red-200 border-b-4 border-red-950";
+                      }
+                      return (
+                        <button
+                          key={seatId}
+                          onClick={() => isAvailable && toggleSeat(seatId)}
+                          disabled={!isAvailable}
+                          className={`
+                w-9 h-8 rounded-t-lg disabled:cursor-not-allowed flex items-center justify-center text-[10px] font-bold cursor-pointer transition-all hover:scale-110 hover:brightness-125
+                ${seatStyle}
+              `}
+                        >
+                          {seat.code}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="bg-[#1a1a2e] rounded-lg p-8 mb-6">
-              <div className="bg-gray-700 rounded-lg py-3 mb-8 text-center">
-                <span className="text-white font-medium">Màn hình</span>
-              </div>
+            {/* Ghế đôi (Sweetbox) */}
+            <div className="mt-8 flex gap-6 min-w-[600px] justify-start flex-wrap">
+              {" "}
+              {/* Thêm flex-wrap nếu cần */}
+              {dataSeatMap?.seatMap.map((row) => {
+                // 1. Lọc ghế Couple
+                const coupleSeats = row.seats?.filter(
+                  (s) => s.type === "COUPLE"
+                );
 
-              <div className="space-y-3 mb-8">
-                {seatLayout.map((rowData) => (
-                  <div key={rowData.row} className="flex items-center gap-2">
-                    <span className="text-white font-bold w-8">
-                      {rowData.row}
-                    </span>
-                    <div className="flex gap-2 flex-wrap">
-                      {rowData.seats.map((seat) => (
+                // 2. Nếu không có ghế Couple, trả về null (không render gì)
+                if (!coupleSeats || coupleSeats.length === 0) {
+                  return null;
+                }
+
+
+                // 3. QUAN TRỌNG: Phải có từ khóa RETURN ở đây
+                // Và nên bọc các ghế của hàng đó trong một div (hoặc Fragment)
+                return (
+                  <div key={row.rowLabel} className="flex gap-4">
+                    {coupleSeats.map((seat) => {
+                      const seatId =
+                        seat.code || `${row.rowLabel}${seat.number}`;
+                      const isSelected = selectedSeats.includes(seatId);
+                      const isAvailable =
+                        String(seat.status).toUpperCase() === "AVAILABLE";
+
+                      return (
                         <button
-                          key={seat.number}
-                          onClick={() =>
-                            handleSeatClick(rowData.row, seat.number, seat.type)
-                          }
-                          disabled={seat.type === "booked"}
-                          className={`w-10 h-10 rounded-lg font-semibold text-sm transition ${getSeatColor(
-                            seat.type,
-                            rowData.row,
-                            seat.number
-                          )}`}
+                          key={seatId}
+                          type="button"
+                          onClick={() => isAvailable && toggleSeat(seatId)}
+                          disabled={!isAvailable}
+                          className={`
+                w-20 h-10 rounded-t-xl disabled:cursor-not-allowed flex items-center justify-center text-[10px] font-bold transition-all border-b-4
+                ${
+                  !isAvailable
+                    ? "bg-slate-700 text-slate-500 border-slate-800 cursor-not-allowed"
+                    : isSelected
+                      ? "bg-[#dc2626] text-white border-red-900 shadow-[0_0_10px_#ef4444] cursor-pointer hover:scale-105"
+                      : "bg-[#3a3a3a] text-slate-400 border-black/30 cursor-pointer hover:scale-105"
+                }
+              `}
                         >
-                          {seat.number}
+                          {seat.code || seatId}
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-4 justify-center">
-                {seatTypes.map((type) => (
-                  <div key={type.key} className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded ${type.color}`}></div>
-                    <span className="text-gray-400 text-sm">{type.label}</span>
-                  </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="mb-6 bg-[#1a1a2e] rounded-lg p-4">
-              <div className="flex gap-4">
-                <img
-                  src="https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Movie poster"
-                  className="w-24 h-32 object-cover rounded-lg"
-                />
-                <div className="flex-1">
-                  <h3 className="text-white font-bold mb-3">
-                    Doraemon: Nobita và Bản Giao Hưởng Địa Cầu
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-400">
-                      {/* <MapPin className="w-4 h-4" /> */}
-                      <span>CGV Vincom Center</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-400">
-                      {/* <Calendar className="w-4 h-4" /> */}
-                      <span>Thứ Hai, 27/05/2024</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-400">
-                      {/* <Clock className="w-4 h-4" /> */}
-                      <span>19:30 - Phòng chiếu 4</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <OrderSummary
-              onProceed={handleProceed}
-              onBack={handleBack}
-              proceedLabel="Tiếp tục"
-              showMovieInfo={false}
+          {/* Chú thích ghế */}
+          <div className="mt-12 pt-8 border-t border-[#2e2e2e] grid grid-cols-2 md:grid-cols-4 gap-4">
+            <NoteSeat
+              color="bg-[#2a2a2a] border border-[#3e3e3e]"
+              label="Ghế Thường"
+            />
+            <NoteSeat color="bg-[#991b1b]" label="Ghế VIP" />
+            <NoteSeat color="bg-[#3a3a3a] w-10" label="Ghế Đôi" />
+            <NoteSeat
+              color="bg-[#dc2626] ring-2 ring-white/50"
+              label="Đang chọn"
             />
           </div>
         </div>
+
+        {/* CỘT PHẢI: THÔNG TIN THANH TOÁN (dùng chung 3 step) */}
+        <BookingSidebar
+          step={1}
+          seatMapData={dataSeatMap ?? undefined}
+          actionButton={{
+            label: "TIẾP TỤC THANH TOÁN",
+            onClick: handleContinue,
+            disabled: selectedSeats.length === 0,
+          }}
+        />
       </div>
-    </div>
+    </main>
   );
 }
+
