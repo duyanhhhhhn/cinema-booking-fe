@@ -13,7 +13,7 @@ import Chart from "chart.js/auto";
 import { useQuery } from "@tanstack/react-query";
 import { Dataset } from "@mui/icons-material";
 import { useEffect, useRef } from "react";
-import { Schedule } from "@/types/data/staff/schedule";
+import { Schedule } from "@/types/data/staff/schedule/schedule";
 
 export default function Dashboard() {
   const today = new Date().toISOString().slice(0, 10);

@@ -2,7 +2,8 @@ import { IHttpError, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 import { useMutation } from "@tanstack/react-query";
-import { use } from "react";
+import IWorkShift from "../workshift";
+import { IUser } from "../../user";
 
 export enum ScheduleStatus {
     ASSIGNED = "ASSIGNED",
@@ -15,19 +16,21 @@ export default interface ISchedule {
     id: number;
     staff_id: number;
     shift_id: number;
-    work_date: string;
+    workdate: string;
+    shift: IWorkShift;
+    staff: IUser;
     status: ScheduleStatus;
 }
 export interface ScheduleFormData {
     staff_id: number;
     shift_id: number;
-    work_date: string;
+    workdate: string;
     status: ScheduleStatus;
 }
 export const initialScheduleData: ScheduleFormData = {
     staff_id: 0,
     shift_id: 0,
-    work_date: "",
+    workdate: "",
     status: ScheduleStatus.UNASSIGNED,
 }
 const modelConfig = {
