@@ -4,6 +4,8 @@ import { IVoucher } from "@/types/data/voucher/voucher";
 import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import EditVoucherModal from "./Modal/EditVoucherPopup";
 import { useState } from "react";
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 interface IVoucherTableProps {
     voucher: IVoucher[];
@@ -54,20 +56,20 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                             <TableCell className="p-4 font-medium">
                                 <div className="flex items-center gap-2">
                                     <button
-                                        className="hover:bg-background-dark text-red-500 rounded-lg border"
+                                        className="hover:bg-background-dark rounded-lg border"
                                         title="Chỉnh sửa"
                                         onClick={() => setEditVoucherModal(true)}
                                     >
-                                        <span className="material-symbols-outlined text-[20px]">
-                                            edit
+                                        <span className=" text-[20px]">
+                                            <EditIcon></EditIcon>
                                         </span>
                                     </button>
                                     <button
-                                        className="hover:bg-background-dark rounded-lg transition-colors border"
+                                        className="hover:bg-background-dark text-red rounded-lg transition-colors border"
                                         title="Xóa"
                                     >
                                         <span className="material-symbols-outlined text-[20px]">
-                                            delete
+                                            <DeleteIcon></DeleteIcon>
                                         </span>
                                     </button>
                                 </div>

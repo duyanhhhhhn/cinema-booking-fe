@@ -5,6 +5,7 @@ import { Combo } from "@/types/data/concession/combo";
 import { useMemo, useState } from "react";
 import AddConcessionModal from "./concessions/modal/AddConcessionModal";
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 import { Typography } from "@mui/material";
 
 
@@ -53,7 +54,7 @@ export default function ConcessionManagement() {
                                 <div className="flex gap-3">
                                     <button onClick={() => setopenAddConcessionModal(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-red-600 text-sm font-medium rounded-lg shadow-lg shadow-primary/20 transition-colors">
                                         <span className="material-symbols-outlined text-[20px]">
-                                            add
+                                            <AddIcon></AddIcon>
                                         </span>
                                     </button>
                                 </div>
