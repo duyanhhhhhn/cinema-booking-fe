@@ -54,26 +54,26 @@ export default function AddBannerModal({ open, onClose, refetchBanner }:
     };
     const handleFileChange = (
         e: React.ChangeEvent<HTMLInputElement>,
-        fieldName: "posterFile" | "bannerFile"
+        fieldName: "bannerFile"
     ) => {
         const file = e.target.files?.[0];
         if (file) {
             const url = URL.createObjectURL(file);
             setPreviews((prev) => ({
                 ...prev,
-                [fieldName === "posterFile" ? "poster" : "banner"]: url,
+                "banner": url,
             }));
         }
     };
     const removeImage = (
         e: React.MouseEvent,
-        fieldName: "posterFile" | "bannerFile"
+        fieldName: "bannerFile"
     ) => {
         e.preventDefault();
         e.stopPropagation();
         setPreviews((prev) => ({
             ...prev,
-            [fieldName === "posterFile" ? "poster" : "banner"]: null,
+            "banner": null,
         }));
         methods.setValue(fieldName, null as any);
     };

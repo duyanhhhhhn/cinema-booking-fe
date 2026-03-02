@@ -43,6 +43,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [commentInput, setCommentInput] = useState<string>("");
   const [needLogin, setNeedLogin] = useState(false);
   const [formError, setFormError] = useState<string>("");
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(null);
 
   const [reviewPage, setReviewPage] = useState(1);
   const reviewPerPage = 5;
@@ -414,6 +415,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       .map((s) => s.trim())
       .filter(Boolean);
   }, [movie?.cast]);
+  console.log(movie)
 
   const Glass =
     "rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
@@ -801,6 +803,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                         b.startTime || "",
                                       ),
                                     )
+<<<<<<< HEAD
                                     .map((st: any) => (
                                       <button
                                         key={st.id}
@@ -817,6 +820,30 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                         ) : null}
                                       </button>
                                     ))
+=======
+                                    .map((st) => {
+                                      const isSelected = selectedShowtimeId === st.id;
+                                      return (
+                                        <button
+                                          key={st.id}
+                                          type="button"
+                                          onClick={() => setSelectedShowtimeId(st.id)}
+                                          className={`cursor-pointer group inline-flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10 ${
+                                            isSelected
+                                              ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/50"
+                                              : "border-white/10 bg-black/25"
+                                          }`}
+                                        >
+                                          <span className="tabular-nums">
+                                            {formatHM(st.startTime)}
+                                          </span>
+                                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
+                                            {st.type}
+                                          </span>
+                                        </button>
+                                      );
+                                    })
+>>>>>>> develop
                                 )}
                               </div>
                             </div>
@@ -1104,7 +1131,13 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
                     <button
                       type="button"
-                      className="relative mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#FF2A2A] px-5 py-3.5 text-[15px] font-extrabold text-black shadow-[0_18px_48px_rgba(255,42,42,0.45)] transition hover:brightness-110 active:brightness-95"
+                      onClick={() => {
+                        if (selectedShowtimeId != null) {
+                          router.push(`/booking/${selectedShowtimeId}`);
+                        }
+                      }}
+                      disabled={selectedShowtimeId == null}
+                      className="cursor-pointer relative mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#FF2A2A] px-5 py-3.5 text-[15px] font-extrabold text-black shadow-[0_18px_48px_rgba(255,42,42,0.45)] transition hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
                     >
                       Đặt Vé Ngay
                     </button>

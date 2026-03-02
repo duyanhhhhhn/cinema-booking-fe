@@ -42,7 +42,7 @@ interface AuthContextType {
   // Auth actions
   login: (
     email: string,
-    password: string
+    password: string,
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 
@@ -57,7 +57,6 @@ interface AuthContextType {
 
   // Loading states from mutations
   isLoggingIn: boolean;
-
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,7 +74,7 @@ function decodeToken(token: string): User | null {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
 
     const decoded = JSON.parse(jsonPayload);
@@ -100,14 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Sử dụng useLoginMutation có sẵn
-  const loginMutation = useLoginMutation();  
+  const loginMutation = useLoginMutation();
   /**
    * Khởi tạo auth state từ localStorage
    */
   const initializeAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      
 
       if (!token) {
         setUser(null);
@@ -218,7 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({
               id: userData.id || userData.userId,
               email: userData.email,
-              fullName: userData.fullName || userData.full_name || userData.name,
+              fullName:
+                userData.fullName || userData.full_name || userData.name,
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
               avatar: userData.avatarUrl,
@@ -233,9 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchUserAfterRefresh();
     };
 
-    window.addEventListener('tokenRefreshed', handleTokenRefreshed);
+    window.addEventListener("tokenRefreshed", handleTokenRefreshed);
     return () => {
-      window.removeEventListener('tokenRefreshed', handleTokenRefreshed);
+      window.removeEventListener("tokenRefreshed", handleTokenRefreshed);
     };
   }, []);
 
@@ -244,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const login = async (
     email: string,
-    password: string
+    password: string,
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await loginMutation.mutateAsync({ email, password });
@@ -252,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data?.accessToken) {
         Auth.handleLoginSuccess(data);
-        
+
         // Gọi API /me để lấy thông tin user đầy đủ từ server
         try {
           const meResponse = await Auth.getMe();
@@ -262,7 +261,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({
               id: userData.id || userData.userId,
               email: userData.email,
-              fullName: userData.fullName || userData.full_name || userData.name,
+              fullName:
+                userData.fullName || userData.full_name || userData.name,
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
               avatar: userData.avatarUrl,
@@ -275,11 +275,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (meError: any) {
           // Nếu API /me fail, fallback về decode token
-          console.warn("Failed to fetch user from /me, using token decode:", meError);
+          console.warn(
+            "Failed to fetch user from /me, using token decode:",
+            meError,
+          );
           const decodedUser = decodeToken(data.accessToken);
           setUser(decodedUser);
         }
-        
+
         return { success: true };
       }
 
@@ -300,8 +303,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const logout = async () => {
     try {
-     await Auth.handleLogout();
-     setUser(null);
+      await Auth.handleLogout();
+      setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -314,7 +317,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await initializeAuth();
   };
 
- 
   // Computed values
   const isAuthenticated = !!user;
   const userIsAdmin = user ? isAdmin(user.role) : false;

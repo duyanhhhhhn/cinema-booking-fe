@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { IPost, Post } from "@/types/data/post/post";
+import { Post } from "@/types/data/post/post";
 import CustomPagination from "../admin/table/CustomPagination";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
   const getCategoryColor = (category) => {
     const colorMap = {
       "Khuyến mãi": "bg-red-500",

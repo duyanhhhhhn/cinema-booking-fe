@@ -28,7 +28,8 @@ export default function CinemaFind() {
     queryKey: ["cinemas", page, perPage, debouncedSearch],
     queryFn: async () => {
       const res = await axios.get(`${API_URL}/public/cinemas`, {
-        params: { page, perPage, title: debouncedSearch },
+        params: {page,perPage,search: debouncedSearch,
+},
       });
       return res.data as CinemaResponse;
     },
