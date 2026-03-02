@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -12,9 +12,18 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+
+import { Toaster, toast } from "sonner";
 
 import { MovieReviewAdmin } from "@/types/data/movie-reviews-admin/movie-review-admin";
 import type {
@@ -66,7 +75,10 @@ function readHidden(row: any): boolean {
 function StatusPill({ hidden }: { hidden: boolean }) {
   const cfg = hidden
     ? { label: "Ẩn", cls: "bg-rose-50 text-rose-700 border-rose-200" }
-    : { label: "Hiện", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    : {
+        label: "Hiện",
+        cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
 
   return (
     <span
@@ -77,6 +89,14 @@ function StatusPill({ hidden }: { hidden: boolean }) {
     </span>
   );
 }
+
+type ConfirmPayload = {
+  id: number;
+  nextHidden: boolean;
+  prevHidden: boolean;
+  rawHidden: any;
+  row?: any;
+};
 
 export default function MovieReviewManagement() {
   const [keyword, setKeyword] = useState("");
@@ -89,6 +109,11 @@ export default function MovieReviewManagement() {
 
   const [openView, setOpenView] = useState(false);
   const [viewRow, setViewRow] = useState<IAdminReviewRow | null>(null);
+
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [confirmData, setConfirmData] = useState<ConfirmPayload | null>(null);
+
+  const toastLoadingIdRef = useRef<string | number | null>(null);
 
   const movieId = useMemo(() => {
     if (movieFilter === "ALL") return undefined;
@@ -226,8 +251,80 @@ export default function MovieReviewManagement() {
     });
   }, [rows, keyword, ratingFilter, tab]);
 
+  const openConfirmToggle = (payload: ConfirmPayload) => {
+    setConfirmData(payload);
+    setOpenConfirm(true);
+  };
+
+  const closeConfirm = () => {
+    setOpenConfirm(false);
+    setConfirmData(null);
+  };
+
+  const runToggle = (payload: ConfirmPayload) => {
+    const loadingText = payload.nextHidden
+      ? "Đang ẩn đánh giá..."
+      : "Đang hiện đánh giá...";
+    toastLoadingIdRef.current = toast.loading(loadingText);
+
+    mSetVisibility.mutate(
+      {
+        id: payload.id,
+        nextHidden: payload.nextHidden,
+        prevHidden: payload.prevHidden,
+        rawHidden: payload.rawHidden,
+      },
+      {
+        onSuccess: (res: any) => {
+          const serverMsg = String(res?.message ?? "").trim();
+
+          const fallbackMsg = payload.nextHidden
+            ? "Đã ẩn thành công"
+            : "Đã hiện thành công";
+
+          const msg =
+            serverMsg &&
+            !/^ok$/i.test(serverMsg) &&
+            !/success$/i.test(serverMsg) &&
+            serverMsg.length >= 3
+              ? serverMsg
+              : fallbackMsg;
+
+          toast.success(msg, {
+            icon: payload.nextHidden ? (
+              <VisibilityOffRoundedIcon fontSize="small" />
+            ) : (
+              <VisibilityRoundedIcon fontSize="small" />
+            ),
+          });
+        },
+
+        onError: (err: any) => {
+          const msg =
+            String(err?.message ?? "").trim() ||
+            (payload.nextHidden
+              ? "Ẩn đánh giá thất bại"
+              : "Hiện đánh giá thất bại");
+
+          toast.error(msg, {
+            icon: <ErrorRoundedIcon fontSize="small" />,
+          });
+        },
+
+        onSettled: () => {
+          if (toastLoadingIdRef.current != null) {
+            toast.dismiss(toastLoadingIdRef.current);
+            toastLoadingIdRef.current = null;
+          }
+        },
+      },
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white px-6 py-6">
+      <Toaster richColors position="top-right" />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900">
@@ -439,6 +536,7 @@ export default function MovieReviewManagement() {
                             onClick={() => {
                               const rawHidden =
                                 r?.hidden ?? r?.isHidden ?? r?.is_hidden;
+
                               console.groupCollapsed(
                                 `[ADMIN_REVIEW] CLICK id=${r.id}`,
                               );
@@ -451,11 +549,12 @@ export default function MovieReviewManagement() {
                               );
                               console.groupEnd();
 
-                              mSetVisibility.mutate({
+                              openConfirmToggle({
                                 id: r.id,
                                 nextHidden,
                                 prevHidden: hidden,
                                 rawHidden,
+                                row: r,
                               });
                             }}
                             className="rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
@@ -526,8 +625,7 @@ export default function MovieReviewManagement() {
             </div>
 
             <div className="flex items-center gap-2">
-              <b>Đánh giá:</b>{" "}
-              {viewRow ? <Stars value={viewRow.rating} /> : null}
+              <b>Đánh giá:</b> {viewRow ? <Stars value={viewRow.rating} /> : null}
             </div>
 
             <div>
@@ -547,6 +645,73 @@ export default function MovieReviewManagement() {
             </div>
           </div>
         </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={openConfirm}
+        onClose={closeConfirm}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle className="text-slate-900 font-extrabold">
+          Xác nhận thao tác
+        </DialogTitle>
+
+        <DialogContent>
+          <div className="space-y-2 text-sm text-slate-700">
+            <div>
+              {confirmData?.nextHidden ? (
+                <>
+                  Bạn có chắc chắn muốn{" "}
+                  <b className="text-rose-600">ẩn</b> đánh giá này khỏi giao diện
+                  người dùng không?
+                </>
+              ) : (
+                <>
+                  Bạn có chắc chắn muốn{" "}
+                  <b className="text-emerald-600">hiện</b> lại đánh giá này
+                  không?
+                </>
+              )}
+            </div>
+
+            {confirmData?.row ? (
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="font-semibold text-slate-900">
+                  {confirmData.row.movieTitle ?? "-"}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {confirmData.row.userFullName ?? "-"} •{" "}
+                  {confirmData.row.userEmail ?? "-"}
+                </div>
+                <div className="mt-2 line-clamp-3 text-sm text-slate-700">
+                  {confirmData.row.comment ?? ""}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+
+        <DialogActions className="px-6 pb-4">
+          <Button onClick={closeConfirm} variant="outlined">
+            Huỷ
+          </Button>
+
+          <Button
+            onClick={() => {
+              if (!confirmData) return;
+              closeConfirm();
+              runToggle(confirmData);
+            }}
+            variant="contained"
+            disabled={confirmData?.id != null && pendingId === confirmData.id}
+            style={{
+              background: confirmData?.nextHidden ? "#e11d48" : "#059669",
+            }}
+          >
+            {confirmData?.nextHidden ? "Ẩn" : "Hiện"}
+          </Button>
+        </DialogActions>
       </Dialog>
     </div>
   );

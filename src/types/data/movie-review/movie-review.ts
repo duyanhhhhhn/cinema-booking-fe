@@ -58,4 +58,4 @@ export class MovieReview extends Model {
   }
 }
 
-MovieReview.setup();
+MovieReview.setup();  
