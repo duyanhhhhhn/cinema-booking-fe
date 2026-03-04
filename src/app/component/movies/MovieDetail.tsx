@@ -43,7 +43,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const [commentInput, setCommentInput] = useState<string>("");
   const [needLogin, setNeedLogin] = useState(false);
   const [formError, setFormError] = useState<string>("");
-  const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(null);
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(
+    null,
+  );
 
   const [reviewPage, setReviewPage] = useState(1);
   const reviewPerPage = 5;
@@ -63,7 +65,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   useEffect(() => {
     setReviewPage(1);
   }, [movieIdNum]);
-
   const routeMoviePath = useMemo(() => {
     return movieIdNum > 0 ? `/movies/${movieIdNum}` : "/movies";
   }, [movieIdNum]);
@@ -81,9 +82,23 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return (raw?: string | null, fallback?: string) => {
       const v = typeof raw === "string" ? raw.trim() : "";
       if (!v) return fallback ?? "";
-      if (v.startsWith("http://") || v.startsWith("https://")) return v;
-      if (!IMAGE_BASE) return v.startsWith("/") ? v : `/${v}`;
-      return v.startsWith("/") ? `${IMAGE_BASE}${v}` : `${IMAGE_BASE}/${v}`;
+      if (/^https?:\/\//i.test(v)) return v;
+      const clean = v.replace(/^\/+/, "");
+      const withMedia = clean.startsWith("media/") ? clean : `media/${clean}`;
+      return `${IMAGE_BASE}/${withMedia}`;
+    };
+  }, [IMAGE_BASE]);
+
+  const resolveCinemaUrl = useMemo(() => {
+    return (raw?: string | null, fallback?: string) => {
+      const v = typeof raw === "string" ? raw.trim() : "";
+      if (!v) return fallback ?? "";
+      if (/^https?:\/\//i.test(v)) return v;
+      const clean = v.replace(/^\/+/, "");
+      const cinemaPath = clean.startsWith("cinema/")
+        ? clean
+        : `cinema/${clean}`;
+      return `${IMAGE_BASE}/media/${cinemaPath}`;
     };
   }, [IMAGE_BASE]);
 
@@ -415,7 +430,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       .map((s) => s.trim())
       .filter(Boolean);
   }, [movie?.cast]);
-  console.log(movie)
+  console.log(movie);
 
   const Glass =
     "rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
@@ -731,22 +746,28 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               cinemaName: "Đang tải...",
                               address: "",
                               posterUrl: null,
+                              cinemaImageUrl: null,
                             } as any,
                             showtimes: [] as IShowtimeItem[],
                           }))
                         : scheduleRows
                       ).map((row: any) => {
                         const c = row.cinema as IMovieShowtimeGroup;
+
                         const cinemaId =
                           (c as any)?.cinemaId ?? (c as any)?.id ?? "";
                         const cinemaName =
                           (c as any)?.cinemaName ?? (c as any)?.name ?? "";
                         const address = (c as any)?.address ?? "";
-                        const posterUrl =
-                          (c as any)?.posterUrl ??
+
+                        const cinemaImageUrl =
+                          (c as any)?.cinemaImageUrl ??
+                          (c as any)?.cinema_image_url ??
                           (c as any)?.imageUrl ??
                           (c as any)?.image_url ??
                           null;
+
+                        const posterUrl = (c as any)?.posterUrl ?? null;
 
                         const showtimes = (row.showtimes ??
                           []) as IShowtimeItem[];
@@ -760,8 +781,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               <div className="flex items-start gap-4">
                                 <div className="h-16 w-12 overflow-hidden rounded-xl border border-white/10 bg-black/30">
                                   <img
-                                    src={resolveUrl(
-                                      posterUrl,
+                                    src={resolveCinemaUrl(
+                                      cinemaImageUrl,
                                       "/poster/poster.jpg",
                                     )}
                                     alt={cinemaName}
@@ -803,31 +824,16 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                         b.startTime || "",
                                       ),
                                     )
-<<<<<<< HEAD
-                                    .map((st: any) => (
-                                      <button
-                                        key={st.id}
-                                        className="group inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10"
-                                      >
-                                        <span className="tabular-nums">
-                                          {formatHM(st.startTime)}
-                                        </span>
-
-                                        {st.type ? (
-                                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
-                                            {st.type}
-                                          </span>
-                                        ) : null}
-                                      </button>
-                                    ))
-=======
                                     .map((st) => {
-                                      const isSelected = selectedShowtimeId === st.id;
+                                      const isSelected =
+                                        selectedShowtimeId === st.id;
                                       return (
                                         <button
                                           key={st.id}
                                           type="button"
-                                          onClick={() => setSelectedShowtimeId(st.id)}
+                                          onClick={() =>
+                                            setSelectedShowtimeId(st.id)
+                                          }
                                           className={`cursor-pointer group inline-flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10 ${
                                             isSelected
                                               ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/50"
@@ -843,7 +849,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                         </button>
                                       );
                                     })
->>>>>>> develop
                                 )}
                               </div>
                             </div>
@@ -968,7 +973,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   {dataMovieReviews.isLoading ? (
-                    <p className="text-sm text-white/55">Đang tải đánh giá...</p>
+                    <p className="text-sm text-white/55">
+                      Đang tải đánh giá...
+                    </p>
                   ) : reviews.length === 0 ? (
                     <p className="text-sm text-white/55">
                       Chưa có đánh giá nào cho phim này.
@@ -1209,7 +1216,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                       const genreName = String(item?.genre ?? "");
                       const duration = Number(item?.durationMinutes) || 0;
 
-                      const poster = item?.posterUrl ?? item?.poster_url ?? null;
+                      const poster =
+                        item?.posterUrl ?? item?.poster_url ?? null;
 
                       return (
                         <button

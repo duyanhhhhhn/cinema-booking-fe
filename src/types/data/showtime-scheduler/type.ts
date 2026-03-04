@@ -7,6 +7,8 @@ export interface IAdminSchedulerResource {
   totalSeats: number;
 }
 
+export type ShowtimeStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED" | string;
+
 export interface IAdminSchedulerEvent {
   id: number;
   resource: number;
@@ -16,7 +18,7 @@ export interface IAdminSchedulerEvent {
   movieId: number;
   posterUrl: string | null;
   basePrice: number;
-  status: "SCHEDULED" | "CANCELLED" | "COMPLETED" | string;
+  status: ShowtimeStatus;
   conflict: boolean;
   conflictWithIds: number[];
 }
@@ -30,10 +32,11 @@ export interface IAdminSchedulerMeta {
 export interface IAdminSchedulerPayload {
   resources: IAdminSchedulerResource[];
   events: IAdminSchedulerEvent[];
-  meta: IAdminSchedulerMeta;
 }
 
-export type IAdminSchedulerResponse = IResponse<IAdminSchedulerPayload>;
+export type IAdminSchedulerResponse = IResponse<IAdminSchedulerPayload> & {
+  meta: IAdminSchedulerMeta;
+};
 
 export interface IAdminCreateShowtimeParams {
   cinemaId: number;
@@ -52,7 +55,39 @@ export interface IAdminMoveShowtimeParams {
 export interface IAdminMovieOption {
   id: number;
   title: string;
+  format: string | null;
   durationMinutes: number;
   posterUrl: string | null;
   status: string;
+}
+
+export interface IAdminShowtimeDetail {
+  id: number;
+
+  cinemaId: number;
+
+  roomId: number;
+  roomName: string;
+  roomType: string | null;
+
+  movieId: number;
+  movieTitle: string;
+  posterUrl: string | null;
+  movieFormat: string | null;
+  durationMinutes: number;
+
+  startAt: string;
+  endAt: string;
+  basePrice: number;
+  status: ShowtimeStatus;
+}
+
+export type IAdminShowtimeDetailResponse = IResponse<IAdminShowtimeDetail>;
+
+export interface IAdminEditShowtimeParams {
+  cinemaId: number;
+  roomId: number;
+  movieId: number;
+  startAt: string;
+  basePrice: number;
 }
