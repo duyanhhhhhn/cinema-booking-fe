@@ -83,8 +83,8 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                                             Combo gồm
                                                         </p>
                                                         {
-                                                            item.itemList.map((comboItem, index) => (
-                                                                <div className="flex items-center gap-2 text-xs">
+                                                            item.itemList != null && item.itemList.map((comboItem, index) => (
+                                                                <div key={index + "key"} className="flex items-center gap-2 text-xs">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                                                                     <span className="font-medium">{comboItem.quantity}x</span> {comboItem.productName}
                                                                 </div>

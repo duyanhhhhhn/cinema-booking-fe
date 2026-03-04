@@ -33,7 +33,7 @@ export default function EditComboModal({ open, onClose, refetchCombo, combo, typ
                 <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 flex flex-col max-h-[90vh] font-sans">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
-                        <h3 className="text-xl font-bold text-zinc-900">Edit Combo</h3>
+                        <h3 className="text-xl font-bold text-zinc-900">Edit {type === "single" ? "Single" : "Product"}</h3>
                         <button
                             onClick={onClose}
                             className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded-full hover:bg-zinc-100"

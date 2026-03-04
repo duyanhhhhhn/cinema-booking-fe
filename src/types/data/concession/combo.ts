@@ -31,6 +31,7 @@ export interface IProductData {
 }
 export interface CartItem extends ICombo {
     quantity: number;
+    productId: number;
 }
 export const initialProductData: IProductData = {
     name: "",
@@ -57,7 +58,7 @@ export class Combo extends Model {
     static objects = ObjectsFactory.factory<ICombo>(modelConfig, this.queryKeys)
     static createCombo(payload: FormData) {
         return this.api.post<IResponse<ICombo>>({
-            url: '/combo/add',
+            url: '/public/combo/add',
             data: payload
         })
     }

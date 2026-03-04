@@ -10,7 +10,8 @@ import { useEffect, useMemo, useState } from "react";
 import { set, useForm } from "react-hook-form";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { convertComboItemToCartItem, IComboItem } from "@/types/data/concession/comboitem";
+import DeleteIcon from '@mui/icons-material/Delete';
+import { convertCartItemToComboItemData, convertComboItemToCartItem, IComboItem } from "@/types/data/concession/comboitem";
 
 export default function ComboForm({ onClose, refetchCombo, type, combo, comboItem }: {
     onClose: () => void,
@@ -77,12 +78,12 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
             if (index !== -1) {
                 return prev.map((item, i) =>
                     i === index
-                        ? { ...item, quantity: item.quantity + 1 }
+                        ? { ...item, quantity: item.quantity + 1, productId: product.id }
                         : item
                 );
             }
-
-            return [...prev, { ...product, quantity: 1 }];
+            console.log(cart);
+            return [...prev, { ...product, quantity: 1, productId: product.id }];
         });
     }
     const removeItem = (id: number) => {
@@ -103,8 +104,10 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                 }
             }
         });
+        formData.append("comboItem", JSON.stringify(cart.map(convertCartItemToComboItemData)));
         formData.delete("bannerUrl");
         if (type === "create") {
+            console.log("Form Data:", Array.from(formData.entries()));
             createCombo(formData, {
                 onSuccess: () => {
                     onClose();
@@ -303,6 +306,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                         </div>
                                         <button
                                             onClick={() => HandleAdd(item)}
+                                            type="button"
                                             className="w-7 h-7 flex items-center justify-center bg-red-500 text-white hover:bg-red-400 rounded-md transition-all">
                                             <span className="text-sm">
                                                 add
@@ -324,7 +328,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                         </div>
                         <div className="flex-1 overflow-y-auto p-2 space-y-2">
                             {cart.map((item) => (
-                                <div key={"cart" + item.id} className="bg-surface-dark/60 border border-border-dark/50 p-2.5 rounded-lg flex items-center justify-between group">
+                                <div key={"cart" + type + item.id} className="bg-surface-dark/60 border border-border-dark/50 p-2.5 rounded-lg flex items-center justify-between group">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded bg-background-dark flex items-center justify-center shrink-0 border border-border-dark">
                                             <span className="material-symbols-outlined">
@@ -354,6 +358,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                         <div className="flex items-center bg-background-dark border border-border-dark rounded overflow-hidden">
                                             <button
                                                 onClick={() => { decrease(item.id) }}
+                                                type="button"
                                                 className="w-6 h-6 flex items-center justify-center text-text-secondary hover:bg-surface-highlight transition-colors">
                                                 <span className="material-symbols-outlined text-xs">
                                                     -
@@ -367,6 +372,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                             />
                                             <button
                                                 onClick={() => { increase(item.id) }}
+                                                type="button"
                                                 className="w-6 h-6 flex items-center justify-center text-text-secondary hover:bg-surface-highlight transition-colors">
                                                 <span className="material-symbols-outlined text-xs">
                                                     +
@@ -377,7 +383,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                             onClick={() => { removeItem(item.id) }}
                                             className="bg-red-500 hover:bg-red-600 transition-colors">
                                             <span className="material-symbols-outlined text-white text-[18px]">
-                                                remove
+                                                <DeleteIcon fontSize="small" />
                                             </span>
                                         </button>
                                     </div>
@@ -410,6 +416,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
             </div>
             <div className="flex gap-3 w-full md:w-auto">
                 <button onClick={onClose}
+                    type="button"
                     className="flex-1 md:flex-none px-6 py-2.5 rounded-lg bg-red-500 border text-white font-medium hover:bg-surface-highlight transition-colors">
                     Hủy
                 </button>
