@@ -19,16 +19,30 @@ export interface ICombo {
 export interface IComboData {
     name: string;
     price: number;
-    bannerFile: string;
+    bannerFile: FileList;
     comboItem: ICombo[];
+}
+export interface IProductData {
+    name: string;
+    price: number;
+    description: string;
+    stock: number;
+    bannerFile: FileList;
 }
 export interface CartItem extends ICombo {
     quantity: number;
 }
+export const initialProductData: IProductData = {
+    name: "",
+    price: 0,
+    description: "",
+    stock: 0,
+    bannerFile: null,
+}
 export const initialComboData: IComboData = {
     name: "",
     price: 0,
-    bannerFile: "",
+    bannerFile: null,
     comboItem: null,
 }
 const modelConfig = {
@@ -44,6 +58,12 @@ export class Combo extends Model {
     static createCombo(payload: FormData) {
         return this.api.post<IResponse<ICombo>>({
             url: '/combo/add',
+            data: payload
+        })
+    }
+    static createProduct(payload: FormData) {
+        return this.api.post<IResponse<ICombo>>({
+            url: '/product/add',
             data: payload
         })
     }
@@ -67,10 +87,17 @@ export function useCreateComboMutation() {
         },
     });
 }
+export function useCreateProductMutation() {
+    return useMutation<IResponse<ICombo>, IHttpError, FormData>({
+        mutationFn: (payload: FormData) => {
+            return Combo.createProduct(payload).then((r) => r.data);
+        },
+    });
+}
 export function useEditComboMutation() {
     return useMutation<IResponse<ICombo>, IHttpError, { payload: FormData, id: number }>({
         mutationFn: ({ id, payload }: { id: number, payload: FormData }) => {
-            return Combo.createCombo(payload).then((r) => r.data);
+            return Combo.editCombo(id, payload).then((r) => r.data);
         }
     })
 }

@@ -1,3 +1,5 @@
+import { CartItem } from "./combo";
+
 export interface IComboItem {
     id: number;
     comboId: number;
@@ -7,4 +9,22 @@ export interface IComboItem {
     stock: number;
     quantity: number;
     is_active: boolean;
+    price: number;
 }
+export const convertComboItemToCartItem = (
+    item: IComboItem
+): CartItem => {
+    return {
+        id: item.id,
+        name: item.productName as string,
+        description: item.description as string,
+        price: item.price,
+        imageUrl: item.image_url as string,
+        isActive: item.is_active,
+        createdAt: "",
+        stock: item.stock,
+        type: "SINGLE",
+        itemList: [], // vì đây là sản phẩm đơn
+        quantity: item.quantity
+    };
+};

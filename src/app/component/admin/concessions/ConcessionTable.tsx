@@ -5,7 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import CustomPagination from "../table/CustomPagination";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { useState } from "react";
+import EditComboModal from "./modal/EditConcessionModal";
+import EditVoucherModal from "../voucher/Modal/EditVoucherPopup";
 
 interface IConcessionTableProps {
     combo: ICombo[];
@@ -13,6 +17,8 @@ interface IConcessionTableProps {
 }
 export default function ConcessionTable({ combo, refetchCombo }: IConcessionTableProps) {
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
+    const [openEditComboModal, setEditComboModal] = useState(false);
+    const [selectedCombo, setSelectedCombo] = useState<ICombo | null>(null);
     return <>
         <div className="bg-surface-dark rounded-xl border border-border-dark overflow-hidden">
             <TableContainer className="overflow-x-auto">
@@ -69,7 +75,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                             <p className="font-medium">
                                                 {item.name}
                                             </p>
-                                            <p className="text-xs">
+                                            <div className="text-xs">
                                                 {
                                                     item.type === "COMBO" &&
                                                     <div className="bg-background-dark/50 border border-border-dark/50 rounded-lg p-2 flex flex-col gap-1.5">
@@ -86,7 +92,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                                             )}
                                                     </div>
                                                 }
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </TableCell>
@@ -106,6 +112,10 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                         <button
                                             className="bg-yellow-500 text-white rounded-md p-1"
                                             title="Chỉnh sửa"
+                                            onClick={() => {
+                                                setSelectedCombo(item);
+                                                setEditComboModal(true);
+                                            }}
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
                                                 <EditIcon></EditIcon>
@@ -132,6 +142,12 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                 itemsPerPage={10}
                 totalItems={combo.length}
             />
+            <EditComboModal
+                open={openEditComboModal} onClose={() => setEditComboModal(false)}
+                refetchCombo={refetchCombo}
+                combo={selectedCombo}
+                type={selectedCombo?.type == "SINGLE" ? "single" : "combo"}
+                comboItem={selectedCombo?.itemList || []}></EditComboModal>
         </div>
     </>
 

@@ -7,6 +7,7 @@ import AddConcessionModal from "./concessions/modal/AddConcessionModal";
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import { Typography } from "@mui/material";
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 
 export default function ConcessionManagement() {
@@ -20,6 +21,7 @@ export default function ConcessionManagement() {
 
     const { data, refetch: refetchCombo } = useQuery({ ...Combo.objects.paginateQueryFactory(queryParams) });
     const combo = data?.data || [];
+    console.log("combo:", combo);
     const [filterType, setFilterType] = useState<"ALL" | "COMBO" | "SINGLE">("ALL");
     const [searchTerm, setSearchTerm] = useState("");
     const filteredProducts = combo.filter((p) => {
@@ -52,9 +54,10 @@ export default function ConcessionManagement() {
                                     </p>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button onClick={() => setopenAddConcessionModal(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-red-600 text-sm font-medium rounded-lg shadow-lg shadow-primary/20 transition-colors">
+                                    <button onClick={() => setopenAddConcessionModal(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-red-500 hover:text-white text-sm font-medium rounded-lg shadow-lg shadow-primary/20 transition-colors">
                                         <span className="material-symbols-outlined text-[20px]">
                                             <AddIcon></AddIcon>
+                                            Thêm Combo
                                         </span>
                                     </button>
                                 </div>
@@ -108,9 +111,7 @@ export default function ConcessionManagement() {
                                             </span>
                                         </p>
                                         <p className="text-green-500 text-xs font-medium bg-green-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-[12px]">
-                                                trending_up
-                                            </span>{" "}
+                                            <TrendingUpIcon></TrendingUpIcon>
                                             +12% vs hqua
                                         </p>
                                     </div>
