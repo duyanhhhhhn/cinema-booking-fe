@@ -1,6 +1,6 @@
 "use client";
 
-import { Combo, ICombo } from "@/types/data/concession/combo";
+import { Combo, ICombo, useDeleteComboMutation } from "@/types/data/concession/combo";
 import { useQuery } from "@tanstack/react-query";
 import CustomPagination from "../table/CustomPagination";
 import EditIcon from '@mui/icons-material/Edit';
@@ -10,6 +10,8 @@ import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow }
 import { useState } from "react";
 import EditComboModal from "./modal/EditConcessionModal";
 import EditVoucherModal from "../voucher/Modal/EditVoucherPopup";
+import DeletePopup from "../user/DeletePopup";
+import { useNotification } from "@/hooks/useNotification";
 
 interface IConcessionTableProps {
     combo: ICombo[];
@@ -17,8 +19,30 @@ interface IConcessionTableProps {
 }
 export default function ConcessionTable({ combo, refetchCombo }: IConcessionTableProps) {
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
+    const n = useNotification();
     const [openEditComboModal, setEditComboModal] = useState(false);
+    const [openDeletePopup, setOpenDeletePopup] = useState(false);
     const [selectedCombo, setSelectedCombo] = useState<ICombo | null>(null);
+    const { mutate: deleteCombo } = useDeleteComboMutation();
+    const handleClickIconDelete = (combo: ICombo) => {
+        setSelectedCombo(combo);
+        setOpenDeletePopup(true);
+    };
+    const handleConfirmDelete = () => {
+        if (selectedCombo) {
+            deleteCombo(selectedCombo.id, {
+                onSuccess: () => {
+                    setOpenDeletePopup(false);
+                    setSelectedCombo(null);
+                    refetchCombo()
+                    n.success('Xoá thành công');
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            });
+        }
+    };
     return <>
         <div className="bg-surface-dark rounded-xl border border-border-dark overflow-hidden">
             <TableContainer className="overflow-x-auto">
@@ -124,6 +148,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                         <button
                                             className="bg-red-500 text-white rounded-md transition-colors p-1"
                                             title="Xóa"
+                                            onClick={() => handleClickIconDelete(item)}
                                         >
                                             <span className="text-[20px]">
                                                 <DeleteIcon></DeleteIcon>
@@ -148,6 +173,12 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                 combo={selectedCombo}
                 type={selectedCombo?.type == "SINGLE" ? "single" : "combo"}
                 comboItem={selectedCombo?.itemList || []}></EditComboModal>
+            <DeletePopup
+                open={openDeletePopup}
+                onClose={() => setOpenDeletePopup(false)}
+                onConfirm={handleConfirmDelete}
+                description={"Bạn có chắc muốn xoá không?"}
+            />
         </div>
     </>
 

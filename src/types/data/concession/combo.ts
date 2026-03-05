@@ -16,6 +16,11 @@ export interface ICombo {
     type: string;
     itemList: IComboItem[];
 }
+export interface ISCombo {
+    name: string;
+    price: number;
+    comboItem: IComboItem[];
+}
 export interface IComboData {
     name: string;
     price: number;
@@ -70,13 +75,13 @@ export class Combo extends Model {
     }
     static editCombo(id: number, payload: FormData) {
         return this.api.put<IResponse<ICombo>>({
-            url: `/combo/${id}`,
+            url: `/public/combo/${id}`,
             data: payload
         })
     }
     static deleteCombo(id: number) {
         return this.api.delete<IResponse<ICombo>>({
-            url: `/combo/${id}`,
+            url: `/public/combo/${id}`,
         })
     }
 }
@@ -109,4 +114,13 @@ export function useDeleteComboMutation() {
         }
     })
 }
+export const convertIComboToISCombo = (
+    item: ICombo
+): ISCombo => {
+    return {
+        name: item.name as string,
+        price: item.price,
+        comboItem: item.itemList as IComboItem[],
+    }
+};
 

@@ -10,8 +10,10 @@ export interface IComboItem {
     quantity: number;
     is_active: boolean;
     price: number;
+    productId: number;
 }
 export interface IComboItemData {
+    id: number;
     comboId: number;
     productId: number;
     quantity: number;
@@ -31,13 +33,14 @@ export const convertComboItemToCartItem = (
         type: "SINGLE",
         itemList: [], // vì đây là sản phẩm đơn
         quantity: item.quantity,
-        productId: item.id,
+        productId: item.productId,
     };
 };
 export const convertCartItemToComboItemData = (
     item: CartItem
 ): IComboItemData => {
     return {
+        id: item.id || 0,
         comboId: 0,
         productId: item.productId,
         quantity: item.quantity,

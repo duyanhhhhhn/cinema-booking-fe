@@ -1,7 +1,7 @@
 "use client"
 
 import { useNotification } from "@/hooks/useNotification";
-import { CartItem, Combo, ICombo, IComboData, initialComboData, useCreateComboMutation, useEditComboMutation } from "@/types/data/concession/combo";
+import { CartItem, Combo, convertIComboToISCombo, ICombo, IComboData, initialComboData, useCreateComboMutation, useEditComboMutation } from "@/types/data/concession/combo";
 import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Box } from "@mui/material";
@@ -35,6 +35,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
     });
     const [cart, setCart] = useState<CartItem[]>([]);
     useEffect(() => {
+        console.log("Combo Item:", comboItem);
         if (comboItem) {
             setCart(
                 comboItem?.map(convertComboItemToCartItem) ?? []
@@ -47,8 +48,9 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
     const n = useNotification();
     const { mutate: createCombo } = useCreateComboMutation();
     const { mutate: updateCombo } = useEditComboMutation();
+    const modCombo = type === "edit" ? convertIComboToISCombo(combo as ICombo) : null;
     const methods = useForm<any>({
-        defaultValues: combo,
+        defaultValues: modCombo ?? initialComboData,
         mode: "onChange",
         resolver: yupResolver(createVoucherSchema()),
     });
@@ -60,6 +62,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                     : item
             )
         );
+        console.log("cart", cart);
     };
     const decrease = (id: number) => {
         setCart((prev) =>
@@ -73,30 +76,40 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
     };
     const HandleAdd = (product: ICombo) => {
         setCart((prev) => {
-            const index = prev.findIndex((p) => p.id === product.id);
+            const index = prev.findIndex((p) => p.productId === product.id);
 
             if (index !== -1) {
                 return prev.map((item, i) =>
                     i === index
-                        ? { ...item, quantity: item.quantity + 1, productId: product.id }
+                        ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
             }
-            console.log(cart);
-            return [...prev, { ...product, quantity: 1, productId: product.id }];
+            console.log("cart", cart);
+            return [
+                ...prev,
+                {
+                    ...product,
+                    id: 0,              // always 0 for new cart item
+                    productId: product.id,
+                    quantity: 1
+                }
+            ];
         });
-    }
+    };
     const removeItem = (id: number) => {
         setCart((prev) => prev.filter((item) => item.id !== id));
     };
     const onSubmit = async (data: IComboData) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
-            if (key === "posterFile" && value instanceof FileList && value.length > 0) {
-                formData.append("posterFile", value[0]);
-            } else if (key === "bannerFile" && value instanceof FileList && value.length > 0) {
-                formData.append("bannerFile", value[0]);
-            } else if (value !== undefined && value !== null) {
+            if (key === "bannerFile") {
+                if (value && value instanceof FileList && value.length > 0) {
+                    formData.append("bannerFile", value[0]);
+                }
+                return; // ignore if empty
+            }
+            if (value !== undefined && value !== null) {
                 if (typeof value === "object") {
                     formData.append(key, JSON.stringify(value));
                 } else {
@@ -104,10 +117,14 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                 }
             }
         });
+        if (type === "edit") {
+            formData.delete("comboItem");
+        }
+        console.log("Cart Items:", cart);
         formData.append("comboItem", JSON.stringify(cart.map(convertCartItemToComboItemData)));
         formData.delete("bannerUrl");
         if (type === "create") {
-            console.log("Form Data:", Array.from(formData.entries()));
+
             createCombo(formData, {
                 onSuccess: () => {
                     onClose();
@@ -121,6 +138,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
             });
         }
         else {
+            console.log("Form Data:", Array.from(formData.entries()));
             updateCombo({ id: Number(combo?.id), payload: formData }, {
                 onSuccess: () => {
                     onClose();
@@ -270,11 +288,6 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                     type="text"
                                 />
                             </div>
-                            <select className="bg-surface-dark border border-border-dark rounded-lg px-2 py-1.5 text-[11px] text-text-secondary focus:ring-primary outline-none">
-                                <option>Tất cả</option>
-                                <option>Bắp rang</option>
-                                <option>Nước ngọt</option>
-                            </select>
                         </div>
                         <div className="flex-1 overflow-y-auto p-2 space-y-1">
                             {
