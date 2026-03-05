@@ -194,6 +194,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                 <div className="relative">
                                     <input min={0}
                                         max={total}
+                                        value={total}
                                         className="w-full bg-dark border border-black rounded-lg pl-4 pr-12 py-3 text-black font-bold text-primary focus:ring-1 focus:ring-primary focus:border-primary" type="number"
                                         id="combo_price"
                                         {...methods.register("price")}
