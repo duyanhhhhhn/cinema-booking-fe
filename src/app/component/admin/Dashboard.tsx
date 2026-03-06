@@ -23,39 +23,31 @@ export default function Dashboard() {
   const today = new Date().toISOString().slice(0, 10);
   const revenueByDate = useQuery(Revenue.getRevenueByDate(today));
   const rev: IRevenue[] = revenueByDate?.data ?? [];
-  console.log(rev);
   const todayRevenue = rev.length > 0 ? rev[0].revenue : 0;
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  console.log("Today Revenue", todayRevenue)
   const labels = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  const data = {
-    labels: labels,
-    datasets: [{
-      label: "Doanh thu",
-      data: revenueByDate?.data || [0, 0, 0, 0, 0, 0, 0],
-      fill: false,
-      borderColor: 'rgb(75, 192, 192)',
-      tension: 0.1
-    }]
-  }
+  const data = revenueByDate?.data?.data;
   useEffect(() => {
     if (!canvasRef.current) return;
-    const chart =
-      new Chart(canvasRef.current, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
+
+    const chart = new Chart(canvasRef.current, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
             label: 'Revenue',
-            data: data,
-            borderColor: '#ec131e',
-          }]
-        }
-      });
+            data: data || [0, 0, 0, 0, 0, 0, 0],
+            backgroundColor: '#ec131e'
+          }
+        ]
+      }
+    });
+
     return () => {
       chart.destroy();
-    }
-  }, []);
+    };
+  }, [revenueByDate]);
   const stats = [
     {
       title: "Tổng doanh thu hôm nay",
@@ -198,7 +190,6 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-              {/* Pseudo Chart Implementation using Tailwind utility classes for visualization */}
               <div className="relative h-64 w-full">
                 <div className="absolute bottom-0 left-0 right-0 top-0 flex items-end justify-between gap-2 px-2">
                   <canvas ref={canvasRef}></canvas>
