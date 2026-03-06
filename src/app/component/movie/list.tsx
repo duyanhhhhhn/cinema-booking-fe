@@ -171,7 +171,7 @@ export default function CinemaList() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#0B0C0F] text-white">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#121212] text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#17181D]/45 via-[#0B0C0F]/70 to-[#0B0C0F]" />
       <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[2px]" />
