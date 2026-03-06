@@ -124,7 +124,18 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
     fallbackUrl: "/",
     description: "Quản lý rạp chiếu",
   },
-
+  {
+    path: "/admin/rooms",
+    guard: "admin",
+    fallbackUrl: "/",
+    description: "Quản lý phòng chiếu",
+  },
+  {
+    path: "/admin/rooms/[id]",
+    guard: "admin",
+    fallbackUrl: "/",
+    description: "Chi tiết phòng chiếu",
+  },
   {
     path: "/admin/users",
     guard: "admin",
