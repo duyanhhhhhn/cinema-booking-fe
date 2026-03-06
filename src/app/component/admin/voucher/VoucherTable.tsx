@@ -1,11 +1,13 @@
 "use client";
 
-import { IVoucher } from "@/types/data/voucher/voucher";
+import { IVoucher, useDeleteVoucherMutation } from "@/types/data/voucher/voucher";
 import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import EditVoucherModal from "./Modal/EditVoucherPopup";
 import { useState } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { useNotification } from "@/hooks/useNotification";
+import DeletePopup from "../user/DeletePopup";
 
 interface IVoucherTableProps {
     voucher: IVoucher[];
@@ -13,8 +15,30 @@ interface IVoucherTableProps {
 }
 
 export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableProps) {
+    const n = useNotification();
     const [openEditVoucherModal, setEditVoucherModal] = useState(false);
-
+    const [openDeletePopup, setOpenDeletePopup] = useState(false);
+    const [selectedVoucher, setSelectedVoucher] = useState<IVoucher | null>(null);
+    const handleClickIconDelete = (voucher: IVoucher) => {
+        setSelectedVoucher(voucher);
+        setOpenDeletePopup(true);
+    };
+    const { mutate: deleteVoucher } = useDeleteVoucherMutation();
+    const handleConfirmDelete = () => {
+        if (selectedVoucher) {
+            deleteVoucher(selectedVoucher.id, {
+                onSuccess: () => {
+                    setOpenDeletePopup(false);
+                    setSelectedVoucher(null);
+                    refetchVoucher();
+                    n.success('Xoá thành công');
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            });
+        }
+    };
     return <>
         <TableContainer className="overflow-x-auto">
             <Table className="w-full text-left border-collapse">
@@ -67,6 +91,7 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                                     <button
                                         className="hover:bg-background-dark text-red rounded-lg transition-colors border"
                                         title="Xóa"
+                                        onClick={() => handleClickIconDelete(item)}
                                     >
                                         <span className="material-symbols-outlined text-[20px]">
                                             <DeleteIcon></DeleteIcon>
@@ -83,6 +108,12 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                     ))}
                 </TableBody>
             </Table>
+            <DeletePopup
+                open={openDeletePopup}
+                onClose={() => setOpenDeletePopup(false)}
+                onConfirm={handleConfirmDelete}
+                description={"Bạn có chắc muốn xoá voucher này không?"}
+            />
         </TableContainer>
     </>;
 }

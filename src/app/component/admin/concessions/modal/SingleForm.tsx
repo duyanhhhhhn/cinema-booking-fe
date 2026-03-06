@@ -1,6 +1,6 @@
 "use client"
 
-import { ICombo, initialProductData, IProductData, useCreateProductMutation } from "@/types/data/concession/combo";
+import { ICombo, initialProductData, IProductData, useCreateProductMutation, useEditProductMutation } from "@/types/data/concession/combo";
 import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
@@ -23,6 +23,7 @@ export default function SingleForm({ onClose, refetchCombo, type, combo }: {
         resolver: yupResolver(createVoucherSchema()),
     });
     const { mutate: createCombo } = useCreateProductMutation();
+    const { mutate: editProduct } = useEditProductMutation();
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
     const [previews, setPreviews] = useState<{
         banner: string | null;
@@ -45,17 +46,32 @@ export default function SingleForm({ onClose, refetchCombo, type, combo }: {
             }
         });
         formData.delete("bannerUrl");
-        createCombo(formData, {
-            onSuccess: () => {
-                onClose();
-                n.success("Success");
-                methods.reset();
-                refetchCombo();
-            },
-            onError: (error) => {
-                n.error(error.message);
-            },
-        });
+        if (type === "create") {
+            createCombo(formData, {
+                onSuccess: () => {
+                    onClose();
+                    n.success("Success");
+                    methods.reset();
+                    refetchCombo();
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            });
+        }
+        else {
+            editProduct({ id: Number(combo?.id), payload: formData }, {
+                onSuccess: () => {
+                    onClose();
+                    n.success("Cập nhật sản phẩm thành công");
+                    methods.reset();
+                    refetchCombo();
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            })
+        }
     };
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "bannerFile") => {
         const file = e.target.files?.[0];

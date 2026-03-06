@@ -1,6 +1,6 @@
 "use client";
 
-import { Combo, ICombo, useDeleteComboMutation } from "@/types/data/concession/combo";
+import { Combo, ICombo, useDeleteComboMutation, useDeleteProductMutation } from "@/types/data/concession/combo";
 import { useQuery } from "@tanstack/react-query";
 import CustomPagination from "../table/CustomPagination";
 import EditIcon from '@mui/icons-material/Edit';
@@ -24,13 +24,27 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
     const [openDeletePopup, setOpenDeletePopup] = useState(false);
     const [selectedCombo, setSelectedCombo] = useState<ICombo | null>(null);
     const { mutate: deleteCombo } = useDeleteComboMutation();
+    const { mutate: deleteProduct } = useDeleteProductMutation();
     const handleClickIconDelete = (combo: ICombo) => {
         setSelectedCombo(combo);
         setOpenDeletePopup(true);
     };
     const handleConfirmDelete = () => {
-        if (selectedCombo) {
+        if (selectedCombo && selectedCombo.type === "COMBO") {
             deleteCombo(selectedCombo.id, {
+                onSuccess: () => {
+                    setOpenDeletePopup(false);
+                    setSelectedCombo(null);
+                    refetchCombo()
+                    n.success('Xoá thành công');
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            });
+        }
+        else if (selectedCombo && selectedCombo.type === "SINGLE") {
+            deleteProduct(selectedCombo.id, {
                 onSuccess: () => {
                     setOpenDeletePopup(false);
                     setSelectedCombo(null);
@@ -66,7 +80,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                     </TableHead>
                     <TableBody className="divide-y divide-border-dark text-sm">
                         {combo.map((item) => (
-                            <TableRow key={"item" + item.name} className="group hover:bg-surface-highlight/50 transition-colors">
+                            <TableRow key={"item" + item.name + item.id} className="group hover:bg-surface-highlight/50 transition-colors">
                                 <TableCell className="p-4 text-center">
                                     <input
                                         type="checkbox"
@@ -177,7 +191,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                 open={openDeletePopup}
                 onClose={() => setOpenDeletePopup(false)}
                 onConfirm={handleConfirmDelete}
-                description={"Bạn có chắc muốn xoá không?"}
+                description={"Bạn có chắc muốn " + (selectedCombo?.type === "SINGLE" ? "xoá sản phẩm" : "xoá combo") + " này không?"}
             />
         </div>
     </>

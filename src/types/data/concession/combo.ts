@@ -79,9 +79,20 @@ export class Combo extends Model {
             data: payload
         })
     }
+    static editProduct(id: number, payload: FormData) {
+        return this.api.put<IResponse<ICombo>>({
+            url: `/public/product/${id}`,
+            data: payload
+        })
+    }
     static deleteCombo(id: number) {
         return this.api.delete<IResponse<ICombo>>({
             url: `/public/combo/${id}`,
+        })
+    }
+    static deleteProduct(id: number) {
+        return this.api.delete<IResponse<ICombo>>({
+            url: `/public/product/${id}`,
         })
     }
 }
@@ -107,10 +118,25 @@ export function useEditComboMutation() {
         }
     })
 }
+export function useEditProductMutation() {
+    return useMutation<IResponse<ICombo>, IHttpError, { payload: FormData, id: number }>({
+        mutationFn: ({ id, payload }: { id: number, payload: FormData }) => {
+            return Combo.editProduct(id, payload).then((r) => r.data);
+        }
+    })
+}
+
 export function useDeleteComboMutation() {
     return useMutation<IResponse<ICombo>, IHttpError, number>({
         mutationFn: (id: number) => {
             return Combo.deleteCombo(id).then((r) => r.data)
+        }
+    })
+}
+export function useDeleteProductMutation() {
+    return useMutation<IResponse<ICombo>, IHttpError, number>({
+        mutationFn: (id: number) => {
+            return Combo.deleteProduct(id).then((r) => r.data)
         }
     })
 }
