@@ -2,12 +2,10 @@
 
 import IRevenue, { Revenue } from "@/types/data/revenue/revenue";
 import {
-  Box,
   Grid,
   Card,
   CardContent,
   Typography,
-  Button,
 } from "@mui/material";
 import Chart from "chart.js/auto";
 import { useQuery } from "@tanstack/react-query";
@@ -193,96 +191,6 @@ export default function Dashboard() {
               <div className="relative h-64 w-full">
                 <div className="absolute bottom-0 left-0 right-0 top-0 flex items-end justify-between gap-2 px-2">
                   <canvas ref={canvasRef}></canvas>
-                  {/* Bar 1 */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-surface-border transition-all"
-                      style={{ height: "40%" }}
-                    >
-                      <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                        12tr
-                      </div>
-                    </div>
-                    <span className="mt-2 text-center text-xs text-gray-500">
-                      T2
-                    </span>
-                  </div>
-                  {/* Bar 2 */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-surface-border transition-all group-hover:bg-primary/60"
-                      style={{ height: "65%" }}
-                    >
-                      <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                        18.5tr
-                      </div>
-                    </div>
-                    <span className="mt-2 text-center text-xs text-gray-500">
-                      T3
-                    </span>
-                  </div>
-                  {/* Bar 3 */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-surface-border transition-all group-hover:bg-primary/60"
-                      style={{ height: "55%" }}
-                    >
-                      <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                        15tr
-                      </div>
-                    </div>
-                    <span className="mt-2 text-center text-xs text-gray-500">
-                      T4
-                    </span>
-                  </div>
-                  {/* Bar 4 */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-surface-border transition-all group-hover:bg-primary/60"
-                      style={{ height: "80%" }}
-                    >
-                      <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                        22tr
-                      </div>
-                    </div>
-                    <span className="mt-2 text-center text-xs text-gray-500">
-                      T5
-                    </span>
-                  </div>
-                  {/* Bar 5 (Current High) */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-primary transition-all shadow-[0_0_15px_rgba(234,42,51,0.4)]"
-                      style={{ height: "90%" }}
-                    >
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-primary px-2 py-1 text-xs font-bold text-white">
-                        24.5tr
-                      </div>
-                    </div>
-                    <span className="mt-2 text-center text-xs font-bold text-white">
-                      Hôm nay
-                    </span>
-                  </div>
-                  {/* Bar 6 */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-surface-border/50 transition-all"
-                      style={{ height: "10%" }}
-                    ></div>
-                    <span className="mt-2 text-center text-xs text-gray-500">
-                      T7
-                    </span>
-                  </div>
-                  {/* Bar 7 */}
-                  <div className="group relative flex h-full w-full flex-col justify-end">
-                    <div
-                      className="relative w-full rounded-t-sm bg-surface-border/50 transition-all"
-                      style={{ height: "10%" }}
-                    ></div>
-                    <span className="mt-2 text-center text-xs text-gray-500">
-                      CN
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>

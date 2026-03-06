@@ -1,5 +1,5 @@
 import { useNotification } from "@/hooks/useNotification";
-import { Banner, IBanner, useDeleteBannerMutation } from "@/types/data/home/banner";
+import { IBanner, useDeleteBannerMutation } from "@/types/data/home/banner";
 import { Delete, Edit } from "@mui/icons-material";
 import { Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import dayjs from "dayjs";

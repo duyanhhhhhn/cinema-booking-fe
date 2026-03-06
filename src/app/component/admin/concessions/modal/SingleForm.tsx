@@ -1,11 +1,10 @@
 "use client"
 
-import { ICombo, initialProductData, IProductData, useCreateProductMutation, useEditProductMutation } from "@/types/data/concession/combo";
+import { ICombo, IProductData, useCreateProductMutation, useEditProductMutation } from "@/types/data/concession/combo";
 import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useNotification } from "@/hooks/useNotification";
