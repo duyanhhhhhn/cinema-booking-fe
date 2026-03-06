@@ -22,6 +22,8 @@ import {
   Menu,
   MenuItem,
   Divider,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 // Import Icons MUI (Thay thế cho ti-icons để đảm bảo hiển thị đẹp)
@@ -40,6 +42,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 const drawerWidth = 260;
+const collapsedWidth = 72;
 
 // --- Cấu hình Menu Data (Dữ liệu mới của bạn) ---
 const menuItems = [
@@ -79,6 +82,7 @@ const menuItems = [
     path: "/admin/services",
     children: [
       { text: "Vé đã bán", path: "/admin/tickets" },
+      { text: "Bán vé", path: "/admin/sell-tickets" },
       { text: "Combo & Đồ ăn", path: "/admin/combos" },
       { text: "Mã giảm giá", path: "/admin/vouchers" },
     ],
@@ -104,9 +108,18 @@ const menuItems = [
 ];
 
 // --- Component Sidebar Item ---
-const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
+const SidebarItem = ({
+  item,
+  pathname,
+  collapsed,
+}: {
+  item: any;
+  pathname: string;
+  collapsed?: boolean;
+}) => {
   const [open, setOpen] = useState(false);
   const hasChildren = item.children && item.children.length > 0;
+  const firstChildPath = hasChildren ? item.children[0]?.path : item.path;
 
   const isParentActive = hasChildren
     ? item.children.some((child: any) => pathname === child.path)
@@ -121,6 +134,31 @@ const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
   const handleClick = () => {
     if (hasChildren) setOpen(!open);
   };
+
+  if (collapsed) {
+    return (
+      <ListItemButton
+        component={Link}
+        href={hasChildren ? firstChildPath : item.path}
+        sx={{
+          py: 1.5,
+          justifyContent: "center",
+          color: "white",
+          "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            minWidth: 0,
+            color: isParentActive ? "#fff" : "rgba(255,255,255,0.7)",
+            justifyContent: "center",
+          }}
+        >
+          {item.icon}
+        </ListItemIcon>
+      </ListItemButton>
+    );
+  }
 
   return (
     <>
@@ -206,15 +244,22 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
   // 1. Logic Auth & Menu từ code cũ
   const { user, logout } = useAuth(); // Lấy thông tin user
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
 
-  // 2. State cho Sidebar Mobile
+  // 2. State Sidebar: mobile = drawer, desktop = thu gọn + hover mở rộng
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [sidebarHover, setSidebarHover] = useState(false);
+
+  const desktopExpanded = desktopSidebarOpen || sidebarHover;
+  const desktopSidebarWidth = desktopExpanded ? drawerWidth : collapsedWidth;
 
   // --- Handlers ---
   const handleDrawerToggle = () => {
@@ -246,7 +291,7 @@ export default function AdminLayout({
     router.push("/");
   };
 
-  const drawerContent = (
+  const renderDrawerContent = (collapsed: boolean) => (
     <Box
       sx={{
         height: "100%",
@@ -256,9 +301,24 @@ export default function AdminLayout({
         color: "white",
       }}
     >
-      {/* 1. Logo Section */}
-      <Box sx={{ px: 3, pt: 3, textAlign: "center" }}>
-        <Box sx={{ width: 100, height: 100, mx: "auto", position: "relative" }}>
+      {/* 1. Logo: thu gọn thì chỉ icon nhỏ */}
+      <Box
+        sx={{
+          px: collapsed ? 1.5 : 3,
+          pt: 2,
+          pb: collapsed ? 1 : 0,
+          textAlign: "center",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <Box
+          sx={{
+            width: collapsed ? 40 : 100,
+            height: collapsed ? 40 : 100,
+            position: "relative",
+          }}
+        >
           <Image
             src="/logo/logo_cinema.png"
             alt="logo"
@@ -268,33 +328,36 @@ export default function AdminLayout({
         </Box>
       </Box>
 
-      {/* 2. Label Menu */}
-      <Box sx={{ px: 3, pb: 1, pt: 2 }}>
-        <Typography
-          variant="caption"
-          sx={{ color: "#8fa1cc", fontWeight: "bold", letterSpacing: 1 }}
-        >
-          MENU
-        </Typography>
-      </Box>
+      {!collapsed && (
+        <Box sx={{ px: 3, pb: 1, pt: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{ color: "#8fa1cc", fontWeight: "bold", letterSpacing: 1 }}
+          >
+            MENU
+          </Typography>
+        </Box>
+      )}
 
-      {/* 3. Danh sách Menu (Phần này sẽ cuộn nhưng không hiện thanh scroll) */}
+      {/* 3. Danh sách Menu */}
       <List
         component="nav"
         sx={{
-          px: 1,
-          // Logic để cuộn
+          px: collapsed ? 0 : 1,
           overflowY: "auto",
           flex: 1,
-
-          // --- CSS ĐỂ ẨN THANH CUỘN ---
-          "&::-webkit-scrollbar": { display: "none" }, // Ẩn trên Chrome/Safari/Edge
-          scrollbarWidth: "none", // Ẩn trên Firefox
-          "-ms-overflow-style": "none", // Ẩn trên IE cũ
+          "&::-webkit-scrollbar": { display: "none" },
+          scrollbarWidth: "none",
+          "-ms-overflow-style": "none",
         }}
       >
         {menuItems.map((item) => (
-          <SidebarItem key={item.text} item={item} pathname={pathname} />
+          <SidebarItem
+            key={item.text}
+            item={item}
+            pathname={pathname}
+            collapsed={collapsed}
+          />
         ))}
       </List>
     </Box>
@@ -302,26 +365,27 @@ export default function AdminLayout({
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f4f6f8" }}>
-      {/* 1. APP BAR (HEADER) - Lấy style trắng từ code cũ */}
       <AppBar
         position="fixed"
         sx={{
-          // Tính toán width để tránh đè lên Sidebar ở Desktop
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          bgcolor: "#fff", // Màu trắng như code cũ
-          color: "#000", // Chữ đen
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)", // Shadow nhẹ
+          width: { xs: "100%", md: `calc(100% - ${desktopSidebarWidth}px)` },
+          ml: { md: desktopSidebarWidth },
+          transition: "width 0.2s ease, margin 0.2s ease",
+          bgcolor: "#fff",
+          color: "#000",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         }}
       >
         <Toolbar>
-          {/* Nút Hamburger (Chỉ hiện ở Mobile) */}
+          {/* Nút đóng/mở sidebar: Mobile = drawer, Desktop = thu gọn/mở rộng */}
           <IconButton
             color="inherit"
-            aria-label="open drawer"
+            aria-label="toggle sidebar"
             edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: "none" } }}
+            onClick={() =>
+              isDesktop ? setDesktopSidebarOpen((prev) => !prev) : handleDrawerToggle()
+            }
+            sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
@@ -430,7 +494,14 @@ export default function AdminLayout({
       {/* 2. SIDEBAR NAVIGATION */}
       <Box
         component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+        onMouseEnter={() => !desktopSidebarOpen && setSidebarHover(true)}
+        onMouseLeave={() => setSidebarHover(false)}
+        sx={{
+          width: { xs: "auto", md: desktopSidebarWidth },
+          flexShrink: 0,
+          transition: "width 0.2s ease",
+          overflow: "hidden",
+        }}
       >
         {/* Mobile Drawer */}
         <Drawer
@@ -448,23 +519,25 @@ export default function AdminLayout({
             },
           }}
         >
-          {drawerContent}
+          {renderDrawerContent(false)}
         </Drawer>
 
-        {/* Desktop Drawer */}
+        {/* Desktop: thu gọn = chỉ icon, hover = mở rộng */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: "none", md: "block" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              width: drawerWidth,
+              width: desktopSidebarWidth,
               borderRight: "1px solid rgba(255,255,255,0.1)",
+              transition: "width 0.2s ease",
+              overflow: "hidden",
             },
           }}
           open
         >
-          {drawerContent}
+          {renderDrawerContent(!desktopExpanded)}
         </Drawer>
       </Box>
 
@@ -474,9 +547,10 @@ export default function AdminLayout({
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          mt: "64px", // Đẩy nội dung xuống bằng chiều cao của Header (AppBar)
+          width: { md: `calc(100% - ${desktopSidebarWidth}px)` },
+          mt: "64px",
           overflowX: "hidden",
+          transition: "width 0.2s ease",
         }}
       >
         {children}

@@ -13,6 +13,22 @@ export interface IHoldBookingForm {
   showtimeId: number 
   seatIds: number[];
 }
+export interface ICreateBookingForAdminForm {
+  showtimeId: number;
+  seatIds: number[];
+  combos: IComboForAdmin[];
+  voucherCode: string;
+  paymentMethod: string;
+  staffId: number;
+}
+
+export interface IComboForAdmin {
+  id: number;
+  comboId: number;
+  productId: number;
+  quantity: number;
+}
+
 
 export interface Seat {
   row: string;
@@ -94,6 +110,27 @@ export interface ICreateBookingResponse {
   createdAt?: string | null;
 }
 
+export interface ICreateBookingForAdminResponse {
+  bookingCode: string;
+  bookingId: number;
+  cinemaName: string;
+  combos: IComboForAdmin[];
+  createdAt: any;
+  createdByStaffId: number;
+  createdByStaffName: string;
+  discountAmount: number;
+  movieTitle: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentUrl: string;
+  products: any[];
+  roomName: string;
+  seats: Seat[];
+  showtime: string;
+  showtimeId: number;
+  totalPrice: number;
+  voucherCode: string;
+}
 export class Booking extends Model {
   static queryKeys = {
     holdBooking: "HOLD_BOOKING_QUERY",
@@ -115,10 +152,16 @@ export class Booking extends Model {
       url: "/bookings/create",
       data: payload,
     });
-  };
+  }
   static releaseSeat(payload: IReleaseSeatForm) {
     return this.api.post<IResponse<ICreateBookingResponse>>({
       url: "/booking/release-seat",
+      data: payload,
+    });
+  }
+  static createBookingForAdmin(payload: ICreateBookingForAdminForm) {
+    return this.api.post<IResponse<any>>({
+      url: "/admin/bookings/walk-in",
       data: payload,
     });
   }
@@ -157,6 +200,17 @@ export function useReleaseSeatMutation() {
   return useMutation<IResponse<ICreateBookingResponse>, IHttpError, IReleaseSeatForm>({
     mutationFn: (payload: IReleaseSeatForm) => {
       return Booking.releaseSeat(payload).then((r) => r.data);
+    },
+  });
+}
+export function useCreateBookingForAdminMutation() {
+  return useMutation<
+    IResponse<ICreateBookingForAdminResponse>,
+    IHttpError,
+    ICreateBookingForAdminForm
+  >({
+    mutationFn: (payload: ICreateBookingForAdminForm) => {
+      return Booking.createBookingForAdmin(payload).then((r) => r.data);
     },
   });
 }

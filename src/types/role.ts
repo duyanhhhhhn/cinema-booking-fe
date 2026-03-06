@@ -8,13 +8,14 @@
 export enum UserRole {
   CLIENT = 'CLIENT',
   STAFF = 'STAFF',
+  MANAGER = 'MANAGER',
   ADMIN = 'ADMIN',
-} 
+}
 
 /**
  * Type cho role
  */
-export type Role = UserRole.CLIENT | UserRole.STAFF | UserRole.ADMIN;
+export type Role = UserRole.CLIENT | UserRole.STAFF | UserRole.MANAGER | UserRole.ADMIN;
 
 /**
  * Array chứa tất cả các role
@@ -43,22 +44,30 @@ export const isStaff = (role: string | Role): boolean => {
 };
 
 /**
+ * Kiểm tra xem role có phải là manager không
+ */
+export const isManager = (role: string | Role): boolean => {
+  return role === UserRole.MANAGER;
+};
+
+/**
  * Lấy label tiếng Việt cho role
  */
 export const getRoleLabel = (role: Role | string): string => {
   const roleMap: Record<string, string> = {
     [UserRole.CLIENT]: 'Khách hàng',
     [UserRole.STAFF]: 'Nhân viên',
+    [UserRole.MANAGER]: 'Quản lý',
     [UserRole.ADMIN]: 'Quản trị viên',
   };
   return roleMap[role] || role;
 };
 
 /**
- * Kiểm tra xem role có phải là admin hoặc staff không (có quyền quản lý)
+ * Kiểm tra xem role có phải là admin, manager hoặc staff không (có quyền vào khu vực quản lý)
  */
 export const isManagementRole = (role: string | Role): boolean => {
-  return isAdmin(role) || isStaff(role);
+  return isAdmin(role) || isStaff(role) || isManager(role);
 };
 
 /**

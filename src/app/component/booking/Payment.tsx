@@ -16,6 +16,7 @@ const paymentMethods = [
     name: "Thanh toán bằng Momo",
     description: "Ví điện tử",
     icon: "M",
+    bankCode: "ATM",
   },
   // {
   //   id: "vnpay" as const,
@@ -62,6 +63,7 @@ export default function PaymentMethodStep() {
         combos: combosPayload,
         voucherCode: "",
         paymentMethod: selected.toUpperCase(),
+        bankCode: selected === "momo" ? "ATM" : null,
       };
       createBooking(payload, {
         onSuccess: (data) => {

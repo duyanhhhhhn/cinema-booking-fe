@@ -1,30 +1,27 @@
 import { Model } from "@/types/core/model";
 import { IMovieShowtimeGroup } from "./type";
+import { ObjectsFactory } from "@/types/core/objectFactory";
 
 const modelConfig = {
-  path: "showtime/public",
+  path: "showtimes/public",
   modal: "showtime",
 };
 console.log("ShowtimePublic modelConfig:", modelConfig);
 export class ShowtimePublic extends Model {
-  static factory<T>(
-    modelConfig: { path: string; modal: string },
-    queryKeys: { all: readonly ["SHOWTIME_PUBLIC", "ALL"] },
-  ) {
-    throw new Error("Method not implemented.");
-  }
+  
   static queryKeys = {
-    all: ["SHOWTIME_PUBLIC", "ALL"] as const,
+    paginate: "SHOWTIME_PUBLIC_PAGINATE_QUERY",
   };
 
-  static objects = this.factory<IMovieShowtimeGroup>(
-    modelConfig, 
+ 
+  static objects = ObjectsFactory.factory<IMovieShowtimeGroup>(
+    modelConfig,
     this.queryKeys,
   );
 
   static getAllShowtimePublic() {
     return {
-      queryKey: this.queryKeys.all,
+      queryKey: this.queryKeys.paginate,
       queryFn: () => {
         return this.api
           .get<{ data: IMovieShowtimeGroup[] }>({
@@ -35,3 +32,4 @@ export class ShowtimePublic extends Model {
     };
   }
 }
+ShowtimePublic.setup();

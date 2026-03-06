@@ -1,200 +1,289 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Chip,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Button,
-} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import Link from "next/link";
+import { Invoice, colorPaymentStatus, paymentStatus } from "@/types/data/invoice/invoice";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useRouteQuery } from "@/hooks/useRouteQuery";
+import CustomPagination from "@/app/component/admin/table/CustomPagination";
+import { Search } from "@mui/icons-material";
+import CinemasSelection from "@/app/component/Selection/CinemasSelection";
+import { useAuth } from "@/contexts/AuthContext";
+import DatePickerRangerSelection from "@/app/component/Selection/DatePickerRangerSelection";
 
-export default function AdminTicketsPage() {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Sample data - replace with API call
-  const tickets = [
-    {
-      id: "BK001234",
-      movie: "Avengers: Secret Wars",
-      customer: "Nguyễn Văn A",
-      email: "nguyenvana@example.com",
-      phone: "0901234567",
-      date: "2024-01-20",
-      time: "18:00",
-      seats: ["A5", "A6"],
-      total: 359000,
-      status: "completed",
-      paymentMethod: "VNPay",
-      createdAt: "2024-01-20 10:30",
-    },
-    {
-      id: "BK001235",
-      movie: "The Last Kingdom",
-      customer: "Trần Thị B",
-      email: "tranthib@example.com",
-      phone: "0902345678",
-      date: "2024-01-22",
-      time: "15:30",
-      seats: ["C8", "C9", "C10"],
-      total: 240000,
-      status: "upcoming",
-      paymentMethod: "MoMo",
-      createdAt: "2024-01-21 11:15",
-    },
-  ];
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-  };
-
-  const getStatusChip = (status) => {
-    const statusMap = {
-      completed: { label: "Đã xem", color: "green" },
-      upcoming: { label: "Sắp xem", color: "teal" },
-      cancelled: { label: "Đã hủy", color: "red" },
-    };
-    const statusInfo = statusMap[status] || statusMap.completed;
-    return (
-      <Chip
-        label={statusInfo.label}
-        size="small"
-        className={`bg-${statusInfo.color}-500 text-white`}
-      />
-    );
-  };
-
-  const filteredTickets = tickets.filter(
-    (ticket) =>
-      ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.movie.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+function StatusBadge({
+  status,
+  label,
+}: {
+  status: string;
+  label: string;
+}) {
+  const hex =
+    colorPaymentStatus[status?.toUpperCase() as keyof typeof colorPaymentStatus] ??
+    "#6B7280";
   return (
-    <Box>
-      <div className="flex items-center justify-between mb-6">
-        <Typography variant="h4" className="font-bold text-gray-900">
-          Quản lý vé đã bán
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<i className="ti ti-download"></i>}
-          className="border-teal-500 text-teal-600"
-        >
-          Xuất Excel
-        </Button>
-      </div>
-
-      <Card className="shadow-md mb-4">
-        <CardContent className="p-4">
-          <TextField
-            fullWidth
-            placeholder="Tìm kiếm vé (mã vé, khách hàng, phim)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ti ti-search text-gray-400"></i>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-md">
-        <CardContent className="p-0">
-          <TableContainer>
-            <Table>
-              <TableHead className="bg-gray-50">
-                <TableRow>
-                  <TableCell className="font-semibold">Mã vé</TableCell>
-                  <TableCell className="font-semibold">Khách hàng</TableCell>
-                  <TableCell className="font-semibold">Phim</TableCell>
-                  <TableCell className="font-semibold">Ngày/Giờ</TableCell>
-                  <TableCell className="font-semibold">Ghế</TableCell>
-                  <TableCell className="font-semibold">Thanh toán</TableCell>
-                  <TableCell className="font-semibold">Tổng tiền</TableCell>
-                  <TableCell className="font-semibold">Trạng thái</TableCell>
-                  <TableCell className="font-semibold">Thao tác</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredTickets
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((ticket) => (
-                    <TableRow key={ticket.id} hover>
-                      <TableCell className="font-semibold">{ticket.id}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-semibold">{ticket.customer}</div>
-                          <div className="text-sm text-gray-600">{ticket.email}</div>
-                          <div className="text-sm text-gray-600">{ticket.phone}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{ticket.movie}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div>{ticket.date}</div>
-                          <div className="text-sm text-gray-600">{ticket.time}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{ticket.seats.join(", ")}</TableCell>
-                      <TableCell>
-                        <Chip label={ticket.paymentMethod} size="small" variant="outlined" />
-                      </TableCell>
-                      <TableCell className="font-semibold text-teal-600">
-                        {formatPrice(ticket.total)}
-                      </TableCell>
-                      <TableCell>{getStatusChip(ticket.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <IconButton size="small" className="text-blue-600">
-                            <i className="ti ti-eye"></i>
-                          </IconButton>
-                          <IconButton size="small" className="text-teal-600">
-                            <i className="ti ti-printer"></i>
-                          </IconButton>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component="div"
-            count={filteredTickets.length}
-            page={page}
-            onPageChange={(e, newPage) => setPage(newPage)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-            labelRowsPerPage="Số hàng mỗi trang:"
-          />
-        </CardContent>
-      </Card>
-    </Box>
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+      style={{
+        backgroundColor: `${hex}20`,
+        color: hex,
+        borderColor: hex,
+      }}
+    >
+      {label}
+    </span>
   );
 }
 
+export default function InvoiceManagement() {
+  const { searchQuery, serializeQuery, updateQuery } = useRouteQuery();
+  const [keywordInput, setKeywordInput] = useState("");
+  const { user, isAdmin } = useAuth();
+    const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
+
+  const keywordFromUrl = searchQuery.get("keyword") ?? "";
+  useEffect(() => {
+    setKeywordInput(keywordFromUrl);
+  }, [keywordFromUrl]);
+  const effectiveCinemaId = isAdmin
+    ? selectedCinemaId
+    : user?.cinemaId != null
+      ? Number(user.cinemaId)
+    : null;
+
+  const params = useMemo(() => {
+    return serializeQuery({
+      page: searchQuery.get("page") || 1,
+      perPage: searchQuery.get("perPage") || 10,
+      startDate: searchQuery.get("startDate"),
+      endDate: searchQuery.get("endDate"),
+      cinemaId: effectiveCinemaId?.toString() || undefined,
+      keyword: searchQuery.get("keyword"),
+      status: searchQuery.get("status"),
+      paymentMethod: searchQuery.get("paymentMethod"),
+    });
+  }, [searchQuery, serializeQuery, effectiveCinemaId]);
+
+  const { data: invoicesData } = useQuery({
+    ...Invoice.objects.paginateQueryFactory(params),
+  });
+  const handleSearch = useCallback(() => {
+    updateQuery({
+      keyword: keywordInput.trim() || undefined,
+      page: 1,
+    });
+  }, [keywordInput, updateQuery]);
+
+  const statusValue = searchQuery.get("status") ?? "";
+   const handleCinemaChange = 
+     (id: number | null) => {
+       setSelectedCinemaId(id);
+     }
+
+  return (
+    <main className="min-h-screen bg-[#f8f6f6] text-gray-800 font-sans ">
+      <div className="w-full ">
+        {/* Tiêu đề & Nút hành động */}
+        <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-gray-900 text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+              Quản lý Hóa đơn
+            </h1>
+            <p className="text-gray-500 text-base font-normal leading-normal">
+              Xem, lọc và quản lý danh sách hóa đơn từ hệ thống.
+            </p>
+          </div>
+        </div>
+
+        {/* Bộ lọc & Tìm kiếm */}
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          <div className="relative grow min-w-[250px]">
+            <SearchIcon
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              fontSize="small"
+            />
+            <input
+              className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-white focus:ring-[#ec131e] focus:border-[#ec131e] outline-none text-sm transition-shadow"
+              placeholder="Tìm kiếm theo tên khách hàng hoặc mã booking"
+              type="text"
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSearch}
+              className="flex cursor-pointer items-center justify-center h-10 px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-gray-600"
+            >
+              <Search fontSize="small" />
+            </button>
+            <DatePickerRangerSelection
+              // value={selectedDateRange}
+              // onChange={handleDateRangeChange}
+              isHiddenLabel={true}
+            />
+            <select
+              className="h-10 px-3 rounded-lg border border-gray-200 bg-white focus:ring-[#ec131e] focus:border-[#ec131e] outline-none text-sm cursor-pointer"
+              value={statusValue}
+              onChange={(e) =>
+                updateQuery({
+                  status: e.target.value || undefined,
+                  page: 1,
+                })
+              }
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value={paymentStatus.PAID}>Đã thanh toán</option>
+              <option value={paymentStatus.PENDING}>Chờ thanh toán</option>
+              <option value={paymentStatus.CANCELLED}>Đã hủy</option>
+              <option value={paymentStatus.FAILED}>Thất bại</option>
+            </select>
+
+            <CinemasSelection
+              value={selectedCinemaId}
+              onChange={handleCinemaChange}
+              isHiddenLabel={true}
+            />
+          </div>
+        </div>
+
+        {/* Bảng dữ liệu */}
+        <div className="overflow-x-auto">
+          <div className="inline-block min-w-full align-middle">
+            <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Mã Hóa Đơn
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Tên Phim
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Rạp
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Thời Gian
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Khách Hàng
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Ngày Tạo
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Tổng Tiền
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Phương Thức
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Trạng Thái
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      Hành Động
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {/* Row 1 */}
+                  {invoicesData?.data?.map((invoice) => (
+                    <tr
+                      className="hover:bg-gray-50 transition-colors"
+                      key={invoice.bookingCode}
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
+                        {invoice.invoiceNumber}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        {invoice.movieTitle}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {invoice.cinemaName}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {invoice.startTime}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {invoice.customerName || "Khách tại quầy"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {invoice.createdAt}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
+                        {invoice.totalPrice.toLocaleString("vi-VN")}đ
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {invoice.paymentMethodLabel}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <StatusBadge
+                          status={invoice.paymentStatus}
+                          label={invoice.paymentStatusLabel}
+                        />
+                      </td>
+                      <td className="px-4 py-4  text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            className="text-gray-400 hover:text-[#ec131e] transition-colors"
+                            title="Xem chi tiết"
+                            href={`/admin/tickets/${invoice.bookingCode}`}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Phân trang (Pagination) */}
+        <CustomPagination
+          itemsPerPage={invoicesData?.meta?.perPage || 0}
+          totalItems={invoicesData?.meta?.total || 0}
+        />
+      </div>
+    </main>
+  );
+}

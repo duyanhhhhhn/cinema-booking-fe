@@ -29,6 +29,8 @@ export interface User {
   role: Role;
   avatar: string;
   createdAt: string;
+  /** Id rạp gắn với staff/manager (do API /users/me trả về) */
+  cinemaId?: number | string;
 }
 
 /**
@@ -87,6 +89,7 @@ function decodeToken(token: string): User | null {
       role: decoded.role || UserRole.CLIENT,
       avatar: decoded.avatarUrl,
       createdAt: decoded.createdAt || decoded.iat,
+      cinemaId: decoded.cinemaId != null ? decoded.cinemaId : undefined,
     };
   } catch (error) {
     console.error("Failed to decode token:", error);
@@ -141,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: userData.role || UserRole.CLIENT,
             avatar: userData.avatarUrl,
             createdAt: userData.createdAt || userData.iat,
+            cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
           });
         } else {
           // Fallback: decode token nếu API thất bại
@@ -170,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   role: retryData.role || UserRole.CLIENT,
                   avatar: retryData.avatar,
                   createdAt: retryData.createdAt || retryData.iat,
+                  cinemaId: retryData.cinemaId != null ? retryData.cinemaId : undefined,
                 });
                 return;
               }
@@ -222,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               role: userData.role || UserRole.CLIENT,
               avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
+              cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
             });
           }
         } catch (error) {
@@ -267,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               role: userData.role || UserRole.CLIENT,
               avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
+              cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
             });
           } else {
             // Fallback: decode token nếu API /me không trả về data
