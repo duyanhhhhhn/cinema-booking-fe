@@ -1,5 +1,10 @@
 import { Model } from "@/types/core/model";
-import { IAdminReviewMovieOption, IAdminReviewRow } from "./type";
+import {
+  IAdminReviewListFilter,
+  IAdminReviewMovieOption,
+  IAdminReviewRow,
+  IResponseWithMeta,
+} from "./type";
 import { IResponse } from "@/types/core/api";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 
@@ -19,69 +24,88 @@ export class MovieReviewAdmin extends Model {
 
   static objects = ObjectsFactory.factory<IAdminReviewRow>(modelConfig, this.queryKeys);
 
-  static getAll(page: number = 1, perPage: number = 10, movieId?: number) {
+  static getAll(filters: IAdminReviewListFilter = {}) {
+    const page = filters.page ?? 1;
+    const perPage = filters.perPage ?? 10;
+    const movieId = filters.movieId ?? null;
+    const rating = filters.rating ?? null;
+    const hidden = filters.hidden ?? null;
+    const keyword = (filters.keyword ?? "").trim();
+
     return {
-      queryKey: [this.queryKeys.list, page, perPage, movieId ?? null],
-      queryFn: () =>
-        this.api
-          .get<IResponse<IAdminReviewRow[]>>({
-            url: `/admin/movie-reviews`,
-            params: { page, perPage, ...(movieId ? { movieId } : {}) },
-          })
-          .then((r) => r.data),
+      queryKey: [
+        this.queryKeys.list,
+        page,
+        perPage,
+        movieId,
+        rating,
+        hidden,
+        keyword || null,
+      ],
+      queryFn: async () => {
+        const res = await this.api.get<IResponseWithMeta<IAdminReviewRow[]>>({
+          url: `/admin/movie-reviews`,
+          params: {
+            page,
+            perPage,
+            ...(movieId !== null ? { movieId } : {}),
+            ...(rating !== null ? { rating } : {}),
+            ...(hidden !== null ? { hidden } : {}),
+            ...(keyword ? { keyword } : {}),
+          },
+        });
+        return res.data;
+      },
     };
   }
 
   static getMovies() {
     return {
       queryKey: [this.queryKeys.movies],
-      queryFn: () =>
-        this.api
-          .get<IResponse<IAdminReviewMovieOption[]>>({
-            url: `/admin/movie-reviews/movies`,
-          })
-          .then((r) => r.data),
+      queryFn: async () => {
+        const res = await this.api.get<IResponse<IAdminReviewMovieOption[]>>({
+          url: `/admin/movie-reviews/movies`,
+        });
+        return res.data;
+      },
     };
   }
 
-  // PATCH /api/admin/movie-reviews/{id}/toggle-hidden
   static toggleHidden(id: number) {
     return {
       queryKey: [this.queryKeys.toggle_hidden, id],
-      queryFn: () =>
-        this.api
-          .patch<IResponse<any>>({
-            url: `/admin/movie-reviews/${id}/toggle-hidden`,
-          })
-          .then((r) => r.data),
+      queryFn: async () => {
+        const res = await this.api.patch<IResponse<{ id: number; hidden: boolean }>>({
+          url: `/admin/movie-reviews/${id}/toggle-hidden`,
+        });
+        return res.data;
+      },
     };
   }
 
-// PATCH /api/admin/movie-reviews/{id}/hide
-static hide(id: number) {
-  return {
-    queryKey: [this.queryKeys.hide, id],
-    queryFn: () =>
-      this.api
-        .patch<IResponse<any>>({
+  static hide(id: number) {
+    return {
+      queryKey: [this.queryKeys.hide, id],
+      queryFn: async () => {
+        const res = await this.api.patch<IResponse<{ id: number; hidden: boolean }>>({
           url: `/admin/movie-reviews/${id}/hide`,
-        })
-        .then((r) => r.data),
-  };
-}
+        });
+        return res.data;
+      },
+    };
+  }
 
-// PATCH /api/admin/movie-reviews/{id}/unhide
-static unhide(id: number) {
-  return {
-    queryKey: [this.queryKeys.unhide, id],
-    queryFn: () =>
-      this.api
-        .patch<IResponse<any>>({
+  static unhide(id: number) {
+    return {
+      queryKey: [this.queryKeys.unhide, id],
+      queryFn: async () => {
+        const res = await this.api.patch<IResponse<{ id: number; hidden: boolean }>>({
           url: `/admin/movie-reviews/${id}/unhide`,
-        })
-        .then((r) => r.data),
-  };
-}
+        });
+        return res.data;
+      },
+    };
+  }
 }
 
 MovieReviewAdmin.setup();

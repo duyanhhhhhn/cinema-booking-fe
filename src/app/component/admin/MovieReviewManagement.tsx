@@ -1,19 +1,16 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 
@@ -27,8 +24,9 @@ import { Toaster, toast } from "sonner";
 
 import { MovieReviewAdmin } from "@/types/data/movie-reviews-admin/movie-review-admin";
 import type {
-  IAdminReviewRow,
+  IAdminReviewFilterState,
   IAdminReviewMovieOption,
+  IAdminReviewRow,
 } from "@/types/data/movie-reviews-admin/type";
 
 function formatDateTime(v?: string | null) {
@@ -38,7 +36,9 @@ function formatDateTime(v?: string | null) {
 }
 
 function initials(name: string) {
-  const parts = String(name || "").trim().split(/\s+/);
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/);
   const a = parts[0]?.[0] ?? "";
   const b = parts[parts.length - 1]?.[0] ?? "";
   return (a + b).toUpperCase() || "U";
@@ -95,54 +95,111 @@ type ConfirmPayload = {
   nextHidden: boolean;
   prevHidden: boolean;
   rawHidden: any;
-  row?: any;
+  row?: IAdminReviewRow;
+};
+
+const defaultFilter: IAdminReviewFilterState = {
+  page: 1,
+  perPage: 10,
+  movieId: null,
+  rating: null,
+  hidden: null,
+  keyword: "",
 };
 
 export default function MovieReviewManagement() {
-  const [keyword, setKeyword] = useState("");
-  const [movieFilter, setMovieFilter] = useState<string>("ALL");
-  const [ratingFilter, setRatingFilter] = useState<string>("ALL");
-  const [tab, setTab] = useState<"ALL" | "VISIBLE" | "HIDDEN">("ALL");
+  const qc = useQueryClient();
 
-  const [page, setPage] = useState(1);
-  const perPage = 10;
+  const [filters, setFilters] =
+    React.useState<IAdminReviewFilterState>(defaultFilter);
+  const [keywordInput, setKeywordInput] = React.useState("");
 
-  const [openView, setOpenView] = useState(false);
-  const [viewRow, setViewRow] = useState<IAdminReviewRow | null>(null);
+  const [openView, setOpenView] = React.useState(false);
+  const [viewRow, setViewRow] = React.useState<IAdminReviewRow | null>(null);
 
-  const [openConfirm, setOpenConfirm] = useState(false);
-  const [confirmData, setConfirmData] = useState<ConfirmPayload | null>(null);
+  const [openConfirm, setOpenConfirm] = React.useState(false);
+  const [confirmData, setConfirmData] = React.useState<ConfirmPayload | null>(
+    null,
+  );
 
-  const toastLoadingIdRef = useRef<string | number | null>(null);
+  const [pendingId, setPendingId] = React.useState<number | null>(null);
+  const toastLoadingIdRef = React.useRef<string | number | null>(null);
 
-  const movieId = useMemo(() => {
-    if (movieFilter === "ALL") return undefined;
-    const n = Number(movieFilter);
-    return Number.isFinite(n) ? n : undefined;
-  }, [movieFilter]);
+  React.useEffect(() => {
+    const t = window.setTimeout(() => {
+      setFilters((prev) => ({
+        ...prev,
+        page: 1,
+        keyword: keywordInput.trim(),
+      }));
+    }, 350);
 
-  const qMovies = useQuery({ ...MovieReviewAdmin.getMovies() });
-  const qReviews = useQuery({
-    ...MovieReviewAdmin.getAll(page, perPage, movieId),
+    return () => window.clearTimeout(t);
+  }, [keywordInput]);
+
+  const qMovies = useQuery({
+    ...MovieReviewAdmin.getMovies(),
   });
 
-  const movies: IAdminReviewMovieOption[] = (qMovies.data?.data ?? []) as any;
-  const rows: IAdminReviewRow[] = (qReviews.data?.data ?? []) as any;
+  const qReviews = useQuery({
+    ...MovieReviewAdmin.getAll({
+      page: filters.page,
+      perPage: filters.perPage,
+      movieId: filters.movieId,
+      rating: filters.rating,
+      hidden: filters.hidden,
+      keyword: filters.keyword,
+    }),
+  });
 
-  const meta: any = (qReviews.data as any)?.meta;
-  const total: number = meta?.total ?? rows.length;
-  const totalPages: number = meta?.perPage
-    ? Math.max(1, Math.ceil(total / meta.perPage))
-    : 1;
+  const movies: IAdminReviewMovieOption[] = qMovies.data?.data ?? [];
+  const rows: IAdminReviewRow[] = qReviews.data?.data ?? [];
+  const meta = qReviews.data?.meta;
 
+  const total = Number(meta?.total ?? 0);
+  const page = Number(meta?.page ?? filters.page);
+  const perPage = Number(meta?.perPage ?? filters.perPage);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
   const showingFrom = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const showingTo = Math.min(page * perPage, total);
+  const showingTo = total === 0 ? 0 : Math.min(page * perPage, total);
+  const shouldShowPagination = totalPages > 1;
+
+  React.useEffect(() => {
+    if (filters.page > totalPages) {
+      setFilters((prev) => ({
+        ...prev,
+        page: 1,
+      }));
+    }
+  }, [filters.page, totalPages]);
 
   const isLoading = qMovies.isLoading || qReviews.isLoading;
   const isError = qMovies.isError || qReviews.isError;
 
-  const qc = useQueryClient();
-  const [pendingId, setPendingId] = useState<number | null>(null);
+  const selectedMovieTitle =
+    filters.movieId != null
+      ? movies.find((m) => m.movieId === filters.movieId)?.movieTitle ?? ""
+      : "Tất cả phim";
+
+  const updateFilters = (patch: Partial<IAdminReviewFilterState>) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...patch,
+      page: patch.page ?? 1,
+    }));
+  };
+
+  const setPage = (nextPage: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: Math.min(Math.max(1, nextPage), totalPages),
+    }));
+  };
+
+  const resetFilters = () => {
+    setKeywordInput("");
+    setFilters(defaultFilter);
+  };
 
   const listPredicate = (q: any) =>
     Array.isArray(q.queryKey) &&
@@ -155,43 +212,18 @@ export default function MovieReviewManagement() {
       prevHidden: boolean;
       rawHidden: any;
     }) => {
-      if (!Number.isFinite(p.id))
+      if (!Number.isFinite(p.id)) {
         throw new Error("Invalid review id: " + String(p.id));
+      }
+
       setPendingId(p.id);
 
-      const action = p.nextHidden ? "HIDE" : "UNHIDE";
-      console.groupCollapsed(`[ADMIN_REVIEW] PATCH ${action} id=${p.id}`);
-      console.log("prevHidden(computed):", p.prevHidden);
-      console.log("rawHidden(from row):", p.rawHidden);
-      console.log("nextHidden:", p.nextHidden);
-      console.log(
-        "endpoint:",
-        p.nextHidden
-          ? `/admin/movie-reviews/${p.id}/hide`
-          : `/admin/movie-reviews/${p.id}/unhide`,
-      );
-
-      try {
-        const res = p.nextHidden
-          ? await MovieReviewAdmin.hide(p.id).queryFn()
-          : await MovieReviewAdmin.unhide(p.id).queryFn();
-
-        console.log("response.message:", (res as any)?.message);
-        console.log("response.data:", (res as any)?.data);
-        console.groupEnd();
-        return res;
-      } catch (e) {
-        console.error("PATCH error:", e);
-        console.groupEnd();
-        throw e;
-      }
+      return p.nextHidden
+        ? MovieReviewAdmin.hide(p.id).queryFn()
+        : MovieReviewAdmin.unhide(p.id).queryFn();
     },
 
     onMutate: async (p) => {
-      console.groupCollapsed(`[ADMIN_REVIEW] Optimistic update id=${p.id}`);
-      console.log("set hidden =>", p.nextHidden);
-      console.groupEnd();
-
       await qc.cancelQueries({ predicate: listPredicate });
       const prev = qc.getQueriesData({ predicate: listPredicate });
 
@@ -208,48 +240,21 @@ export default function MovieReviewManagement() {
       return { prev };
     },
 
-    onError: (e, p, ctx) => {
-      console.error(`[ADMIN_REVIEW] SET_VISIBILITY_ERROR id=${p?.id}`, e);
+    onError: (_e, _p, ctx) => {
       if (ctx?.prev) {
-        console.log("[ADMIN_REVIEW] rollback cache");
         for (const [key, data] of ctx.prev) qc.setQueryData(key, data);
       }
     },
 
-    onSuccess: async (res: any, p) => {
-      console.log(`[ADMIN_REVIEW] invalidate list after id=${p.id}`, {
-        message: res?.message,
-      });
+    onSuccess: async () => {
       await qc.invalidateQueries({ predicate: listPredicate });
       await qc.refetchQueries({ predicate: listPredicate });
     },
 
-    onSettled: (_res, _err, p) => {
-      console.log(`[ADMIN_REVIEW] settled id=${p?.id}`);
+    onSettled: () => {
       setPendingId(null);
     },
   });
-
-  const viewRows = useMemo(() => {
-    const kw = keyword.trim().toLowerCase();
-
-    return rows.filter((r: any) => {
-      const hidden = readHidden(r);
-
-      if (tab === "VISIBLE" && hidden) return false;
-      if (tab === "HIDDEN" && !hidden) return false;
-
-      if (ratingFilter !== "ALL" && String(r.rating) !== ratingFilter)
-        return false;
-
-      if (!kw) return true;
-      const hay =
-        `${r.userFullName ?? ""} ${r.userEmail ?? ""} ${r.movieTitle ?? ""} ${
-          r.comment ?? ""
-        }`.toLowerCase();
-      return hay.includes(kw);
-    });
-  }, [rows, keyword, ratingFilter, tab]);
 
   const openConfirmToggle = (payload: ConfirmPayload) => {
     setConfirmData(payload);
@@ -277,7 +282,6 @@ export default function MovieReviewManagement() {
       {
         onSuccess: (res: any) => {
           const serverMsg = String(res?.message ?? "").trim();
-
           const fallbackMsg = payload.nextHidden
             ? "Đã ẩn thành công"
             : "Đã hiện thành công";
@@ -306,9 +310,7 @@ export default function MovieReviewManagement() {
               ? "Ẩn đánh giá thất bại"
               : "Hiện đánh giá thất bại");
 
-          toast.error(msg, {
-            icon: <ErrorRoundedIcon fontSize="small" />,
-          });
+          toast.error(msg);
         },
 
         onSettled: () => {
@@ -325,7 +327,7 @@ export default function MovieReviewManagement() {
     <div className="min-h-screen bg-white px-6 py-6">
       <Toaster richColors position="top-right" />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="w-full">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900">
             Quản lý đánh giá
@@ -335,272 +337,271 @@ export default function MovieReviewManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-            <SettingsOutlinedIcon fontSize="small" />
-            Cài đặt kiểm duyệt
-          </button>
-
-          <button className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
-            <FileDownloadOutlinedIcon fontSize="small" />
-            Xuất báo cáo
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <SearchOutlinedIcon fontSize="small" className="text-slate-400" />
-            <input
-              value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Tìm kiếm theo khách hàng, nội dung đánh giá..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-            />
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <select
-              value={movieFilter}
-              onChange={(e) => {
-                setMovieFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
-            >
-              <option value="ALL">Tất cả phim</option>
-              {movies.map((m) => (
-                <option key={m.movieId} value={String(m.movieId)}>
-                  {m.movieTitle}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={ratingFilter}
-              onChange={(e) => {
-                setRatingFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
-            >
-              <option value="ALL">Mọi xếp hạng</option>
-              <option value="5">5 sao</option>
-              <option value="4">4 sao</option>
-              <option value="3">3 sao</option>
-              <option value="2">2 sao</option>
-              <option value="1">1 sao</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {[
-            { k: "ALL", label: "Tất cả" },
-            { k: "VISIBLE", label: "Đang hiển thị" },
-            { k: "HIDDEN", label: "Đã ẩn" },
-          ].map((t) => {
-            const active = tab === (t.k as any);
-            return (
-              <button
-                key={t.k}
-                onClick={() => {
-                  setTab(t.k as any);
-                  setPage(1);
-                }}
-                className={[
-                  "rounded-full px-4 py-2 text-sm font-semibold",
-                  active
-                    ? "bg-rose-600 text-white"
-                    : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-                ].join(" ")}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto relative">
-          <table className="min-w-[960px] w-full">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600">
-                <th className="px-5 py-4">Khách hàng</th>
-                <th className="px-5 py-4">Phim</th>
-                <th className="px-5 py-4">Xếp hạng</th>
-                <th className="px-5 py-4">Nội dung đánh giá</th>
-                <th className="px-5 py-4">Ngày đăng</th>
-                <th className="px-5 py-4">Trạng thái</th>
-                <th className="px-5 py-4 text-right sticky right-0 bg-slate-50">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-10 text-center text-sm text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
-              ) : isError ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-10 text-center text-sm text-rose-600"
-                  >
-                    Lỗi tải dữ liệu.
-                  </td>
-                </tr>
-              ) : viewRows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-10 text-center text-sm text-slate-500"
-                  >
-                    Không có dữ liệu.
-                  </td>
-                </tr>
-              ) : (
-                viewRows.map((r: any) => {
-                  const hidden = readHidden(r);
-                  const nextHidden = !hidden;
-
-                  return (
-                    <tr key={r.id} className="border-t border-slate-200">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="grid h-10 w-10 place-items-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
-                            {initials(r.userFullName)}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-slate-900">
-                              {r.userFullName}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {r.userEmail}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 font-semibold text-slate-900">
-                        {r.movieTitle}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <Stars value={r.rating} />
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="max-w-[360px] truncate text-sm text-slate-700">
-                          {r.comment ?? ""}
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-sm text-slate-600">
-                        {formatDateTime(r.createdAt)}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <StatusPill hidden={hidden} />
-                      </td>
-
-                      <td className="px-5 py-4 sticky right-0 bg-white">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setViewRow(r);
-                              setOpenView(true);
-                            }}
-                            className="rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
-                            title="Chi tiết"
-                          >
-                            <InfoOutlinedIcon fontSize="small" />
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={pendingId === r.id}
-                            onClick={() => {
-                              const rawHidden =
-                                r?.hidden ?? r?.isHidden ?? r?.is_hidden;
-
-                              console.groupCollapsed(
-                                `[ADMIN_REVIEW] CLICK id=${r.id}`,
-                              );
-                              console.log("rawHidden:", rawHidden);
-                              console.log("computed hidden:", hidden);
-                              console.log("nextHidden:", nextHidden);
-                              console.log(
-                                "will call:",
-                                nextHidden ? "HIDE (/hide)" : "UNHIDE (/unhide)",
-                              );
-                              console.groupEnd();
-
-                              openConfirmToggle({
-                                id: r.id,
-                                nextHidden,
-                                prevHidden: hidden,
-                                rawHidden,
-                                row: r,
-                              });
-                            }}
-                            className="rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                            title={hidden ? "Hiện lại" : "Ẩn"}
-                          >
-                            {hidden ? (
-                              <VisibilityOutlinedIcon fontSize="small" />
-                            ) : (
-                              <VisibilityOffOutlinedIcon fontSize="small" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-slate-600">
-            Hiển thị {showingFrom} đến {showingTo} trong tổng số {total} đánh giá
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
-            >
-              Trước
-            </button>
-
-            <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-              {page} / {totalPages}
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
+            <div className="flex w-full max-w-[520px] min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+              <SearchOutlinedIcon fontSize="small" className="text-slate-400" />
+              <input
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                placeholder="Tìm khách hàng, email, phim, nội dung..."
+                className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-slate-400"
+              />
             </div>
 
+            <div className="flex w-full flex-col gap-3 md:flex-row md:flex-wrap 2xl:w-auto 2xl:justify-end">
+              <div className="w-full min-w-0 md:w-[280px]">
+                <select
+                  value={filters.movieId ?? ""}
+                  onChange={(e) =>
+                    updateFilters({
+                      movieId: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                  title={selectedMovieTitle}
+                  className="h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
+                >
+                  <option value="">Tất cả phim</option>
+                  {movies.map((m) => (
+                    <option key={m.movieId} value={String(m.movieId)}>
+                      {m.movieTitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="w-full min-w-0 md:w-[210px]">
+                <select
+                  value={filters.rating ?? ""}
+                  onChange={(e) =>
+                    updateFilters({
+                      rating: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                  className="h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
+                >
+                  <option value="">Mọi xếp hạng</option>
+                  <option value="5">5 sao</option>
+                  <option value="4">4 sao</option>
+                  <option value="3">3 sao</option>
+                  <option value="2">2 sao</option>
+                  <option value="1">1 sao</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {[
+              { k: "ALL", label: "Tất cả" },
+              { k: "VISIBLE", label: "Đang hiển thị" },
+              { k: "HIDDEN", label: "Đã ẩn" },
+            ].map((t) => {
+              const active =
+                (t.k === "ALL" && filters.hidden === null) ||
+                (t.k === "VISIBLE" && filters.hidden === false) ||
+                (t.k === "HIDDEN" && filters.hidden === true);
+
+              return (
+                <button
+                  key={t.k}
+                  onClick={() =>
+                    updateFilters({
+                      hidden:
+                        t.k === "ALL" ? null : t.k === "VISIBLE" ? false : true,
+                    })
+                  }
+                  className={[
+                    "rounded-full px-4 py-2 text-sm font-semibold transition",
+                    active
+                      ? "bg-rose-600 text-white"
+                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 md:ml-auto"
             >
-              Sau
+              <RestartAltRoundedIcon fontSize="small" />
+              Đặt lại bộ lọc
             </button>
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="relative overflow-x-auto">
+            <table className="min-w-[1120px] w-full">
+              <thead className="bg-slate-50">
+                <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600">
+                  <th className="px-5 py-4">Khách hàng</th>
+                  <th className="px-5 py-4">Phim</th>
+                  <th className="px-5 py-4">Xếp hạng</th>
+                  <th className="px-5 py-4">Nội dung đánh giá</th>
+                  <th className="px-5 py-4">Ngày đăng</th>
+                  <th className="px-5 py-4">Trạng thái</th>
+                  <th className="sticky right-0 bg-slate-50 px-5 py-4 text-right">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-5 py-10 text-center text-sm text-slate-500"
+                    >
+                      Đang tải dữ liệu...
+                    </td>
+                  </tr>
+                ) : isError ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-5 py-10 text-center text-sm text-rose-600"
+                    >
+                      Lỗi tải dữ liệu.
+                    </td>
+                  </tr>
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-5 py-10 text-center text-sm text-slate-500"
+                    >
+                      Không có dữ liệu.
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((r: any) => {
+                    const hidden = readHidden(r);
+                    const nextHidden = !hidden;
+
+                    return (
+                      <tr key={r.id} className="border-t border-slate-200">
+                        <td className="px-5 py-4 align-top">
+                          <div className="flex items-center gap-3">
+                            <div className="grid h-10 w-10 place-items-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
+                              {initials(r.userFullName)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-slate-900">
+                                {r.userFullName}
+                              </div>
+                              <div className="truncate text-xs text-slate-500">
+                                {r.userEmail}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-4 align-top font-semibold text-slate-900">
+                          <div className="max-w-[260px] break-words">
+                            {r.movieTitle}
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-4 align-top">
+                          <Stars value={r.rating} />
+                        </td>
+
+                        <td className="px-5 py-4 align-top">
+                          <div className="max-w-[420px] truncate text-sm text-slate-700">
+                            {r.comment ?? ""}
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-4 align-top text-sm text-slate-600">
+                          {formatDateTime(r.createdAt)}
+                        </td>
+
+                        <td className="px-5 py-4 align-top">
+                          <StatusPill hidden={hidden} />
+                        </td>
+
+                        <td className="sticky right-0 bg-white px-5 py-4 align-top">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setViewRow(r);
+                                setOpenView(true);
+                              }}
+                              className="rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                              title="Chi tiết"
+                            >
+                              <InfoOutlinedIcon fontSize="small" />
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={pendingId === r.id}
+                              onClick={() => {
+                                const rawHidden =
+                                  r?.hidden ?? r?.isHidden ?? r?.is_hidden;
+
+                                openConfirmToggle({
+                                  id: r.id,
+                                  nextHidden,
+                                  prevHidden: hidden,
+                                  rawHidden,
+                                  row: r,
+                                });
+                              }}
+                              className="rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                              title={hidden ? "Hiện lại" : "Ẩn"}
+                            >
+                              {hidden ? (
+                                <VisibilityOutlinedIcon fontSize="small" />
+                              ) : (
+                                <VisibilityOffOutlinedIcon fontSize="small" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-slate-600">
+              Hiển thị {showingFrom} đến {showingTo} trong tổng số {total} đánh giá
+            </div>
+
+            {shouldShowPagination ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page <= 1}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+                >
+                  Trước
+                </button>
+
+                <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                  {page} / {totalPages}
+                </div>
+
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page >= totalPages}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+                >
+                  Sau
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -653,7 +654,7 @@ export default function MovieReviewManagement() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle className="text-slate-900 font-extrabold">
+        <DialogTitle className="font-extrabold text-slate-900">
           Xác nhận thao tác
         </DialogTitle>
 
@@ -669,8 +670,7 @@ export default function MovieReviewManagement() {
               ) : (
                 <>
                   Bạn có chắc chắn muốn{" "}
-                  <b className="text-emerald-600">hiện</b> lại đánh giá này
-                  không?
+                  <b className="text-emerald-600">hiện</b> lại đánh giá này không?
                 </>
               )}
             </div>
