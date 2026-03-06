@@ -38,7 +38,7 @@ export default function NewsList() {
     if (!posts.length) return [];
     if (searchTerm === "") return posts;
     return posts.filter((post) =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.title.toLowerCase().includes(searchTerm.toLocaleLowerCase()) ||
       post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -64,7 +64,7 @@ export default function NewsList() {
     <>
       <>
         {/* Top Navigation */}
-        <main className="bg-[#181111] flex-grow w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-8 flex flex-col gap-10">
+        <main className="bg-[#121212] flex-grow w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-8 flex flex-col gap-10">
           {/* Hero Section: Featured Article */}
           <section className="bg-[#261c1c] relative w-full rounded-2xl overflow-hidden bg-surface-dark border border-border-dark group cursor-pointer shadow-2xl">
             <div className="grid lg:grid-cols-2 gap-0">

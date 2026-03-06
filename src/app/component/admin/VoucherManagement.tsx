@@ -16,9 +16,7 @@ export default function VoucherManagement() {
         }
     }, [])
     const { data, refetch: refetchVoucher } = useQuery({ ...Voucher.objects.paginateQueryFactory(queryParams) });
-    console.log("data", data);
     const vouchers = data?.data || [];
-    console.log("vouchers", vouchers);
     return <div>
         <div className=" flex flex-col gap-6">
             <div className="flex flex-wrap justify-between gap-3">

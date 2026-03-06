@@ -47,6 +47,7 @@ export interface ICinemaMovieShowtimeItem {
   address: string;
   cinemaId: number;
   cinemaName: string;
+  cinemaImageUrl?: string | null;
   durationMinutes: number; 
   posterUrl: string | null;
   showtime: IShowtimeItem[];

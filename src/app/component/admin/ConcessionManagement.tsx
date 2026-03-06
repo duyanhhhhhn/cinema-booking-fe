@@ -4,6 +4,10 @@ import ConcessionTable from "./concessions/ConcessionTable";
 import { Combo } from "@/types/data/concession/combo";
 import { useMemo, useState } from "react";
 import AddConcessionModal from "./concessions/modal/AddConcessionModal";
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import { Typography } from "@mui/material";
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 
 export default function ConcessionManagement() {
@@ -17,11 +21,20 @@ export default function ConcessionManagement() {
 
     const { data, refetch: refetchCombo } = useQuery({ ...Combo.objects.paginateQueryFactory(queryParams) });
     const combo = data?.data || [];
+    console.log("combo:", combo);
     const [filterType, setFilterType] = useState<"ALL" | "COMBO" | "SINGLE">("ALL");
+    const [searchTerm, setSearchTerm] = useState("");
     const filteredProducts = combo.filter((p) => {
         if (filterType === "ALL") return true;
         return p.type === filterType;
     });
+    const searchCon = useMemo(() => {
+        if (!filteredProducts.length) return [];
+        if (searchTerm === "") return filteredProducts;
+        return filteredProducts.filter((pro) =>
+            pro.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
+        );
+    }, [filteredProducts, searchTerm]);
     const total = combo.length;
     return <>
         <>
@@ -41,9 +54,10 @@ export default function ConcessionManagement() {
                                     </p>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button onClick={() => setopenAddConcessionModal(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-red-600 text-sm font-medium rounded-lg shadow-lg shadow-primary/20 transition-colors">
+                                    <button onClick={() => setopenAddConcessionModal(true)} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-red-500 hover:text-white text-sm font-medium rounded-lg shadow-lg shadow-primary/20 transition-colors">
                                         <span className="material-symbols-outlined text-[20px]">
-                                            add
+                                            <AddIcon></AddIcon>
+                                            Thêm Combo
                                         </span>
                                     </button>
                                 </div>
@@ -97,9 +111,7 @@ export default function ConcessionManagement() {
                                             </span>
                                         </p>
                                         <p className="text-green-500 text-xs font-medium bg-green-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-[12px]">
-                                                trending_up
-                                            </span>{" "}
+                                            <TrendingUpIcon></TrendingUpIcon>
                                             +12% vs hqua
                                         </p>
                                     </div>
@@ -110,9 +122,12 @@ export default function ConcessionManagement() {
                                 {/* Search */}
                                 <div className="relative w-full lg:max-w-md">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <button className="material-symbols-outlined">search</button>
+                                        <button className="material-symbols-outlined">
+                                            <SearchIcon></SearchIcon>
+                                        </button>
                                     </span>
                                     <input
+                                        onChange={e => { setSearchTerm(e.target.value), console.log(searchCon) }}
                                         className="w-full bg-background-dark border text-sm rounded-lg focus:ring-primary focus:border-primary block pl-10 p-2.5 placeholder-text-secondary"
                                         type="text"
                                     />
@@ -121,27 +136,24 @@ export default function ConcessionManagement() {
                                 <div className="flex gap-2 overflow-x-auto w-full pb-1 lg:pb-0 scrollbar-hide">
                                     <button
                                         onClick={() => setFilterType("ALL")}
-                                        className="flex items-center px-4 py-1.5 rounded-full bg-red-400 text-white text-sm font-medium whitespace-nowrap transition-colors">
+                                        className={filterType === "ALL" ? "flex items-center px-4 py-1.5 rounded-full bg-red-500 text-white text-sm font-medium whitespace-nowrap transition-colors" : "flex items-center px-4 py-1.5 rounded-full bg-background-dark border border-border-dark hover:text-red-600 hover:border-red-600  text-sm font-medium whitespace-nowrap transition-colors"}>
                                         Tất cả
                                     </button>
                                     <button
                                         onClick={() => setFilterType("COMBO")}
-                                        className={filterType === "COMBO" ? "flex items-center px-4 py-1.5 rounded-full bg-red-400 text-white text-sm font-medium whitespace-nowrap transition-colors" : "flex items-center px-4 py-1.5 rounded-full bg-background-dark border border-border-dark text-text-secondary hover:text-white hover:border-white/20 text-sm font-medium whitespace-nowrap transition-colors"}>
+                                        className={filterType === "COMBO" ? "flex items-center px-4 py-1.5 rounded-full bg-red-500 text-white text-sm font-medium whitespace-nowrap transition-colors" : "flex items-center px-4 py-1.5 rounded-full bg-background-dark border border-border-dark hover:text-red-600 hover:border-red-600 text-sm font-medium whitespace-nowrap transition-colors"}>
                                         Combo
                                     </button>
                                     <button
                                         onClick={() => setFilterType("SINGLE")}
-                                        className={filterType === "SINGLE" ? "flex items-center px-4 py-1.5 rounded-full bg-red-400 text-white text-sm font-medium whitespace-nowrap transition-colors" : "flex items-center px-4 py-1.5 rounded-full bg-background-dark border border-border-dark text-text-secondary hover:text-white hover:border-white/20 text-sm font-medium whitespace-nowrap transition-colors"}>
+                                        className={filterType === "SINGLE" ? "flex items-center px-4 py-1.5 rounded-full bg-red-500 text-white text-sm font-medium whitespace-nowrap transition-colors" : "flex items-center px-4 py-1.5 rounded-full bg-background-dark border border-border-dark hover:text-red-600 hover:border-red-600 text-sm font-medium whitespace-nowrap transition-colors"}>
                                         Món lẻ
                                     </button>
                                 </div>
                             </div>
                             {/* Data Table */}
-                            {
-
-                            }
                             <ConcessionTable
-                                combo={filteredProducts} refetchCombo={refetchCombo} />
+                                combo={searchCon} refetchCombo={refetchCombo} />
                         </div>
                     </div>
                 </main>

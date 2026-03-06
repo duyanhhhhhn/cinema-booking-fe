@@ -1,9 +1,17 @@
 "use client";
 
-import { Combo, ICombo } from "@/types/data/concession/combo";
+import { Combo, ICombo, useDeleteComboMutation, useDeleteProductMutation } from "@/types/data/concession/combo";
 import { useQuery } from "@tanstack/react-query";
 import CustomPagination from "../table/CustomPagination";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { useState } from "react";
+import EditComboModal from "./modal/EditConcessionModal";
+import EditVoucherModal from "../voucher/Modal/EditVoucherPopup";
+import DeletePopup from "../user/DeletePopup";
+import { useNotification } from "@/hooks/useNotification";
 
 interface IConcessionTableProps {
     combo: ICombo[];
@@ -11,6 +19,44 @@ interface IConcessionTableProps {
 }
 export default function ConcessionTable({ combo, refetchCombo }: IConcessionTableProps) {
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
+    const n = useNotification();
+    const [openEditComboModal, setEditComboModal] = useState(false);
+    const [openDeletePopup, setOpenDeletePopup] = useState(false);
+    const [selectedCombo, setSelectedCombo] = useState<ICombo | null>(null);
+    const { mutate: deleteCombo } = useDeleteComboMutation();
+    const { mutate: deleteProduct } = useDeleteProductMutation();
+    const handleClickIconDelete = (combo: ICombo) => {
+        setSelectedCombo(combo);
+        setOpenDeletePopup(true);
+    };
+    const handleConfirmDelete = () => {
+        if (selectedCombo && selectedCombo.type === "COMBO") {
+            deleteCombo(selectedCombo.id, {
+                onSuccess: () => {
+                    setOpenDeletePopup(false);
+                    setSelectedCombo(null);
+                    refetchCombo()
+                    n.success('Xoá thành công');
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            });
+        }
+        else if (selectedCombo && selectedCombo.type === "SINGLE") {
+            deleteProduct(selectedCombo.id, {
+                onSuccess: () => {
+                    setOpenDeletePopup(false);
+                    setSelectedCombo(null);
+                    refetchCombo()
+                    n.success('Xoá thành công');
+                },
+                onError: (error) => {
+                    n.error(error.message);
+                },
+            });
+        }
+    };
     return <>
         <div className="bg-surface-dark rounded-xl border border-border-dark overflow-hidden">
             <TableContainer className="overflow-x-auto">
@@ -34,7 +80,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                     </TableHead>
                     <TableBody className="divide-y divide-border-dark text-sm">
                         {combo.map((item) => (
-                            <TableRow key={"item" + item.name} className="group hover:bg-surface-highlight/50 transition-colors">
+                            <TableRow key={"item" + item.name + item.id} className="group hover:bg-surface-highlight/50 transition-colors">
                                 <TableCell className="p-4 text-center">
                                     <input
                                         type="checkbox"
@@ -67,16 +113,16 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                             <p className="font-medium">
                                                 {item.name}
                                             </p>
-                                            <p className="text-xs">
+                                            <div className="text-xs">
                                                 {
                                                     item.type === "COMBO" &&
                                                     <div className="bg-background-dark/50 border border-border-dark/50 rounded-lg p-2 flex flex-col gap-1.5">
-                                                        <p className="text-[10px] uppercase font-bold tracking-wider mb-0.5">
-                                                            Sản phẩm thành phần
+                                                        <p className="text-[10px] px-5 uppercase font-bold tracking-wider mb-0.5 border-b-1">
+                                                            Combo gồm
                                                         </p>
                                                         {
-                                                            item.itemList.map((comboItem, index) => (
-                                                                <div className="flex items-center gap-2 text-xs">
+                                                            item.itemList != null && item.itemList.map((comboItem, index) => (
+                                                                <div key={index + "key"} className="flex items-center gap-2 text-xs">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                                                                     <span className="font-medium">{comboItem.quantity}x</span> {comboItem.productName}
                                                                 </div>
@@ -84,7 +130,7 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                                             )}
                                                     </div>
                                                 }
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </TableCell>
@@ -95,32 +141,31 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
                                 </TableCell>
                                 <TableCell className="p-4 font-medium">{item.price.toLocaleString()} đ</TableCell>
                                 <TableCell className="p-4">
-                                    <div className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            defaultChecked={false}
-                                            className="sr-only peer"
-                                            type="checkbox"
-                                            defaultValue=""
-                                        />
-                                        <div className="w-9 h-5 bg-border-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
-                                    </div>
+                                    <button className="flex border rounded-lg p-1">
+                                        {item.isActive == true && <p>ACTIVE</p>}
+                                    </button>
                                 </TableCell>
                                 <TableCell className="p-4">
                                     <div className="flex items-center gap-2">
                                         <button
-                                            className="hover:bg-background-dark text-red-500 rounded-lg"
+                                            className="bg-yellow-500 text-white rounded-md p-1"
                                             title="Chỉnh sửa"
+                                            onClick={() => {
+                                                setSelectedCombo(item);
+                                                setEditComboModal(true);
+                                            }}
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
-                                                edit
+                                                <EditIcon></EditIcon>
                                             </span>
                                         </button>
                                         <button
-                                            className="hover:bg-background-dark rounded-lg transition-colors"
+                                            className="bg-red-500 text-white rounded-md transition-colors p-1"
                                             title="Xóa"
+                                            onClick={() => handleClickIconDelete(item)}
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">
-                                                delete
+                                            <span className="text-[20px]">
+                                                <DeleteIcon></DeleteIcon>
                                             </span>
                                         </button>
                                     </div>
@@ -135,6 +180,18 @@ export default function ConcessionTable({ combo, refetchCombo }: IConcessionTabl
             <CustomPagination
                 itemsPerPage={10}
                 totalItems={combo.length}
+            />
+            <EditComboModal
+                open={openEditComboModal} onClose={() => setEditComboModal(false)}
+                refetchCombo={refetchCombo}
+                combo={selectedCombo}
+                type={selectedCombo?.type == "SINGLE" ? "single" : "combo"}
+                comboItem={selectedCombo?.itemList || []}></EditComboModal>
+            <DeletePopup
+                open={openDeletePopup}
+                onClose={() => setOpenDeletePopup(false)}
+                onConfirm={handleConfirmDelete}
+                description={"Bạn có chắc muốn " + (selectedCombo?.type === "SINGLE" ? "xoá sản phẩm" : "xoá combo") + " này không?"}
             />
         </div>
     </>

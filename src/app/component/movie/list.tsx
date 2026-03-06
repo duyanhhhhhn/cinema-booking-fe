@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MoviePublic } from "@/types/data/movie-public";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
@@ -35,13 +35,30 @@ export default function CinemaList() {
   const [loading, setLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState(false);
 
+  const didResetRef = useRef(false);
+
+  useEffect(() => {
+    if (didResetRef.current) return;
+    didResetRef.current = true;
+
+    updateQuery({
+      page: "1",
+      title: null,
+      genre: null,
+      status: "NOW_SHOWING",
+    });
+  }, [updateQuery]);
+
   const params = useMemo(() => {
     const pageRaw = Number(searchQuery.get("page") ?? 1);
     const perPageRaw = Number(searchQuery.get("perPage") ?? 12);
 
-    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+    const page =
+      Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
     const perPage =
-      Number.isFinite(perPageRaw) && perPageRaw > 0 ? Math.floor(perPageRaw) : 12;
+      Number.isFinite(perPageRaw) && perPageRaw > 0
+        ? Math.floor(perPageRaw)
+        : 12;
 
     const title = (searchQuery.get("title") ?? "").trim();
     const genre = (searchQuery.get("genre") ?? "").trim();
@@ -49,26 +66,42 @@ export default function CinemaList() {
     return { page, perPage, title, genre };
   }, [searchQuery]);
 
-  const [titleInput, setTitleInput] = useState(params.title);
-  const [genreInput, setGenreInput] = useState(params.genre);
-
   const activeTab: TabKey = useMemo(() => {
     const raw = (searchQuery.get("status") ?? "").trim();
     return raw === "COMING_SOON" ? "COMING_SOON" : "NOW_SHOWING";
   }, [searchQuery]);
 
-  const dataMovie = useQuery({
-    ...MoviePublic.objects.paginateQueryFactory({
+  const [titleInput, setTitleInput] = useState("");
+  const [genreInput, setGenreInput] = useState("");
+
+  useEffect(() => {
+    setTitleInput(params.title);
+    setGenreInput(params.genre);
+  }, [params.title, params.genre]);
+
+  const apiParams = useMemo(() => {
+    return {
       ...params,
       status: activeTab,
-    } as any),
+      title: params.title.trim() ? params.title.trim() : undefined,
+      genre: params.genre.trim() ? params.genre.trim() : undefined,
+    };
+  }, [params, activeTab]);
+
+  const dataMovie = useQuery({
+    ...MoviePublic.objects.paginateQueryFactory(apiParams as any),
   });
 
-  const totalItems = dataMovie.data?.meta?.total ?? 0;
+  const movies = (dataMovie.data?.data ?? []) as any[];
+  const totalItems =
+    (dataMovie.data as any)?.meta?.total ??
+    (Array.isArray(movies) ? movies.length : 0);
+
   const itemsPerPage = params.perPage;
 
   const totalPages = useMemo(() => {
-    const perPage = Number.isFinite(itemsPerPage) && itemsPerPage > 0 ? itemsPerPage : 12;
+    const perPage =
+      Number.isFinite(itemsPerPage) && itemsPerPage > 0 ? itemsPerPage : 12;
     const total = Number(totalItems) || 0;
     return Math.max(1, Math.ceil(total / perPage));
   }, [totalItems, itemsPerPage]);
@@ -77,12 +110,14 @@ export default function CinemaList() {
     return Math.min(Math.max(params.page, 1), totalPages);
   }, [params.page, totalPages]);
 
-  const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
-  const endItem = totalItems > 0 ? Math.min(currentPage * itemsPerPage, totalItems) : 0;
+  const startItem =
+    totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endItem =
+    totalItems > 0 ? Math.min(currentPage * itemsPerPage, totalItems) : 0;
 
   const IMAGE_BASE = (process.env.NEXT_PUBLIC_IMAGE_URL ?? "http://localhost:8080").replace(
     /\/+$/,
-    ""
+    "",
   );
 
   const resolvePosterUrl = (posterUrl?: string | null) => {
@@ -136,7 +171,7 @@ export default function CinemaList() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#0B0C0F] text-white">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#121212] text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#17181D]/45 via-[#0B0C0F]/70 to-[#0B0C0F]" />
       <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[2px]" />
@@ -165,13 +200,28 @@ export default function CinemaList() {
               <span className="text-white/55">⌕</span>
               <input
                 value={titleInput}
-                onChange={(e) => setTitleInput(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setTitleInput(v);
+
+                  if (v.trim() === "" && params.title !== "") {
+                    applyFilter("", genreInput);
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") applyFilter(titleInput, genreInput);
                 }}
                 placeholder="Tìm kiếm theo tên phim..."
                 className="w-full bg-transparent text-sm text-white placeholder:text-white/45 outline-none"
               />
+
+              <button
+                type="button"
+                onClick={() => applyFilter(titleInput, genreInput)}
+                className="shrink-0 rounded-xl bg-[#E11D2E] px-4 py-2 text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(225,29,46,0.25)] hover:bg-[#C81B2A]"
+              >
+                Tìm
+              </button>
             </div>
 
             <div className="flex w-full items-center justify-between gap-3 md:w-auto">
@@ -223,44 +273,53 @@ export default function CinemaList() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-          {(dataMovie.data?.data ?? []).map((m: any) => (
-            <button
-              key={m.id}
-              type="button"
-              className="group text-left"
-              onClick={() => {
-                setLoading(true);
-                setTimeout(() => router.push(`/movies/${m.id}`), MIN_LOADING_TIME);
-              }}
-            >
-              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl transition group-hover:border-white/20 group-hover:bg-black/30">
-                <div className="overflow-hidden">
-                  <img
-                    src={resolvePosterUrl(m.posterUrl)}
-                    alt={m.title}
-                    className="aspect-[2/3] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    onError={(e) => {
-                      const img = e.currentTarget as HTMLImageElement;
-                      if (img.dataset.fallback === "1") return;
-                      img.dataset.fallback = "1";
-                      img.src = "/poster/placeholder.jpg";
-                    }}
-                  />
+        {dataMovie.isLoading ? (
+          <div className="py-16 text-center text-sm text-white/70">Đang tải dữ liệu...</div>
+        ) : movies.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="text-lg font-extrabold text-white">Không có phim phù hợp</div>
+            <div className="mt-2 text-sm text-white/60">Hãy thử đổi bộ lọc hoặc xoá từ khoá tìm kiếm.</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            {movies.map((m: any) => (
+              <button
+                key={m.id}
+                type="button"
+                className="group text-left"
+                onClick={() => {
+                  setLoading(true);
+                  setTimeout(() => router.push(`/movies/${m.id}`), MIN_LOADING_TIME);
+                }}
+              >
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl transition group-hover:border-white/20 group-hover:bg-black/30">
+                  <div className="overflow-hidden">
+                    <img
+                      src={resolvePosterUrl(m.posterUrl)}
+                      alt={m.title}
+                      className="aspect-[2/3] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      onError={(e) => {
+                        const img = e.currentTarget as HTMLImageElement;
+                        if (img.dataset.fallback === "1") return;
+                        img.dataset.fallback = "1";
+                        img.src = "/poster/placeholder.jpg";
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-3">
-                <div className="line-clamp-2 text-[14px] font-extrabold leading-snug text-white sm:text-[15px]">
-                  {m.title}
+                <div className="mt-3">
+                  <div className="line-clamp-2 text-[14px] font-extrabold leading-snug text-white sm:text-[15px]">
+                    {m.title}
+                  </div>
+                  <div className="mt-1 text-xs text-white/60">
+                    {viGenre(m.genre)} | {m.durationMinutes} phút
+                  </div>
                 </div>
-                <div className="mt-1 text-xs text-white/60">
-                  {viGenre(m.genre)} | {m.durationMinutes} phút
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="mt-8">
           <Stack direction="row" justifyContent="center" alignItems="center" sx={{ width: "100%" }}>
