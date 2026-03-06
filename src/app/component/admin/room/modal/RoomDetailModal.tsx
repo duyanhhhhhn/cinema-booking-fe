@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,74 +11,66 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import {
-  useCreateRoomMutation,
-  useUpdateRoomMutation,
-  useGetRoomsQuery,
-} from "../room";
+import { useCreateRoomMutation, useUpdateRoomMutation } from "../room";
+
+import SeatLayoutBuilder from "./SeatLayoutBuilder";
 
 interface Props {
-  roomId: number; // 0 = tạo mới
+  roomId: number;
+  cinemaId?: number;
   open: boolean;
   onClose: () => void;
 }
 
 const roomTypes = ["2D", "3D", "IMAX", "4DX"];
 
-export default function RoomDetailModal({ roomId, open, onClose }: Props) {
+export default function RoomDetailModal({
+  roomId,
+  cinemaId,
+  open,
+  onClose,
+}: Props) {
   const [name, setName] = useState("");
   const [type, setType] = useState(roomTypes[0]);
-  const [totalSeats, setTotalSeats] = useState(50);
-  const [cinemaName, setCinemaName] = useState("");
+  const [totalSeats, setTotalSeats] = useState(0);
+  const [seatLayout, setSeatLayout] = useState("[]");
 
   const createMutation = useCreateRoomMutation();
   const updateMutation = useUpdateRoomMutation();
 
-  // Nếu roomId > 0, load data để edit
-  useEffect(() => {
-    if (roomId > 0) {
-      // TODO: gọi API get room detail để load
-      // Ví dụ: setName(room.name); setType(room.type); ...
-    } else {
-      setName("");
-      setType(roomTypes[0]);
-      setTotalSeats(50);
-      setCinemaName("");
-    }
-  }, [roomId]);
-
   const handleSave = () => {
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("type", type);
-    formData.append("totalSeats", totalSeats.toString());
-    formData.append("cinemaName", cinemaName);
+    const payload = {
+      cinemaId: cinemaId || 0,
+      name,
+      type,
+      totalSeats,
+      seatLayout,
+    };
 
     if (roomId === 0) {
-      createMutation.mutate(formData, {
-        onSuccess: () => onClose(),
+      createMutation.mutate(payload, {
+        onSuccess: (res) => {
+          // mở modal room mới tạo
+          window.location.reload();
+        },
       });
     } else {
       updateMutation.mutate(
-        { id: roomId, payload: formData },
-        { onSuccess: () => onClose() },
+        { id: roomId, payload },
+        {
+          onSuccess: () => onClose(),
+        },
       );
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        {roomId === 0 ? "Thêm phòng" : "Chi tiết phòng"}
+        {roomId === 0 ? "Tạo phòng chiếu" : "Chi tiết phòng"}
       </DialogTitle>
+
       <DialogContent dividers>
-        <TextField
-          label="Rạp"
-          fullWidth
-          margin="normal"
-          value={cinemaName}
-          onChange={(e) => setCinemaName(e.target.value)}
-        />
         <TextField
           label="Tên phòng"
           fullWidth
@@ -86,6 +78,7 @@ export default function RoomDetailModal({ roomId, open, onClose }: Props) {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
+
         <TextField
           label="Loại"
           select
@@ -100,18 +93,31 @@ export default function RoomDetailModal({ roomId, open, onClose }: Props) {
             </MenuItem>
           ))}
         </TextField>
+
+        {/* SEAT BUILDER */}
+
+        <SeatLayoutBuilder
+          onChange={(layout, total) => {
+            setSeatLayout(layout);
+            setTotalSeats(total);
+          }}
+        />
+
         <TextField
           label="Tổng ghế"
           type="number"
           fullWidth
           margin="normal"
           value={totalSeats}
-          onChange={(e) => setTotalSeats(Number(e.target.value))}
+          InputProps={{
+            readOnly: true,
+          }}
         />
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose}>Hủy</Button>
-        <Button onClick={handleSave} variant="contained" color="primary">
+        <Button variant="contained" onClick={handleSave}>
           Lưu
         </Button>
       </DialogActions>

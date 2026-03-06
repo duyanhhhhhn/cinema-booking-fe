@@ -1,7 +1,7 @@
 "use client";
 
 import { Model } from "@/types/core/model";
-import { IRoom } from "./type";
+import { IRoom, IRoomRequest } from "./type";
 import { useMutation } from "@tanstack/react-query";
 
 export class Room extends Model {
@@ -33,8 +33,8 @@ export class Room extends Model {
   // CREATE ROOM
   // =========================
 
-  static createRoom(payload: FormData) {
-    return this.api.post<IRoom>({
+  static createRoom(payload: IRoomRequest) {
+    return this.api.post<{ message: string; data: IRoom }>({
       url: "/rooms",
       data: payload,
     });
@@ -44,8 +44,8 @@ export class Room extends Model {
   // UPDATE ROOM
   // =========================
 
-  static updateRoom(id: number, payload: FormData) {
-    return this.api.put<IRoom>({
+  static updateRoom(id: number, payload: IRoomRequest) {
+    return this.api.put<{ message: string; data: IRoom }>({
       url: `/rooms/${id}`,
       data: payload,
     });
@@ -70,14 +70,14 @@ Room.setup();
 
 export function useCreateRoomMutation() {
   return useMutation({
-    mutationFn: (payload: FormData) =>
+    mutationFn: (payload: IRoomRequest) =>
       Room.createRoom(payload).then((res) => res.data),
   });
 }
 
 export function useUpdateRoomMutation() {
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: FormData }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: IRoomRequest }) =>
       Room.updateRoom(id, payload).then((res) => res.data),
   });
 }

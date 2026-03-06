@@ -15,3 +15,11 @@ export interface IRoom {
 
   createdAt?: string;
 }
+
+export interface IRoomRequest {
+  cinemaId: number;
+  name: string;
+  type: string;
+  totalSeats: number;
+  seatLayout: string;
+}

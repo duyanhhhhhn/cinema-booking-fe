@@ -12,6 +12,7 @@ import { IRoom } from "../type";
 import { useGetRoomsQuery } from "../room";
 
 import { useGetCinemaForAdminQuery } from "@/types/data/cinema/cinema";
+import RoomFormModal from "../modal/RoomFormModal";
 
 export default function RoomManagement() {
   const [selectedRoom, setSelectedRoom] = useState<IRoom | null>(null);
@@ -23,7 +24,7 @@ export default function RoomManagement() {
   // =========================
   // GET CINEMAS
   // =========================
-
+  const [isRoomFormOpen, setRoomFormOpen] = useState(false);
   const { data: cinemaData } = useQuery(useGetCinemaForAdminQuery(1, 100));
 
   const cinemas = cinemaData?.data || [];
@@ -105,18 +106,7 @@ export default function RoomManagement() {
           {/* ADD ROOM */}
 
           <button
-            onClick={() =>
-              setSelectedRoom({
-                id: 0,
-                cinemaId: cinemaId || 0,
-                cinemaName: "",
-                name: "",
-                type: "2D",
-                totalSeats: 50,
-                seatLayout: "",
-                createdAt: "",
-              })
-            }
+            onClick={() => setRoomFormOpen(true)}
             className="flex items-center gap-2 bg-[#ec131e] text-white px-5 h-12 rounded-lg font-bold"
           >
             <Add fontSize="small" />
@@ -128,11 +118,30 @@ export default function RoomManagement() {
 
         <RoomTable rooms={rooms} setSelectedRoom={setSelectedRoom} />
 
+        {isRoomFormOpen && (
+          <RoomFormModal
+            open={isRoomFormOpen}
+            cinemaId={cinemaId || 0} // cinemaId hiện tại
+            onClose={() => setRoomFormOpen(false)}
+            onCreated={(roomId) => {
+              setRoomFormOpen(false); // đóng modal tạo phòng
+              setSelectedRoom({
+                id: roomId,
+                cinemaId: cinemaId || 0,
+                name: "",
+                type: "2D",
+                totalSeats: 0,
+                seatLayout: "",
+              });
+            }}
+          />
+        )}
         {/* MODAL */}
 
         {selectedRoom && (
           <RoomDetailModal
             roomId={selectedRoom.id}
+            cinemaId={selectedRoom.cinemaId}
             open={true}
             onClose={() => setSelectedRoom(null)}
           />
