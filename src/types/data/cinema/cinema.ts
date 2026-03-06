@@ -1,5 +1,5 @@
 import { Model } from "../../core/model";
-import { IPaginateResponse, IResponse } from "../../core/api";
+import { IPaginateResponse } from "../../core/api";
 import { ICinema } from "./types";
 import { useMutation } from "@tanstack/react-query";
 
@@ -28,6 +28,25 @@ export class Cinema extends Model {
           res.request?.responseURL ?? res.config.url,
         );
         return res.data;
+      },
+      keepPreviousData: true,
+    };
+  }
+  static getCinemaPublic(params: {
+    page: number;
+    perPage: number;
+    search?: string;
+  }) {
+    const { page, perPage, search } = params;
+    return {
+      queryKey: ["GET_CINEMAS_PUBLIC_QUERY", page, perPage, search ?? ""],
+      queryFn: () => {
+        return this.api
+          .get<IPaginateResponse<ICinema>>({
+            url: "/public/cinemas",
+            params: { page, perPage, search },
+          })
+          .then((r) => r.data);
       },
       keepPreviousData: true,
     };

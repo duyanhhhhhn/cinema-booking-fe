@@ -83,7 +83,7 @@ export function GlobalRouteGuard({ children }: { children: React.ReactNode }) {
         if (!isAuthenticated) {
           shouldRedirect = true;
           redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
-        } else if (user && user.role !== "ADMIN") {
+        } else if (user && user.role === "CLIENT") {
           // Staff vào trang admin-only -> redirect về not-authorized
           shouldRedirect = true;
           redirectUrl = "/not-authorized";
