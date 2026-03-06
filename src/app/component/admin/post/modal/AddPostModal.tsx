@@ -213,6 +213,10 @@ export default function AddPostModal({ open, onClose, refetchPost }:
                                     </div>
                                 </div>
                             </div>
+                            <div className="col-span-1 md:col-span-2">
+                                <label className={labelClass}>Content</label>
+                            </div>
+
                         </form>
                     </div>
 

@@ -1,21 +1,20 @@
-"use client";
+"use client"
 
-import { CartItem, Combo, ICombo, IComboData, initialComboData, useCreateComboMutation } from "@/types/data/concession/combo";
+import { Backdrop, Fade, Modal } from "@mui/material";
+import { useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { Backdrop, Box, Fade, Modal } from "@mui/material";
-import { useMemo, useState } from "react";
-import { set, useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
-import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 import SingleForm from "./SingleForm";
 import ComboForm from "./ComboForm";
+import { ICombo } from "@/types/data/concession/combo";
+import { IComboItem } from "@/types/data/concession/comboitem";
 
-export default function AddConcessionModal({ open, onClose, refetchCombo }: {
+export default function EditComboModal({ open, onClose, refetchCombo, combo, type, comboItem }: {
     open: boolean, onClose: () => void,
     refetchCombo: () => void
+    combo: ICombo
+    type: "single" | "combo"
+    comboItem: IComboItem[]
 }) {
-    const [type, setType] = useState<"single" | "combo">("combo");
     return (
         <Modal
             open={open}
@@ -34,7 +33,7 @@ export default function AddConcessionModal({ open, onClose, refetchCombo }: {
                 <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 flex flex-col max-h-[90vh] font-sans">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
-                        <h3 className="text-xl font-bold text-zinc-900">Add New Combo</h3>
+                        <h3 className="text-xl font-bold text-zinc-900">Edit {type === "single" ? "Single" : "Product"}</h3>
                         <button
                             onClick={onClose}
                             className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded-full hover:bg-zinc-100"
@@ -43,24 +42,6 @@ export default function AddConcessionModal({ open, onClose, refetchCombo }: {
                         </button>
                     </div>
                     <div className="px-6 pt-4">
-                        <div className="flex p-1 rounded-lg border border-border-dark">
-                            <button
-                                onClick={() => setType("single")}
-                                className={`flex-1 py-2 px-4 rounded-md text-sm transition-all
-      ${type === "single"
-                                        ? "bg-red-500 text-white font-bold shadow-sm"
-                                        : "text-black"} `}>
-                                Sản phẩm lẻ
-                            </button>
-                            <button
-                                onClick={() => setType("combo")}
-                                className={`flex-1 py-2 px-4 rounded-md text-sm transition-all
-      ${type === "combo"
-                                        ? "bg-red-500 text-white font-bold shadow-sm"
-                                        : "text-black"}`}>
-                                Combo
-                            </button>
-                        </div>
                     </div>
 
                     {/* Form Body */}
@@ -68,9 +49,9 @@ export default function AddConcessionModal({ open, onClose, refetchCombo }: {
                         <div>
                             {
                                 type === "single" ? (
-                                    <SingleForm onClose={onClose} refetchCombo={refetchCombo} type="create" combo={undefined}></SingleForm>
+                                    <SingleForm onClose={onClose} refetchCombo={refetchCombo} type="edit" combo={combo}></SingleForm>
                                 ) : (
-                                    <ComboForm onClose={onClose} refetchCombo={refetchCombo} type="create" combo={undefined}></ComboForm>
+                                    <ComboForm onClose={onClose} refetchCombo={refetchCombo} type="edit" combo={combo} comboItem={comboItem}></ComboForm>
                                 )
                             }
 

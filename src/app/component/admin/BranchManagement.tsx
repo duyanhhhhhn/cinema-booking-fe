@@ -115,9 +115,8 @@ export default function BranchManagement() {
                   <Chip
                     label={branch.status === "active" ? "Hoạt động" : "Tạm dừng"}
                     size="small"
-                    className={`${
-                      branch.status === "active" ? "bg-green-500" : "bg-gray-500"
-                    } text-white`}
+                    className={`${branch.status === "active" ? "bg-green-500" : "bg-gray-500"
+                      } text-white`}
                   />
                 </div>
 

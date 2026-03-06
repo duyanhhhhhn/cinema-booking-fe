@@ -1,26 +1,49 @@
 "use client"
 import { useNotification } from "@/hooks/useNotification";
-import { createBannerSchema } from "@/types/data/home/schema/banner";
 import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
-import { initialVoucherData, useCreateVoucherMutation, VoucherFormData } from "@/types/data/voucher/voucher";
+import { initialVoucherData, useCreateVoucherMutation, useUpdateVoucherMutation, Voucher, VoucherFormData } from "@/types/data/voucher/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";
 import CloseIcon from "@mui/icons-material/Close";
 import { Backdrop, Fade, Modal } from "@mui/material";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
-export default function AddVoucherModal({ open, onClose, refetchVoucher }: {
+export default function EditVoucherModal({ open, onClose, refetchVoucher, id }: {
     open: boolean, onClose: () => void,
-    refetchVoucher: () => void
+    refetchVoucher: () => void,
+    id: number
 }) {
+
     const n = useNotification();
+    const data = useQuery(Voucher.voucherInfo(id));
+    const voucher = data?.data?.data;
     const methods = useForm<any>({
-        defaultValues: initialVoucherData,
+        defaultValues: voucher,
         mode: "onChange",
         resolver: yupResolver(createVoucherSchema()),
     });
+    useEffect(() => {
+        if (voucher) {
+            methods.reset({
+                code: voucher.code,
+                description: voucher.description,
+                discount_type: voucher.discountType,
+                discount_value: voucher.discountValue,
+                min_order_amount: voucher.minOrderAmount,
+                start_at: voucher.startAt?.slice(0, 10),
+                end_at: voucher.endAt?.slice(0, 10),
+                usage_limit: voucher.usageLimit,
+            });
+        }
+    }, [voucher]);
+    if (id == null) {
+        id = 0
+    }
+
+    console.log("Voucher Info :", data?.data?.data);
     const discountType = methods.watch("discount_type");
-    const { mutate: createVoucher } = useCreateVoucherMutation();
+    const { mutate: updateVoucher } = useUpdateVoucherMutation();
     const onSubmit = async (data: VoucherFormData) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
@@ -32,7 +55,7 @@ export default function AddVoucherModal({ open, onClose, refetchVoucher }: {
                 }
             }
         });
-        createVoucher(formData, {
+        updateVoucher({ id: id, payload: formData }, {
             onSuccess: () => {
                 onClose();
                 n.success("Success");

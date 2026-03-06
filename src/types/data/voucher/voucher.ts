@@ -49,6 +49,18 @@ export class Voucher extends Model {
         getRelate: 'VOUCHERS_FIND_RELATE'
     }
     static objects = ObjectsFactory.factory<IVoucher>(modelConfig, this.queryKeys)
+    static voucherInfo(id: number) {
+        return {
+            queryKey: [this.queryKeys.findOne],
+            queryFn: () => {
+                return this.api
+                    .get<IVoucher>({
+                        url: `/public/vouchers/${id}`,
+                    })
+                    .then((res) => res.data);
+            }
+        }
+    }
     static createVoucher(payload: FormData) {
         return this.api.post<IResponse<IVoucher>>({
             url: "/vouchers",
@@ -59,6 +71,11 @@ export class Voucher extends Model {
         return this.api.put<IResponse<IVoucher>>({
             url: `/vouchers/${id}`,
             data: payload,
+        })
+    }
+    static deleteVoucher(id: Number) {
+        return this.api.delete<IResponse<IVoucher>>({
+            url: `/vouchers/${id}`
         })
     }
 }
@@ -76,4 +93,11 @@ export function useUpdateVoucherMutation() {
             return Voucher.editVoucher(id, payload).then((r) => r.data);
         },
     });
+}
+export function useDeleteVoucherMutation() {
+    return useMutation<IResponse<IVoucher>, IHttpError, number>({
+        mutationFn: (id) => {
+            return Voucher.deleteVoucher(id).then((r) => r.data);
+        }
+    })
 }
