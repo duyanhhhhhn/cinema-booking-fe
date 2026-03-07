@@ -7,6 +7,10 @@ import {
   IAdminSchedulerResponse,
   IAdminSchedulerEvent,
   IAdminMovieOption,
+  IAdminCinemaOption,
+  IAdminEditShowtimeParams,
+  IAdminShowtimeDetailResponse,
+  IMePayload,
 } from "./type";
 
 const modelConfig = {
@@ -16,6 +20,8 @@ const modelConfig = {
 
 export class ShowtimeSchedulerAdmin extends Model {
   static queryKeys = {
+    me: "ME_QUERY",
+    cinemas: "ADMIN_SHOWTIME_SCHEDULER_CINEMAS_QUERY",
     scheduler: "ADMIN_SHOWTIME_SCHEDULER_QUERY",
     movies: "ADMIN_SHOWTIME_SCHEDULER_MOVIES_QUERY",
     detail: "ADMIN_SHOWTIME_SCHEDULER_DETAIL_QUERY",
@@ -25,7 +31,34 @@ export class ShowtimeSchedulerAdmin extends Model {
     edit: "ADMIN_SHOWTIME_SCHEDULER_EDIT_MUTATION",
   };
 
-  static objects = ObjectsFactory.factory<IAdminSchedulerEvent>(modelConfig, this.queryKeys);
+  static objects = ObjectsFactory.factory<IAdminSchedulerEvent>(
+    modelConfig,
+    this.queryKeys,
+  );
+
+  static getMe() {
+    return {
+      queryKey: [this.queryKeys.me],
+      queryFn: () =>
+        this.api
+          .get<IResponse<IMePayload>>({
+            url: "users/me",
+          })
+          .then((r) => r.data),
+    };
+  }
+
+  static getCinemas() {
+    return {
+      queryKey: [this.queryKeys.cinemas],
+      queryFn: () =>
+        this.api
+          .get<IResponse<IAdminCinemaOption[]>>({
+            url: "/admin/showtime-scheduler/cinemas",
+          })
+          .then((r) => r.data),
+    };
+  }
 
   static getScheduler(cinemaId: number, date: string) {
     return {
@@ -40,12 +73,19 @@ export class ShowtimeSchedulerAdmin extends Model {
     };
   }
 
-  static getMovies(keyword?: string, roomType?: string | null) {
-    const rt = (roomType ?? "").trim();
-    const kw = (keyword ?? "").trim();
+  static getMovies(params?: {
+    keyword?: string;
+    roomType?: string | null;
+    roomId?: number | null;
+    cinemaId?: number | null;
+  }) {
+    const kw = (params?.keyword ?? "").trim();
+    const rt = (params?.roomType ?? "").trim();
+    const roomId = params?.roomId ?? null;
+    const cinemaId = params?.cinemaId ?? null;
 
     return {
-      queryKey: [this.queryKeys.movies, kw || null, rt || null],
+      queryKey: [this.queryKeys.movies, kw || null, rt || null, roomId, cinemaId],
       queryFn: () =>
         this.api
           .get<IResponse<IAdminMovieOption[]>>({
@@ -53,6 +93,8 @@ export class ShowtimeSchedulerAdmin extends Model {
             params: {
               ...(kw ? { keyword: kw } : {}),
               ...(rt ? { roomType: rt } : {}),
+              ...(roomId ? { roomId } : {}),
+              ...(cinemaId ? { cinemaId } : {}),
             },
           })
           .then((r) => r.data),
@@ -64,7 +106,7 @@ export class ShowtimeSchedulerAdmin extends Model {
       queryKey: [this.queryKeys.detail, id, cinemaId],
       queryFn: () =>
         this.api
-          .get<IResponse<any>>({
+          .get<IAdminShowtimeDetailResponse>({
             url: `/admin/showtime-scheduler/detail/${id}`,
             params: { cinemaId },
           })
@@ -79,7 +121,13 @@ export class ShowtimeSchedulerAdmin extends Model {
         this.api
           .post<IResponse<{ id: number }>>({
             url: "/admin/showtime-scheduler",
-            params,
+            params: {
+              ...(params.cinemaId ? { cinemaId: params.cinemaId } : {}),
+              roomId: params.roomId,
+              movieId: params.movieId,
+              startAt: params.startAt,
+              basePrice: params.basePrice,
+            },
           })
           .then((r) => r.data),
     };
@@ -87,12 +135,16 @@ export class ShowtimeSchedulerAdmin extends Model {
 
   static moveShowtime(id: number, params: IAdminMoveShowtimeParams) {
     return {
-      queryKey: [this.queryKeys.move],
+      queryKey: [this.queryKeys.move, id],
       queryFn: () =>
         this.api
           .patch<IResponse<{ id: number }>>({
             url: `/admin/showtime-scheduler/${id}/move`,
-            params,
+            params: {
+              ...(params.cinemaId ? { cinemaId: params.cinemaId } : {}),
+              roomId: params.roomId,
+              startAt: params.startAt,
+            },
           })
           .then((r) => r.data),
     };
@@ -100,7 +152,7 @@ export class ShowtimeSchedulerAdmin extends Model {
 
   static cancelShowtime(id: number) {
     return {
-      queryKey: [this.queryKeys.cancel],
+      queryKey: [this.queryKeys.cancel, id],
       queryFn: () =>
         this.api
           .patch<IResponse<{ id: number }>>({
@@ -110,17 +162,20 @@ export class ShowtimeSchedulerAdmin extends Model {
     };
   }
 
-  static editShowtime(
-    id: number,
-    params: { cinemaId: number; roomId: number; movieId: number; startAt: string; basePrice: number },
-  ) {
+  static editShowtime(id: number, params: IAdminEditShowtimeParams) {
     return {
-      queryKey: [this.queryKeys.edit],
+      queryKey: [this.queryKeys.edit, id],
       queryFn: () =>
         this.api
           .patch<IResponse<{ id: number }>>({
             url: `/admin/showtime-scheduler/edit/${id}`,
-            params,
+            params: {
+              ...(params.cinemaId ? { cinemaId: params.cinemaId } : {}),
+              roomId: params.roomId,
+              movieId: params.movieId,
+              startAt: params.startAt,
+              basePrice: params.basePrice,
+            },
           })
           .then((r) => r.data),
     };
