@@ -65,6 +65,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   useEffect(() => {
     setReviewPage(1);
   }, [movieIdNum]);
+
   const routeMoviePath = useMemo(() => {
     return movieIdNum > 0 ? `/movies/${movieIdNum}` : "/movies";
   }, [movieIdNum]);
@@ -104,8 +105,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const buildReturnUrl = useMemo(() => {
     return () => {
-      if (typeof window === "undefined")
+      if (typeof window === "undefined") {
         return `${pathname || routeMoviePath}#review`;
+      }
       const p = window.location.pathname || pathname || routeMoviePath;
       const s = window.location.search || "";
       return `${p}${s}#review`;
@@ -145,7 +147,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const formatHM = useMemo(() => {
     return (iso: string) => {
       const d = toDateSafe(iso);
-      if (!d) return "";
+      if (!d) {
+        const matched = String(iso ?? "").match(/(\d{2}):(\d{2})/);
+        return matched ? `${matched[1]}:${matched[2]}` : "";
+      }
       return new Intl.DateTimeFormat("vi-VN", {
         hour: "2-digit",
         minute: "2-digit",
@@ -154,7 +159,19 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   }, [toDateSafe]);
 
   const dateKey = useMemo(() => {
-    return (iso: string) => (iso ? iso.slice(0, 10) : "");
+    return (iso: string) => {
+      if (!iso) return "";
+      const raw = String(iso).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return "";
+
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${dd}`;
+    };
   }, []);
 
   const dataMovieDetail = useQuery({
@@ -202,38 +219,38 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const reviews_rating = dataMovieCountRating.data?.data;
 
-  const getReviewerName = useMemo(() => {
-    return (review: any) => {
-      const first =
-        review?.first_name ??
-        review?.firstName ??
-        review?.userFirstName ??
-        review?.user_first_name ??
-        null;
+  // const getReviewerName = useMemo(() => {
+  //   return (review: any) => {
+  //     const first =
+  //       review?.first_name ??
+  //       review?.firstName ??
+  //       review?.userFirstName ??
+  //       review?.user_first_name ??
+  //       null;
 
-      const last =
-        review?.last_name ??
-        review?.lastName ??
-        review?.userLastName ??
-        review?.user_last_name ??
-        null;
+  //     const last =
+  //       review?.last_name ??
+  //       review?.lastName ??
+  //       review?.userLastName ??
+  //       review?.user_last_name ??
+  //       null;
 
-      const composed = [first, last].filter(Boolean).join(" ").trim();
-      if (composed) return composed;
+  //     const composed = [first, last].filter(Boolean).join(" ").trim();
+  //     if (composed) return composed;
 
-      const full =
-        review?.full_name ??
-        review?.userFullName ??
-        review?.fullName ??
-        review?.user_full_name ??
-        review?.name ??
-        null;
+  //     const full =
+  //       review?.full_name ??
+  //       review?.userFullName ??
+  //       review?.fullName ??
+  //       review?.user_full_name ??
+  //       review?.name ??
+  //       null;
 
-      const name = String(full ?? "").trim();
-      const uid = review?.userId ?? review?.user_id ?? "";
-      return name || `Người dùng #${uid}`;
-    };
-  }, []);
+  //     const name = String(full ?? "").trim();
+  //     const uid = review?.userId ?? review?.user_id ?? "";
+  //     return name || `Người dùng #${uid}`;
+  //   };
+  // }, []);
 
   const RELATED_LIMIT = 6;
 
@@ -241,7 +258,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     ...MoviePublic.getAllMovieGenres(String(movie?.genre ?? ""), RELATED_LIMIT),
     enabled: movieIdNum > 0 && !!movie?.genre,
   });
-  console.log("genre: ", movieGenre);
 
   const relatedMovies = useMemo(() => {
     const list = movieGenre.data ?? [];
@@ -255,6 +271,34 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     [dataMovieCinemaShowtimes.data],
   );
 
+  function parseStartSortableValue(value?: string | null) {
+    if (!value) return "";
+
+    const raw = String(value).trim();
+    if (!raw) return "";
+
+    const d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) {
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    const matched = raw.match(/(\d{2}):(\d{2})(?::(\d{2}))?/);
+    if (matched) {
+      return `${matched[1]}:${matched[2]}:${matched[3] ?? "00"}`;
+    }
+
+    return raw;
+  }
+
+  function sortShowtimesAsc(a: IShowtimeItem, b: IShowtimeItem) {
+    return parseStartSortableValue(a?.startTime).localeCompare(
+      parseStartSortableValue(b?.startTime),
+    );
+  }
+
   const cinemas = useMemo(() => {
     return cinemasRaw
       .map((c) => {
@@ -262,9 +306,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
           (((c as any)?.showtimes ??
             (c as any)?.showtime ??
             []) as IShowtimeItem[]) || [];
-        const showtimes = [...list].sort((a, b) =>
-          (a?.startTime || "").localeCompare(b?.startTime || ""),
-        );
+        const showtimes = [...list].sort(sortShowtimesAsc);
         return { ...c, showtimes };
       })
       .sort((a, b) => (a.cinemaName ?? "").localeCompare(b.cinemaName ?? ""));
@@ -319,7 +361,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       return;
     }
     if (!Number.isFinite(ratingInput) || ratingInput < 1 || ratingInput > 5) {
-      setFormError("Rating không hợp lệ.");
+      setFormError("Đánh giá không hợp lệ.");
       return;
     }
     createCommentMutation.mutate();
@@ -430,7 +472,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       .map((s) => s.trim())
       .filter(Boolean);
   }, [movie?.cast]);
-  console.log(movie);
 
   const Glass =
     "rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
@@ -453,6 +494,33 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
     return pages;
   }, [reviewsTotalPages, reviewPage]);
 
+  const SHOWTIME_BUCKETS = [
+    { key: "morning", label: "Sáng", from: 5, to: 11 },
+    { key: "noon", label: "Trưa", from: 11, to: 13 },
+    { key: "afternoon", label: "Chiều", from: 13, to: 18 },
+    { key: "evening", label: "Tối", from: 18, to: 24 },
+  ] as const;
+
+  function getHourFromTime(value?: string | null) {
+    if (!value) return -1;
+
+    const raw = String(value).trim();
+    if (!raw) return -1;
+
+    const matched = raw.match(/(\d{2}):(\d{2})/);
+    if (matched) {
+      const hh = Number(matched[1]);
+      return Number.isFinite(hh) ? hh : -1;
+    }
+
+    const d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) {
+      return d.getHours();
+    }
+
+    return -1;
+  }
+
   return (
     <main className="relative min-h-screen bg-[#0B0C0F] text-white">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
@@ -460,86 +528,86 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[1px]" />
 
       <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-70"
-          style={{
-            backgroundImage: `url("${resolveUrl(
-              movie?.posterUrl,
-              "/poster/poster.jpg",
-            )}")`,
+  <div
+    className="absolute inset-0 bg-cover bg-center opacity-70"
+    style={{
+      backgroundImage: `url("${resolveUrl(
+        movie?.bannerUrl || movie?.posterUrl,
+        "/poster/poster.jpg",
+      )}")`,
+    }}
+  />
+  <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
+  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_20%_30%,rgba(225,29,46,0.10),transparent_55%),radial-gradient(900px_420px_at_80%_35%,rgba(255,255,255,0.06),transparent_60%)]" />
+
+  <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
+    <div className="flex justify-center md:justify-start">
+      <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
+        <img
+          alt={`${movie?.title} Poster`}
+          src={resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}
+          className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
+          onError={(e) => {
+            const img = e.currentTarget as HTMLImageElement;
+            if (img.dataset.fallback === "1") return;
+            img.dataset.fallback = "1";
+            img.src = "/poster/poster.jpg";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_20%_30%,rgba(225,29,46,0.10),transparent_55%),radial-gradient(900px_420px_at_80%_35%,rgba(255,255,255,0.06),transparent_60%)]" />
+      </div>
+    </div>
 
-        <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
-          <div className="flex justify-center md:justify-start">
-            <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
-              <img
-                alt={`${movie?.title} Poster`}
-                src={resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}
-                className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
-                onError={(e) => {
-                  const img = e.currentTarget as HTMLImageElement;
-                  if (img.dataset.fallback === "1") return;
-                  img.dataset.fallback = "1";
-                  img.src = "/poster/poster.jpg";
-                }}
-              />
-            </div>
-          </div>
+    <div className="flex flex-1 flex-col gap-4 md:gap-6">
+      <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
+        {movie?.title}
+      </h1>
 
-          <div className="flex flex-1 flex-col gap-4 md:gap-6">
-            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
-              {movie?.title}
-            </h1>
+      <p className="max-w-2xl text-sm text-white/75 md:text-base">
+        {movie?.shortDescription}
+      </p>
 
-            <p className="max-w-2xl text-sm text-white/75 md:text-base">
-              {movie?.shortDescription}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 md:gap-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
-                <Star className="text-yellow-400" fontSize="small" />
-                <span className="font-extrabold text-white">
-                  {reviews_rating?.avgRating ?? 0}
-                </span>
-                <span className="text-white/60">/ 5</span>
-              </div>
-
-              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
-                {movie?.durationMinutes} phút
-              </div>
-
-              {movie?.genre ? (
-                <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
-                  {movie?.genre}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-3">
-              <a
-                href={movie?.trailerUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
-              >
-                <PlayCircleOutline className="text-lg" />
-                <span>Xem Trailer</span>
-              </a>
-
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(0,0,0,0.45)] transition hover:border-red-400/30 hover:bg-red-500/10"
-              >
-                <ConfirmationNumber className="text-lg" />
-                <span>Đặt Vé Ngay</span>
-              </button>
-            </div>
-          </div>
+      <div className="flex flex-wrap items-center gap-3 md:gap-4">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
+          <Star className="text-yellow-400" fontSize="small" />
+          <span className="font-extrabold text-white">
+            {reviews_rating?.avgRating ?? 0}
+          </span>
+          <span className="text-white/60">/ 5</span>
         </div>
-      </section>
+
+        <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
+          {movie?.durationMinutes} phút
+        </div>
+
+        {movie?.genre ? (
+          <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
+            {movie?.genre}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-3">
+        <a
+          href={movie?.trailerUrl || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
+        >
+          <PlayCircleOutline className="text-lg" />
+          <span>Xem Trailer</span>
+        </a>
+
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(0,0,0,0.45)] transition hover:border-red-400/30 hover:bg-red-500/10"
+        >
+          <ConfirmationNumber className="text-lg" />
+          <span>Đặt Vé Ngay</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section className="relative z-10">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
@@ -656,9 +724,6 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              {/* =========================
-                  ✅ KHÔI PHỤC: LỊCH CHIẾU (UI)
-                 ========================= */}
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -679,7 +744,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-5">
-                    <div className="text-xs font-extrabold tracking-wide text-white/70 uppercase">
+                    <div className="text-xs font-extrabold uppercase tracking-wide text-white/70">
                       Chọn ngày
                     </div>
 
@@ -727,8 +792,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </div>
                   ) : null}
 
-                  {!dataMovieCinemaShowtimes.isLoading &&
-                  cinemas.length === 0 ? (
+                  {!dataMovieCinemaShowtimes.isLoading && cinemas.length === 0 ? (
                     <p className="mt-5 text-sm text-white/55">
                       Chưa có rạp hoặc suất chiếu cho phim này.
                     </p>
@@ -767,15 +831,14 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           (c as any)?.image_url ??
                           null;
 
-                        const posterUrl = (c as any)?.posterUrl ?? null;
-
-                        const showtimes = (row.showtimes ??
-                          []) as IShowtimeItem[];
+                        const showtimes = ((row.showtimes ?? []) as IShowtimeItem[])
+                          .slice()
+                          .sort(sortShowtimesAsc);
 
                         return (
                           <div
                             key={cinemaId || cinemaName}
-                            className="rounded-2xl border border-white/10 bg-black/25 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+                            className="overflow-hidden rounded-2xl border border-white/10 bg-black/25 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                           >
                             <div className="p-4 md:p-5">
                               <div className="flex items-start gap-4">
@@ -809,46 +872,83 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 </div>
                               </div>
 
-                              <div className="mt-4 flex flex-wrap gap-2">
+                              <div className="mt-4 border-t border-white/10 pt-4">
                                 {dataMovieCinemaShowtimes.isLoading ? (
-                                  <>
-                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
-                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
-                                    <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
-                                  </>
+                                  <div className="space-y-3">
+                                    <div className="grid grid-cols-[76px_1fr] gap-3">
+                                      <div className="h-10 rounded-xl border border-white/10 bg-black/25" />
+                                      <div className="flex flex-wrap gap-2">
+                                        <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                        <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                        <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                      </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-[76px_1fr] gap-3">
+                                      <div className="h-10 rounded-xl border border-white/10 bg-black/25" />
+                                      <div className="flex flex-wrap gap-2">
+                                        <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                        <div className="h-10 w-28 rounded-xl border border-white/10 bg-black/25" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : showtimes.length === 0 ? (
+                                  <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/50">
+                                    Chưa có suất chiếu trong ngày này.
+                                  </div>
                                 ) : (
-                                  showtimes
-                                    .slice()
-                                    .sort((a, b) =>
-                                      (a.startTime || "").localeCompare(
-                                        b.startTime || "",
-                                      ),
-                                    )
-                                    .map((st) => {
-                                      const isSelected =
-                                        selectedShowtimeId === st.id;
+                                  <div className="space-y-3">
+                                    {SHOWTIME_BUCKETS.map((group) => {
+                                      const items = showtimes.filter((st) => {
+                                        const hour = getHourFromTime(st.startTime);
+                                        return hour >= group.from && hour < group.to;
+                                      });
+
+                                      if (items.length === 0) return null;
+
                                       return (
-                                        <button
-                                          key={st.id}
-                                          type="button"
-                                          onClick={() =>
-                                            setSelectedShowtimeId(st.id)
-                                          }
-                                          className={`cursor-pointer group inline-flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm font-extrabold text-white transition hover:border-red-400/25 hover:bg-red-500/10 ${
-                                            isSelected
-                                              ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/50"
-                                              : "border-white/10 bg-black/25"
-                                          }`}
+                                        <div
+                                          key={group.key}
+                                          className="grid grid-cols-1 gap-2 md:grid-cols-[88px_1fr]"
                                         >
-                                          <span className="tabular-nums">
-                                            {formatHM(st.startTime)}
-                                          </span>
-                                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 group-hover:border-red-400/20 group-hover:bg-red-500/10">
-                                            {st.type}
-                                          </span>
-                                        </button>
+                                          <div className="flex items-start md:pt-2">
+                                            <div className="inline-flex min-w-[72px] items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">
+                                              {group.label}
+                                            </div>
+                                          </div>
+
+                                          <div className="flex flex-wrap gap-2">
+                                            {items.map((st) => {
+                                              const isSelected =
+                                                selectedShowtimeId === st.id;
+
+                                              return (
+                                                <button
+                                                  key={st.id}
+                                                  type="button"
+                                                  onClick={() =>
+                                                    setSelectedShowtimeId(st.id)
+                                                  }
+                                                  className={`group inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-extrabold text-white transition ${
+                                                    isSelected
+                                                      ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/50"
+                                                      : "border-white/10 bg-black/25 hover:border-red-400/25 hover:bg-red-500/10"
+                                                  }`}
+                                                >
+                                                  <span className="tabular-nums">
+                                                    {formatHM(st.startTime)}
+                                                  </span>
+                                                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 transition group-hover:border-red-400/20 group-hover:bg-red-500/10">
+                                                    {st.type}
+                                                  </span>
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
                                       );
-                                    })
+                                    })}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -860,6 +960,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
+              {/* { đây là phần review xử lý đánh giá} */}
               <section className={Glass} id="review">
                 <div className="p-5 md:p-6 lg:p-7">
                   <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
@@ -990,7 +1091,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           >
                             <div className="mb-2 flex items-center justify-between">
                               <span className="text-sm font-extrabold text-white">
-                                {getReviewerName(review)}
+                                {review.full_name}
                               </span>
 
                               <div className="flex items-center gap-1 text-xs text-yellow-400">

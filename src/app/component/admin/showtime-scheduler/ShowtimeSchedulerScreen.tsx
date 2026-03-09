@@ -435,23 +435,23 @@ export default function ShowtimeSchedulerScreen() {
     <div className="min-h-screen bg-white text-gray-900">
       <Toaster position="bottom-center" richColors />
 
-      <div className="px-8 pt-8 pb-5 border-b border-gray-200 bg-white sticky top-0 z-30">
+      <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 pb-5 pt-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold">Lịch Suất Chiếu</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="mt-1 text-sm text-gray-500">
               Quản lý và sắp xếp lịch chiếu phim tại các phòng
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700">
               {role || "—"}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             title="Tổng suất chiếu"
             value={`${events.length}`}
@@ -468,7 +468,7 @@ export default function ShowtimeSchedulerScreen() {
           />
 
           <div className="md:col-span-2 xl:col-span-2">
-            <div className="h-full rounded-2xl border border-gray-200 bg-white p-4">
+            <div className="h-full rounded-2xl border border-gray-200 bg-white p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-gray-600">Lịch</div>
@@ -484,7 +484,7 @@ export default function ShowtimeSchedulerScreen() {
                 <div className="flex flex-col gap-3 lg:items-end">
                   {isAdmin ? (
                     <div className="w-full lg:w-[280px]">
-                      <div className="text-xs font-semibold text-gray-600 mb-1">Cinema</div>
+                      <div className="mb-1 text-xs font-semibold text-gray-600">Cinema</div>
                       <div className="relative">
                         <Storefront
                           fontSize="small"
@@ -493,7 +493,7 @@ export default function ShowtimeSchedulerScreen() {
                         <select
                           value={cinemaId || 0}
                           onChange={(e) => setCinemaId(Number(e.target.value))}
-                          className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 py-2.5 text-sm font-medium text-gray-800"
+                          className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-gray-800 outline-none"
                         >
                           <option value={0}>-- Chọn rạp --</option>
                           {cinemas.map((c) => (
@@ -505,34 +505,33 @@ export default function ShowtimeSchedulerScreen() {
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full lg:w-[280px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                    <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 lg:w-[280px]">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                         Cinema
                       </div>
-                      <div className="mt-1 text-sm font-bold text-gray-900 truncate">
-                        {/* {selectedCinemaName} */}
+                      <div className="mt-1 truncate text-sm font-bold text-gray-900">
                         {qScheduler.data?.data?.cinemaName}
                       </div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-3 gap-2 w-full lg:w-[280px]">
+                  <div className="grid w-full grid-cols-3 gap-2 lg:w-[280px]">
                     <button
-                      className="h-11 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center gap-1 text-gray-700 font-semibold"
+                      className="flex h-11 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white font-semibold text-gray-700 hover:bg-gray-50"
                       onClick={() => setDate((d) => addDays(d, -1))}
                     >
                       Trước
                     </button>
 
                     <button
-                      className="h-11 rounded-xl border border-gray-200 bg-gray-900 hover:bg-black text-white flex items-center justify-center gap-1 font-semibold"
+                      className="flex h-11 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-gray-900 font-semibold text-white hover:bg-black"
                       onClick={() => setDate(todayYMD())}
                     >
                       Hôm nay
                     </button>
 
                     <button
-                      className="h-11 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center gap-1 text-gray-700 font-semibold"
+                      className="flex h-11 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white font-semibold text-gray-700 hover:bg-gray-50"
                       onClick={() => setDate((d) => addDays(d, 1))}
                     >
                       Sau
@@ -567,6 +566,7 @@ export default function ShowtimeSchedulerScreen() {
         {qScheduler.isLoading ? (
           <div className="p-6 text-sm text-gray-500">Đang tải lịch...</div>
         ) : null}
+
         {qScheduler.isError ? (
           <div className="p-6 text-sm text-red-600">
             Lỗi tải lịch. Kiểm tra API / quyền truy cập.
@@ -576,7 +576,7 @@ export default function ShowtimeSchedulerScreen() {
         <button
           onClick={openCreateModal}
           disabled={cinemaId <= 0}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white shadow-lg flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           <Add />
         </button>

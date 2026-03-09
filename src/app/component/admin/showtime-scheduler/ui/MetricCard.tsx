@@ -16,32 +16,37 @@ export default function MetricCard({
 }) {
   const toneCls =
     tone === "danger"
-      ? "bg-red-50 text-red-700 border-red-200"
+      ? "border-red-200 bg-red-50 text-red-700"
       : tone === "success"
-        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-        : "bg-gray-50 text-gray-700 border-gray-200";
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : "border-gray-200 bg-gray-50 text-gray-700";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22 }}
-      className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 flex items-center justify-between"
+      className="flex h-full items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
     >
-      <div>
-        <div className="text-xs tracking-wide text-gray-500 uppercase">
+      <div className="min-w-0">
+        <div className="text-xs uppercase tracking-[0.12em] text-gray-500">
           {title}
         </div>
-        <div className="mt-2 flex items-end gap-2">
-          <div className="text-3xl font-extrabold text-gray-900">{value}</div>
+
+        <div className="mt-2 flex flex-wrap items-end gap-2">
+          <div className="text-3xl font-extrabold leading-none text-gray-900">
+            {value}
+          </div>
+
           {sub ? (
-            <div className={`text-xs px-2 py-1 rounded-full border ${toneCls}`}>
+            <div className={`rounded-full border px-2 py-1 text-xs ${toneCls}`}>
               {sub}
             </div>
           ) : null}
         </div>
       </div>
-      <div className="h-10 w-10 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-700">
+
+      <div className="ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700">
         {icon}
       </div>
     </motion.div>

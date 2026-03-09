@@ -20,7 +20,7 @@ import {
 function StatusPill({ status, conflict }: { status: string; conflict: boolean }) {
   if (conflict) {
     return (
-      <div className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full border border-red-200 bg-red-50 text-red-700">
+      <div className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
         <WarningAmber fontSize="inherit" />
         Xung đột
       </div>
@@ -30,13 +30,13 @@ function StatusPill({ status, conflict }: { status: string; conflict: boolean })
   const s = String(status ?? "").trim().toUpperCase();
   const cls =
     s === "COMPLETED"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : s === "CANCELLED"
-        ? "bg-gray-100 text-gray-600 border-gray-200"
-        : "bg-blue-50 text-blue-700 border-blue-200";
+        ? "border-gray-200 bg-gray-100 text-gray-600"
+        : "border-blue-200 bg-blue-50 text-blue-700";
 
   return (
-    <div className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${cls}`}>
+    <div className={`inline-flex items-center rounded-full border px-2 py-1 text-xs ${cls}`}>
       {statusVi(s)}
     </div>
   );
@@ -52,7 +52,9 @@ function DayDropZone({ id }: { id: "day-prev" | "day-next" }) {
   return (
     <div
       ref={setNodeRef}
-      className={`${base} ${isOver ? "bg-blue-100/70 pointer-events-auto" : "pointer-events-none bg-transparent"}`}
+      className={`${base} ${
+        isOver ? "pointer-events-auto bg-blue-100/70" : "pointer-events-none bg-transparent"
+      }`}
     />
   );
 }
@@ -71,7 +73,7 @@ function DroppableRoomColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`relative border-r border-gray-200 bg-white ${isOver ? "bg-blue-50/40" : ""}`}
+      className={`relative border-l border-gray-200 bg-white ${isOver ? "bg-blue-50/40" : ""}`}
       style={{ height }}
     >
       {children}
@@ -80,13 +82,14 @@ function DroppableRoomColumn({
 }
 
 function StartMarker({ top, label }: { top: number; label: string }) {
-  const y = top - 6;
-
   return (
-    <div className="absolute left-0 right-0 z-[6] pointer-events-none" style={{ top: y }}>
+    <div
+      className="pointer-events-none absolute left-0 right-0 z-[40]"
+      style={{ top }}
+    >
       <div className="relative">
-        <div className="h-[2px] bg-red-500/90" />
-        <div className="absolute left-2 -top-3 px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold shadow">
+        <div className="h-[2px] bg-red-500/95" />
+        <div className="absolute left-3 -top-3 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
           {label}
         </div>
       </div>
@@ -116,16 +119,16 @@ function ShowtimeCardBody({
     <motion.div
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ duration: 0.18 }}
-      className={`h-full rounded-2xl border ${borderCls} bg-white shadow-sm overflow-hidden select-none hover:shadow-md`}
+      className={`h-full overflow-hidden rounded-2xl border ${borderCls} bg-white shadow-sm select-none hover:shadow-md`}
     >
       <div className={`h-full ${dense ? "p-4" : compact ? "p-2.5" : "p-4"}`}>
         {ultraCompact ? (
-          <div className="h-full flex items-center justify-between gap-3">
+          <div className="flex h-full items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className={`font-bold truncate ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
+              <div className={`truncate font-bold ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
                 {e.text}
               </div>
-              <div className={`text-[11px] mt-0.5 ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
+              <div className={`mt-0.5 text-[11px] ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
                 {hhmmFromISO(e.start)} - {hhmmFromISO(e.end)}
               </div>
             </div>
@@ -135,18 +138,18 @@ function ShowtimeCardBody({
             </div>
           </div>
         ) : compact ? (
-          <div className="h-full flex gap-3">
-            <div className="w-14 min-w-14 h-full rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
-              {src ? <img src={src} alt={e.text} className="w-full h-full object-cover" /> : null}
+          <div className="flex h-full gap-3">
+            <div className="h-full w-14 min-w-14 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+              {src ? <img src={src} alt={e.text} className="h-full w-full object-cover" /> : null}
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className={`font-bold truncate ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
+                  <div className={`truncate font-bold ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
                     {e.text}
                   </div>
-                  <div className={`text-xs mt-0.5 ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
+                  <div className={`mt-0.5 text-xs ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
                     {hhmmFromISO(e.start)} - {hhmmFromISO(e.end)}
                   </div>
                 </div>
@@ -154,7 +157,7 @@ function ShowtimeCardBody({
               </div>
 
               <div className="mt-auto pt-2">
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-xs text-gray-600">
+                <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-600">
                   <LocalOffer fontSize="inherit" />
                   {Number.isFinite(Number(e.basePrice)) ? `${e.basePrice}` : "—"}
                 </div>
@@ -162,26 +165,26 @@ function ShowtimeCardBody({
             </div>
           </div>
         ) : (
-          <div className={`h-full flex gap-4 ${dense ? "h-[104px]" : ""}`}>
-            <div className="w-20 min-w-20 h-full rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
-              {src ? <img src={src} alt={e.text} className="w-full h-full object-cover" /> : null}
+          <div className={`flex h-full gap-4 ${dense ? "h-[104px]" : ""}`}>
+            <div className="h-full w-20 min-w-20 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+              {src ? <img src={src} alt={e.text} className="h-full w-full object-cover" /> : null}
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className={`font-extrabold truncate ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
+                  <div className={`truncate font-extrabold ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
                     {e.text}
                   </div>
-                  <div className={`text-sm mt-0.5 ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
+                  <div className={`mt-0.5 text-sm ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
                     {hhmmFromISO(e.start)} - {hhmmFromISO(e.end)}
                   </div>
                 </div>
                 <StatusPill status={e.status} conflict={!!e.conflict} />
               </div>
 
-              <div className="mt-auto pt-3 flex items-center justify-between text-sm text-gray-600">
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-gray-200 bg-gray-50">
+              <div className="mt-auto flex items-center justify-between pt-3 text-sm text-gray-600">
+                <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1">
                   <LocalOffer fontSize="inherit" />
                   {Number.isFinite(Number(e.basePrice)) ? `${e.basePrice}` : "—"}
                 </div>
@@ -229,6 +232,15 @@ export default function SchedulerBoard(props: {
     disarmDrag,
   } = props;
 
+  const TIME_COL_WIDTH = 104;
+  const ROOM_COL_WIDTH = 320;
+  const HEADER_HEIGHT = 62;
+  const HOUR_LABEL_OFFSET = 18;
+
+  const boardResources = resources.length
+    ? resources
+    : [{ id: 0, name: "—", type: null, totalSeats: 0 }];
+
   function DraggableCard({
     e,
     top,
@@ -253,7 +265,7 @@ export default function SchedulerBoard(props: {
     return (
       <div
         ref={setNodeRef}
-        className="absolute left-3 right-3 z-[10]"
+        className="absolute left-2 right-2 z-[20]"
         style={{ top, height, ...style }}
         onMouseDown={armDrag}
         onMouseUp={disarmDrag}
@@ -289,7 +301,7 @@ export default function SchedulerBoard(props: {
               ev.stopPropagation();
               openDetailModal(Number(e.id), true);
             }}
-            className="absolute top-2 right-2 z-20 h-9 w-9 rounded-xl border border-gray-200 bg-white/95 hover:bg-white flex items-center justify-center text-gray-700 shadow-sm"
+            className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white/95 text-gray-700 shadow-sm hover:bg-white"
             aria-label="Edit"
           >
             <EditOutlined fontSize="small" />
@@ -302,10 +314,10 @@ export default function SchedulerBoard(props: {
   }
 
   return (
-    <div className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
       <div className="relative" style={{ height: "calc(100vh - 220px)" }}>
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-          <div className="h-full overflow-auto relative bg-white">
+          <div className="relative h-full overflow-auto bg-white">
             <DayDropZone id="day-prev" />
             <DayDropZone id="day-next" />
 
@@ -313,29 +325,29 @@ export default function SchedulerBoard(props: {
               className="min-w-[1250px]"
               style={{
                 display: "grid",
-                gridTemplateColumns: `108px repeat(${resources.length || 1}, 320px)`,
+                gridTemplateColumns: `${TIME_COL_WIDTH}px repeat(${boardResources.length}, ${ROOM_COL_WIDTH}px)`,
+                gridTemplateRows: `${HEADER_HEIGHT}px ${timelineHeight}px`,
               }}
             >
-              <div className="sticky top-0 z-20 bg-white border-b border-gray-200" />
+              <div className="sticky top-0 z-30 border-b border-r border-gray-200 bg-white" />
 
-              {(resources.length
-                ? resources
-                : [{ id: 0, name: "—", type: null, totalSeats: 0 }]
-              ).map((r: any) => (
+              {boardResources.map((r: any) => (
                 <div
                   key={r.id}
-                  className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-3"
+                  className="sticky top-0 z-30 border-b border-gray-200 bg-white px-4 py-3"
+                  style={{ height: HEADER_HEIGHT }}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="text-sm font-extrabold text-gray-900">
+                    <div className="min-w-0">
+                      <div className="truncate text-base font-extrabold text-gray-900">
                         {r.name}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
+                      <div className="mt-0.5 text-xs text-gray-500">
                         {r.type ?? "—"} • {r.totalSeats ?? 0} ghế
                       </div>
                     </div>
-                    <div className="text-[11px] px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700">
+
+                    <div className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] text-gray-700">
                       {(r.type ?? "2D").toString()}
                     </div>
                   </div>
@@ -348,30 +360,51 @@ export default function SchedulerBoard(props: {
               >
                 {hours.map((hour) => {
                   const top = (hour * 60 - startMinute) * pxPerMinute;
+
                   return (
-                    <div key={hour} className="absolute left-0 right-0" style={{ top }}>
-                      <div className="text-xs text-gray-500 px-3 -translate-y-2">
+                    <React.Fragment key={hour}>
+                      <div
+                        className="absolute left-0 right-0 bg-gray-200"
+                        style={{ top, height: 1 }}
+                      />
+                      <div
+                        className="absolute left-0 right-0 px-4 text-base font-bold text-gray-500"
+                        style={{ top: top + HOUR_LABEL_OFFSET }}
+                      >
                         {pad2(hour)}:00
                       </div>
-                      <div className="h-px bg-gray-200" />
-                    </div>
+                    </React.Fragment>
                   );
                 })}
+
+                <div
+                  className="absolute left-0 right-0 bg-gray-200"
+                  style={{ top: timelineHeight - 1, height: 1 }}
+                />
               </div>
 
-              {(resources.length ? resources : [{ id: 0 }]).map((r: any) => (
+              {boardResources.map((r: any) => (
                 <DroppableRoomColumn
                   key={`col-${r.id}`}
                   roomId={r.id}
                   height={timelineHeight}
                 >
-                  {hours.map((hour) => (
-                    <div
-                      key={hour}
-                      className="absolute left-0 right-0 h-px bg-gray-100"
-                      style={{ top: (hour * 60 - startMinute) * pxPerMinute }}
-                    />
-                  ))}
+                  {hours.map((hour) => {
+                    const top = (hour * 60 - startMinute) * pxPerMinute;
+
+                    return (
+                      <div
+                        key={hour}
+                        className="absolute left-0 right-0 bg-gray-100"
+                        style={{ top, height: 1 }}
+                      />
+                    );
+                  })}
+
+                  <div
+                    className="absolute left-0 right-0 bg-gray-100"
+                    style={{ top: timelineHeight - 1, height: 1 }}
+                  />
 
                   {events
                     .filter((e: any) => e.resource === r.id)
@@ -383,7 +416,6 @@ export default function SchedulerBoard(props: {
                         startDate.getSeconds() / 60;
 
                       const top = (startTotalMinutes - startMinute) * pxPerMinute;
-
                       const durationMinutes = calcDurationMs(e.start, e.end) / 60000;
                       const height = Math.max(18, durationMinutes * pxPerMinute);
 
