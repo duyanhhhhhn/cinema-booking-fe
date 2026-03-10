@@ -219,38 +219,31 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
   const reviews_rating = dataMovieCountRating.data?.data;
 
-  // const getReviewerName = useMemo(() => {
-  //   return (review: any) => {
-  //     const first =
-  //       review?.first_name ??
-  //       review?.firstName ??
-  //       review?.userFirstName ??
-  //       review?.user_first_name ??
-  //       null;
+  const genreViMap: Record<string, string> = {
+    ACTION: "Hành động",
+    COMEDY: "Hài",
+    ROMANCE: "Lãng mạn",
+    DRAMA: "Chính kịch",
+    HORROR: "Kinh dị",
+    THRILLER: "Giật gân",
+    SCI_FI: "Khoa học viễn tưởng",
+    FANTASY: "Giả tưởng",
+    ANIMATION: "Hoạt hình",
+    ADVENTURE: "Phiêu lưu",
+    CRIME: "Tội phạm",
+    WAR: "Chiến tranh",
+    FAMILY: "Gia đình",
+    MUSIC: "Âm nhạc",
+    DOCUMENTARY: "Tài liệu",
+    MYSTERY: "Bí ẩn",
+  };
 
-  //     const last =
-  //       review?.last_name ??
-  //       review?.lastName ??
-  //       review?.userLastName ??
-  //       review?.user_last_name ??
-  //       null;
+  const getGenreLabelVi = (genre?: string | null) => {
+    if (!genre) return "";
+    return genreViMap[String(genre).trim().toUpperCase()] ?? genre;
+  };
 
-  //     const composed = [first, last].filter(Boolean).join(" ").trim();
-  //     if (composed) return composed;
-
-  //     const full =
-  //       review?.full_name ??
-  //       review?.userFullName ??
-  //       review?.fullName ??
-  //       review?.user_full_name ??
-  //       review?.name ??
-  //       null;
-
-  //     const name = String(full ?? "").trim();
-  //     const uid = review?.userId ?? review?.user_id ?? "";
-  //     return name || `Người dùng #${uid}`;
-  //   };
-  // }, []);
+  const genreLabel = getGenreLabelVi(movie?.genre);
 
   const RELATED_LIMIT = 6;
 
@@ -528,86 +521,78 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[1px]" />
 
       <section className="relative overflow-hidden">
-  <div
-    className="absolute inset-0 bg-cover bg-center opacity-70"
-    style={{
-      backgroundImage: `url("${resolveUrl(
-        movie?.bannerUrl || movie?.posterUrl,
-        "/poster/poster.jpg",
-      )}")`,
-    }}
-  />
-  <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
-  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_20%_30%,rgba(225,29,46,0.10),transparent_55%),radial-gradient(900px_420px_at_80%_35%,rgba(255,255,255,0.06),transparent_60%)]" />
-
-  <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
-    <div className="flex justify-center md:justify-start">
-      <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
-        <img
-          alt={`${movie?.title} Poster`}
-          src={resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}
-          className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
-          onError={(e) => {
-            const img = e.currentTarget as HTMLImageElement;
-            if (img.dataset.fallback === "1") return;
-            img.dataset.fallback = "1";
-            img.src = "/poster/poster.jpg";
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-70"
+          style={{
+            backgroundImage: `url("${resolveUrl(
+              movie?.bannerUrl || movie?.posterUrl,
+              "/poster/poster.jpg",
+            )}")`,
           }}
         />
-      </div>
-    </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0C0F]/70 via-[#0B0C0F]/50 to-[#0B0C0F]/80" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_420px_at_20%_30%,rgba(225,29,46,0.10),transparent_55%),radial-gradient(900px_420px_at_80%_35%,rgba(255,255,255,0.06),transparent_60%)]" />
 
-    <div className="flex flex-1 flex-col gap-4 md:gap-6">
-      <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
-        {movie?.title}
-      </h1>
-
-      <p className="max-w-2xl text-sm text-white/75 md:text-base">
-        {movie?.shortDescription}
-      </p>
-
-      <div className="flex flex-wrap items-center gap-3 md:gap-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
-          <Star className="text-yellow-400" fontSize="small" />
-          <span className="font-extrabold text-white">
-            {reviews_rating?.avgRating ?? 0}
-          </span>
-          <span className="text-white/60">/ 5</span>
-        </div>
-
-        <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
-          {movie?.durationMinutes} phút
-        </div>
-
-        {movie?.genre ? (
-          <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
-            {movie?.genre}
+        <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
+          <div className="flex justify-center md:justify-start">
+            <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
+              <img
+                alt={`${movie?.title} Poster`}
+                src={resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}
+                className="h-[380px] w-[260px] object-cover md:h-[440px] md:w-[300px]"
+                onError={(e) => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  if (img.dataset.fallback === "1") return;
+                  img.dataset.fallback = "1";
+                  img.src = "/poster/poster.jpg";
+                }}
+              />
+            </div>
           </div>
-        ) : null}
-      </div>
 
-      <div className="mt-2 flex flex-wrap gap-3">
-        <a
-          href={movie?.trailerUrl || "#"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
-        >
-          <PlayCircleOutline className="text-lg" />
-          <span>Xem Trailer</span>
-        </a>
+          <div className="flex flex-1 flex-col gap-4 md:gap-6">
+            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
+              {movie?.title}
+            </h1>
 
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(0,0,0,0.45)] transition hover:border-red-400/30 hover:bg-red-500/10"
-        >
-          <ConfirmationNumber className="text-lg" />
-          <span>Đặt Vé Ngay</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
+            <p className="max-w-2xl text-sm text-white/75 md:text-base">
+              {movie?.shortDescription}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
+                <Star className="text-yellow-400" fontSize="small" />
+                <span className="font-extrabold text-white">
+                  {reviews_rating?.avgRating ?? 0}
+                </span>
+                <span className="text-white/60">/ 5</span>
+              </div>
+
+              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
+                {movie?.durationMinutes} phút
+              </div>
+
+              {genreLabel ? (
+                <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
+                  {genreLabel}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-3">
+              <a
+                href={movie?.trailerUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
+              >
+                <PlayCircleOutline className="text-lg" />
+                <span>Xem Trailer</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="relative z-10">
         <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-8 lg:py-14">
@@ -792,7 +777,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </div>
                   ) : null}
 
-                  {!dataMovieCinemaShowtimes.isLoading && cinemas.length === 0 ? (
+                  {!dataMovieCinemaShowtimes.isLoading &&
+                  cinemas.length === 0 ? (
                     <p className="mt-5 text-sm text-white/55">
                       Chưa có rạp hoặc suất chiếu cho phim này.
                     </p>
@@ -831,7 +817,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           (c as any)?.image_url ??
                           null;
 
-                        const showtimes = ((row.showtimes ?? []) as IShowtimeItem[])
+                        const showtimes = (
+                          (row.showtimes ?? []) as IShowtimeItem[]
+                        )
                           .slice()
                           .sort(sortShowtimesAsc);
 
@@ -900,8 +888,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                   <div className="space-y-3">
                                     {SHOWTIME_BUCKETS.map((group) => {
                                       const items = showtimes.filter((st) => {
-                                        const hour = getHourFromTime(st.startTime);
-                                        return hour >= group.from && hour < group.to;
+                                        const hour = getHourFromTime(
+                                          st.startTime,
+                                        );
+                                        return (
+                                          hour >= group.from && hour < group.to
+                                        );
                                       });
 
                                       if (items.length === 0) return null;
