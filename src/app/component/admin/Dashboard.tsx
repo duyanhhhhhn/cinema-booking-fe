@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import Chart from "chart.js/auto";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import PaymentsIcon from '@mui/icons-material/Payments';
 import AddIcon from '@mui/icons-material/Add';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -23,19 +23,25 @@ export default function Dashboard() {
   const rev: IRevenue[] = revenueByDate?.data ?? [];
   const todayRevenue = rev.length > 0 ? rev[0].revenue : 0;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [type, setType] = useState<"week" | "month">("week");
   const labels = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  const data = revenueByDate?.data?.data;
+  const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const apiData = revenueByDate?.data?.data;
+  const data = apiData ? apiData.map((item: any) => item.revenue) : [0, 0, 0, 0, 0, 0, 0];
+  const data2 = useQuery(Revenue.getRevenueByMonth());
+  const apiMonthData = data2?.data?.data;
+  const monthData = apiMonthData ? apiMonthData.map((item: any) => item.revenue) : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const chart = new Chart(canvasRef.current, {
       type: 'bar',
       data: {
-        labels: labels,
+        labels: type === "week" ? labels : monthLabels,
         datasets: [
           {
             label: 'Revenue',
-            data: data || [0, 0, 0, 0, 0, 0, 0],
+            data: type === "week" ? data || [0, 0, 0, 0, 0, 0, 0] : monthData,
             backgroundColor: '#ec131e'
           }
         ]
@@ -45,7 +51,7 @@ export default function Dashboard() {
     return () => {
       chart.destroy();
     };
-  }, [revenueByDate]);
+  }, [data, monthData]);
   const stats = [
     {
       title: "Tổng doanh thu hôm nay",
@@ -180,10 +186,10 @@ export default function Dashboard() {
                   Biểu đồ doanh thu
                 </h3>
                 <div className="flex rounded-lg bg-surface-darker p-1 border border-surface-border">
-                  <button className="rounded-md bg-primary px-3 py-1 text-xs font-medium shadow-sm transition-all">
+                  <button onClick={() => setType("week")} className="rounded-md bg-primary px-3 py-1 text-xs font-medium shadow-sm transition-all">
                     Theo tuần
                   </button>
-                  <button className="rounded-md px-3 py-1 text-xs font-medium text-gray-400 hover:text-white transition-all">
+                  <button onClick={() => setType("month")} className="rounded-md px-3 py-1 text-xs font-medium text-gray-400 hover:text-white hover:bg-red-500 transition-all">
                     Theo tháng
                   </button>
                 </div>
@@ -255,132 +261,6 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <div className="flex flex-col gap-5">
-              </div>
-            </div>
-          </div>
-          {/* Recent Activity / Orders Table */}
-          <div className="mt-6 rounded-xl border border-surface-border bg-surface-dark">
-            <div className="flex items-center justify-between border-b border-surface-border px-6 py-4">
-              <h3 className="text-lg font-bold text-white">Hoạt động gần đây</h3>
-              <button className="flex items-center gap-1 text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                <span className="material-symbols-outlined text-lg">
-                  filter_list
-                </span>
-                Lọc
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-400">
-                <thead className="bg-surface-darker text-xs uppercase text-gray-500">
-                  <tr>
-                    <th className="px-6 py-3 font-medium" scope="col">
-                      Khách hàng
-                    </th>
-                    <th className="px-6 py-3 font-medium" scope="col">
-                      Phim
-                    </th>
-                    <th className="px-6 py-3 font-medium" scope="col">
-                      Chi tiết
-                    </th>
-                    <th className="px-6 py-3 font-medium" scope="col">
-                      Thời gian
-                    </th>
-                    <th className="px-6 py-3 font-medium" scope="col">
-                      Trạng thái
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-border">
-                  <tr className="group hover:bg-surface-darker/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium text-xs">
-                          A
-                        </div>
-                        <span className="font-medium text-white">
-                          Nguyễn Văn A
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-white">Dune: Part Two</td>
-                    <td className="px-6 py-4">2 vé • Ghế G12, G13</td>
-                    <td className="px-6 py-4">2 phút trước</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
-                        Thành công
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="group hover:bg-surface-darker/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium text-xs">
-                          L
-                        </div>
-                        <span className="font-medium text-white">Lê Thị B</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-white">Mai</td>
-                    <td className="px-6 py-4">4 vé • Ghế F01-F04</td>
-                    <td className="px-6 py-4">15 phút trước</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
-                        Thành công
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="group hover:bg-surface-darker/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium text-xs">
-                          T
-                        </div>
-                        <span className="font-medium text-white">Trần Văn C</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-white">Kung Fu Panda 4</td>
-                    <td className="px-6 py-4">1 vé • Ghế H10</td>
-                    <td className="px-6 py-4">32 phút trước</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-500 ring-1 ring-inset ring-yellow-500/20">
-                        Chờ thanh toán
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="group hover:bg-surface-darker/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium text-xs">
-                          H
-                        </div>
-                        <span className="font-medium text-white">
-                          Hoàng Văn D
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-white">Mai</td>
-                    <td className="px-6 py-4">2 vé • Ghế K05, K06</td>
-                    <td className="px-6 py-4">1 giờ trước</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded bg-red-500/10 px-2 py-1 text-xs font-medium text-red-500 ring-1 ring-inset ring-red-500/20">
-                        Hủy
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center justify-between border-t border-surface-border px-6 py-4">
-              <span className="text-xs text-gray-500">
-                Hiển thị 4 trên 128 đơn hàng
-              </span>
-              <div className="flex gap-2">
-                <button className="flex items-center justify-center rounded bg-surface-darker px-3 py-1 text-xs font-medium text-gray-400 hover:text-white border border-surface-border hover:border-gray-500 transition-all">
-                  Trước
-                </button>
-                <button className="flex items-center justify-center rounded bg-surface-darker px-3 py-1 text-xs font-medium text-gray-400 hover:text-white border border-surface-border hover:border-gray-500 transition-all">
-                  Sau
-                </button>
               </div>
             </div>
           </div>

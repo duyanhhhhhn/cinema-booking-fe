@@ -9,14 +9,6 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
-  const getCategoryColor = (category) => {
-    const colorMap = {
-      "Khuyến mãi": "bg-red-500",
-      "Tin tức": "bg-blue-500",
-      "Review": "bg-purple-500",
-    };
-    return colorMap[category] || "bg-gray-500";
-  };
   const { searchQuery } = useRouteQuery();
   const queryParam = useMemo(() => {
     return {

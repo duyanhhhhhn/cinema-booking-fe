@@ -19,7 +19,6 @@ export default function EditBanner() {
     const { data: bannerData } = useQuery({
         ...Banner.getBannerDetail(Number(id)),
     });
-    const link = "http://localhost:3000"
     const n = useNotification();
     const { mutate: updateBanner } = useUpdateBannerMutation();
     const [previews, setPreviews] = useState<{
@@ -122,9 +121,6 @@ export default function EditBanner() {
             if (previews.banner) URL.revokeObjectURL(previews.banner);
         };
     }, [previews]);
-
-
-
 
     return (
         <div className="min-h-screen  font-sans text-gray-900">

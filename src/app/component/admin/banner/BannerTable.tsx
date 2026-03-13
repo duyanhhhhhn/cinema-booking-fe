@@ -14,6 +14,7 @@ interface BannerTableProps {
 export default function BannerTable({ banner, refetchBanner }: BannerTableProps) {
     const n = useNotification();
     const [openDeletePopup, setOpenDeletePopup] = useState(false);
+    const [openEditBannerModal, setEditBannerModal] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
     const { mutate: deleteBanner } = useDeleteBannerMutation();
@@ -21,6 +22,10 @@ export default function BannerTable({ banner, refetchBanner }: BannerTableProps)
         setSelectedId(id);
         setOpenDeletePopup(true);
     };
+    const handleClickIconEdit = (id: number) => {
+        setSelectedId(id);
+        setEditBannerModal(true);
+    }
     const handleConfirmDelete = () => {
         if (selectedId) {
             deleteBanner(selectedId, {

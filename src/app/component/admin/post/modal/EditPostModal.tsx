@@ -1,7 +1,7 @@
 "use client"
 
 import { useNotification } from "@/hooks/useNotification";
-import { initialPostData, PostFormData, useCreatePostMutation } from "@/types/data/post/post";
+import { initialPostData, Post, PostFormData, useUpdatePostMutation } from "@/types/data/post/post";
 import { Backdrop, Fade, Modal } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
@@ -13,9 +13,11 @@ import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-export default function AddPostModal({ open, onClose, refetchPost }:
-    { open: boolean; onClose: () => void, refetchPost: () => void }
+export default function EditPostModal({ open, onClose, refetchPost, id }:
+    { open: boolean; onClose: () => void, refetchPost: () => void, id: number }
 ) {
+    const data = Post.getPostsInfo(id);
+    console.log(data);
     const n = useNotification();
     const [previews, setPreviews] = useState<{
         banner: string | null;
@@ -32,7 +34,7 @@ export default function AddPostModal({ open, onClose, refetchPost }:
         content: "<p>Hello World!</p>",
         immediatelyRender: false
     });
-    const { mutate: createPost } = useCreatePostMutation()
+    const { mutate: updatePost } = useUpdatePostMutation()
     const onSubmit = async (data: PostFormData) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
@@ -48,7 +50,7 @@ export default function AddPostModal({ open, onClose, refetchPost }:
                 }
             }
             formData.delete("bannerUrl");
-            createPost(formData, {
+            updatePost({ id: Number(1), payload: formData }, {
                 onSuccess: () => {
                     onClose();
                     n.success("Success");

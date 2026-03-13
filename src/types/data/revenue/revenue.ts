@@ -22,7 +22,8 @@ export class Revenue extends Model {
     static queryKeys = {
         paginate: 'REVENUE_PAGINATE_QUERY',
         findOne: 'REVENUE_FIND_ONE_QUERY',
-        getByDate: 'REVENUE_GET_BY_DATE_QUERY'
+        getByDate: 'REVENUE_GET_BY_DATE_QUERY',
+        getByMonth: 'REVENUE_GET_BY_MONTH_QUERY'
     }
     static objects = ObjectsFactory.factory<IRevenue>(modelConfig, this.queryKeys);
     static getRevenue(month) {
@@ -35,6 +36,18 @@ export class Revenue extends Model {
                         params: {
                             month: month
                         }
+                    })
+                    .then((res) => res.data);
+            }
+        }
+    }
+    static getRevenueByMonth() {
+        return {
+            queryKey: [this.queryKeys.paginate],
+            queryFn: () => {
+                return this.api
+                    .get<IRevenue[]>({
+                        url: '/revenue/month/all',
                     })
                     .then((res) => res.data);
             }

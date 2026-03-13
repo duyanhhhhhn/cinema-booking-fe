@@ -23,6 +23,10 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
         setSelectedVoucher(voucher);
         setOpenDeletePopup(true);
     };
+    const handleClickIconEdit = (voucher: IVoucher) => {
+        setSelectedVoucher(voucher);
+        setEditVoucherModal(true);
+    }
     const { mutate: deleteVoucher } = useDeleteVoucherMutation();
     const handleConfirmDelete = () => {
         if (selectedVoucher) {
@@ -82,7 +86,7 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                                     <button
                                         className="hover:bg-background-dark rounded-lg border"
                                         title="Chỉnh sửa"
-                                        onClick={() => setEditVoucherModal(true)}
+                                        onClick={() => handleClickIconEdit(item)}
                                     >
                                         <span className=" text-[20px]">
                                             <EditIcon></EditIcon>
@@ -98,16 +102,16 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                                         </span>
                                     </button>
                                 </div>
-                                <EditVoucherModal
-                                    open={openEditVoucherModal} onClose={() => setEditVoucherModal(false)}
-                                    refetchVoucher={refetchVoucher}
-                                    id={item.id}
-                                ></EditVoucherModal>
                             </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+            <EditVoucherModal
+                open={openEditVoucherModal} onClose={() => setEditVoucherModal(false)}
+                refetchVoucher={refetchVoucher}
+                id={selectedVoucher?.id || 0}
+            ></EditVoucherModal>
             <DeletePopup
                 open={openDeletePopup}
                 onClose={() => setOpenDeletePopup(false)}

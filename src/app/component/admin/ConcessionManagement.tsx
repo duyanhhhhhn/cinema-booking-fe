@@ -21,7 +21,6 @@ export default function ConcessionManagement() {
 
     const { data, refetch: refetchCombo } = useQuery({ ...Combo.objects.paginateQueryFactory(queryParams) });
     const combo = data?.data || [];
-    console.log("combo:", combo);
     const [filterType, setFilterType] = useState<"ALL" | "COMBO" | "SINGLE">("ALL");
     const [searchTerm, setSearchTerm] = useState("");
     const filteredProducts = combo.filter((p) => {
