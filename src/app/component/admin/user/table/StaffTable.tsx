@@ -63,6 +63,17 @@ export default function StaffTable({
     />
   );
 
+  const IMAGE_URL =
+    process.env.NEXT_PUBLIC_IMAGE_URL || "http://localhost:8080";
+
+  const getAvatarUrl = (avatarUrl?: string) => {
+    if (!avatarUrl) return "/default-avatar.png";
+    if (avatarUrl.startsWith("http")) return avatarUrl;
+    if (avatarUrl.startsWith("/"))
+      return `${IMAGE_URL}${avatarUrl}?t=${Date.now()}`;
+    return `${IMAGE_URL}/${avatarUrl}?t=${Date.now()}`;
+  };
+
   return (
     <>
       <TableContainer
@@ -94,7 +105,7 @@ export default function StaffTable({
                       width: 40,
                       height: 40,
                       borderRadius: "50%",
-                      backgroundImage: `url(${staff.avatarUrl || "/default-avatar.png"})`,
+                      backgroundImage: `url(${getAvatarUrl(staff.avatarUrl)})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }}

@@ -56,7 +56,7 @@ export default function AddStaffPopup({
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      roleType: isAdmin ? "STAFF" : "STAFF",
+      roleType: isAdmin ? "MANAGER" : "STAFF",
     },
   });
 

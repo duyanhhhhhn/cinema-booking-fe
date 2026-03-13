@@ -59,9 +59,8 @@ export default function CinemaFind() {
     }
     return Array.from(new Set(pages));
   }, [page, totalPages]);
-
   return (
-    <section className="w-full bg-[#000000FF]">
+    <section className="w-full bg-[#121212]">
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 text-slate-50 md:px-8 md:py-14">
         {/* HEADER */}
         <header className="space-y-2 rounded-2xl border border-[#412C3080] bg-gradient-to-r from-[#412C3080] to-[#412C3080] px-6 py-5 shadow-[0_18px_45px_rgba(0,0,0,0.65)]">

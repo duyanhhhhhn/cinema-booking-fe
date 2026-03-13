@@ -73,7 +73,8 @@ const menuItems = [
     path: "/admin/movies-group",
     children: [
       { text: "Danh sách phim", path: "/admin/movies" },
-      { text: "Suất chiếu", path: "/admin/showtimes" },
+      { text: "Suất chiếu", path: "/admin/showtime-scheduler" },
+      { text: "Đánh giá", path: "/admin/movie-reviews" },
     ],
   },
   {
