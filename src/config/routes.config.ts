@@ -229,12 +229,13 @@ export function requiresAuth(pathname: string): boolean {
 }
 
 /**
- * Helper function: Get redirect URL cho user dựa trên role
+ * Helper function: Get redirect URL cho user dựa trên role (admin/staff/manager -> /admin)
  */
 export function getRedirectUrlByRole(role: UserRole | string): string {
   switch (role) {
     case UserRole.ADMIN:
     case UserRole.STAFF:
+    case UserRole.MANAGER:
       return "/admin";
     case UserRole.CLIENT:
     default:

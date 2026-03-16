@@ -1,17 +1,26 @@
+/* eslint-disable react-hooks/static-components */
 "use client";
 
 import React from "react";
 import Image from "next/image";
+import dayjs from "dayjs";
+
+// --- Types ---
 export type PrintTicketResponse = {
   bookingCode: string;
   movieTitle: string;
   cinemaName: string;
+  cinemaAddress: string;
   roomName: string;
   startTime: string;
   printedTickets: PrintedTicket[];
+  combos?: { name: string; detail: string; price: number }[];
+  totalPrice: number;
   totalPrinted: number;
   printedAt: string;
   printStamp: string;
+  customerName?: string;
+  duration?: string;
 };
 
 export type PrintedTicket = {
@@ -22,62 +31,27 @@ export type PrintedTicket = {
   qrData: string;
 };
 
-type PrintableInvoiceTicketProps = {
-  data: PrintTicketResponse;
-};
-
-function formatDateTime(value?: string) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-
-  return d.toLocaleString("vi-VN", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+// --- Utilities ---
 
 function formatMoney(value?: number) {
-  if (value == null) return "0đ";
-  return `${value.toLocaleString("vi-VN")}đ`;
+  if (value == null) return "0";
+  return value.toLocaleString("vi-VN");
 }
 
-function getSeatTypeLabel(seatType?: string) {
-  if (!seatType) return "Thường";
-  switch (seatType.toUpperCase()) {
-    case "VIP":
-      return "Ghế VIP";
-    case "COUPLE":
-      return "Ghế Couple";
-    case "STANDARD":
-      return "Ghế Standard";
-    default:
-      return seatType;
-  }
-}
-
+// --- Sub-components ---
 function SideBrandColumn() {
   return (
-    <div className="flex h-full w-[52px] flex-col items-center justify-between py-2">
-      {Array.from({ length: 16 }).map((_, i) => (
+    <div className="flex h-full gap-15 w-20 flex-col items-center justify-between py-2 bg-[#1e73be] print:bg-black">
+      {Array.from({ length: 15 }).map((_, i) => (
         <div
           key={i}
-          className="flex h-[34px] w-[34px] items-center justify-center rounded-[6px] bg-white shadow-sm ring-1 ring-sky-200"
+          className="flex h-15 w-15 flex-col items-center justify-center rounded-sm bg-white p-1 shadow-sm"
         >
-          <div className="text-center leading-[1]">
-            <div className="text-[7px] font-bold uppercase tracking-tight text-sky-700">
-              beta
-            </div>
-            <div className="text-[6px] font-semibold uppercase text-sky-500">
-              two
-            </div>
-            <div className="text-[6px] font-semibold uppercase text-sky-500">
-              cinema
-            </div>
+          <div className="text-[15px] font-black uppercase text-neutral-800 leading-none">
+            BETA
+          </div>
+          <div className="text-[15px] font-bold uppercase text-white bg-[#1e73be] print:bg-black px-0.5 mt-0.5">
+            TWO
           </div>
         </div>
       ))}
@@ -85,249 +59,236 @@ function SideBrandColumn() {
   );
 }
 
-function BarcodeFake({ value }: { value: string }) {
-  const bars = Array.from({ length: Math.max(value.length * 4, 48) }).map(
-    (_, i) => {
-      const wide = i % 5 === 0 || i % 7 === 0;
-      const height = 62 + ((i * 9) % 22);
-      return {
-        width: wide ? 3 : i % 2 === 0 ? 1 : 2,
-        height,
-      };
-    },
-  );
-
+function InfoRow({
+  label,
+  value,
+  boldValue = false,
+  className = "",
+}: {
+  label: string;
+  value: any;
+  boldValue?: boolean;
+  className?: string;
+}) {
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex h-[88px] items-end gap-[1px]">
-        {bars.map((bar, i) => (
-          <span
-            key={i}
-            className="inline-block bg-black"
-            style={{
-              width: `${bar.width}px`,
-              height: `${bar.height}px`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="mt-2 text-[12px] tracking-[2.5px] text-neutral-600">
+    <div
+      className={`grid grid-cols-[110px_1fr] items-start py-0.5 ${className}`}
+    >
+      <div className="text-[13px] text-neutral-700">{label}</div>
+      <div
+        className={`text-[13px] text-right text-neutral-900 ${boldValue ? "font-bold" : ""}`}
+      >
         {value}
       </div>
     </div>
   );
 }
 
-function TicketInfoRow({
-  left,
-  right,
-  leftClassName = "",
-  rightClassName = "",
-}: {
-  left: React.ReactNode;
-  right: React.ReactNode;
-  leftClassName?: string;
-  rightClassName?: string;
-}) {
-  return (
-    <div className="grid grid-cols-[1fr_auto] items-end gap-3">
-      <div className={`text-[13px] text-neutral-700 ${leftClassName}`}>
-        {left}
-      </div>
-      <div className={`text-[13px] text-neutral-800 ${rightClassName}`}>
-        {right}
-      </div>
-    </div>
-  );
-}
-
-function SingleTicketPaper({
-  root,
-  ticket,
-  index,
-}: {
-  root: PrintTicketResponse;
-  ticket: PrintedTicket;
-  index: number;
-}) {
-  return (
-    <div className="mx-auto w-[390px] bg-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] print:shadow-none">
-      <div className="flex">
-        <div className="bg-sky-400">
-          <SideBrandColumn />
-        </div>
-
-        <div className="flex-1 px-4 py-5 font-sans text-neutral-900">
-          <div className="min-h-[1090px]">
-            <div className="text-center">
-<div className="mx-auto mb-3 flex items-center justify-center">
-  <Image
-    src="/logo/logo_cinema.png"
-    alt="Beta Two Cinemas"
-    width={82}
-    height={82}
-    className="h-auto w-auto object-contain"
-    priority
-  />
-</div>
-
-              <div className="text-[28px] font-semibold italic tracking-tight text-neutral-700">
-                Beta Two
-              </div>
-
-              <div className="mt-1 text-[10px] uppercase tracking-[1px] text-neutral-500">
-                Trải nghiệm điện ảnh trọn vẹn
-              </div>
-
-              <div className="mt-3 text-[11px] font-medium uppercase leading-4 text-neutral-700">
-                Mã in: {root.printStamp || "---"}
-              </div>
-
-              <div className="mt-3 text-[12px] font-bold uppercase leading-4 text-neutral-800">
-                {root.cinemaName}
-              </div>
-
-              <div className="mx-auto mt-1 max-w-[240px] text-[11px] leading-4 text-neutral-600">
-                Phòng chiếu: {root.roomName}
-              </div>
-            </div>
-
-            <div className="my-4 border-t border-dashed border-neutral-300" />
-
-            <div className="text-center">
-              <div className="text-[24px] font-bold uppercase tracking-[1px] text-neutral-700">
-                Vé xem phim
-              </div>
-              <div className="mt-1 text-[14px] uppercase tracking-[2px] text-neutral-300">
-                {root.bookingCode}
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-neutral-600">
-              <div>Ký hiệu: N/A</div>
-              <div className="text-right">Tổng vé: {root.totalPrinted}</div>
-            </div>
-
-            <div className="mt-1 grid grid-cols-2 gap-3 text-[11px] text-neutral-600">
-              <div>Số vé: {ticket.ticketCode}</div>
-              <div className="text-right">STT: {index + 1}</div>
-            </div>
-
-            <div className="mt-4 space-y-1.5">
-              <TicketInfoRow
-                left={formatDateTime(root.startTime)}
-                right=""
-                leftClassName="font-medium"
-              />
-
-              <div className="text-[16px] font-bold leading-5 text-neutral-800">
-                {root.movieTitle}
-              </div>
-
-              <div className="grid grid-cols-[1fr_auto] items-end gap-3">
-                <div className="text-[13px] text-neutral-600">
-                  {getSeatTypeLabel(ticket.seatType)}
-                </div>
-                <div className="text-[13px] font-medium text-neutral-700">
-                  {formatMoney(ticket.price)}
-                </div>
-              </div>
-
-              <div className="mt-1 text-right text-[10px] italic text-neutral-400">
-                (Đã gồm VAT)
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-6">
-              <div>
-                <div className="text-[13px] text-neutral-500">Ghế/Seat</div>
-                <div className="mt-1 text-[16px] font-bold text-neutral-800">
-                  {ticket.seatCode}
-                </div>
-              </div>
-
-              <div className="text-right">
-                <div className="text-[13px] text-neutral-500">Phòng/Room</div>
-                <div className="mt-1 text-[16px] font-bold text-neutral-800">
-                  {root.roomName}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 text-center text-[12px] font-semibold text-neutral-600">
-              ** Xuất trình vé khi vào rạp **
-            </div>
-
-            <div className="my-4 border-t border-dashed border-neutral-300" />
-
-            <div className="space-y-1 text-[11px] text-neutral-600">
-              <div className="grid grid-cols-[1fr_auto] gap-3">
-                <div>Mã booking: {root.bookingCode}</div>
-                <div>In lúc: {formatDateTime(root.printedAt)}</div>
-              </div>
-              <div>QR Data: {ticket.qrData}</div>
-            </div>
-
-            <div className="mt-6 text-center">
-              <div className="text-[16px] font-semibold text-neutral-700">
-                Xin chân thành cảm ơn quý khách!
-              </div>
-              <div className="mx-auto mt-2 max-w-[250px] text-[11px] leading-4 text-neutral-500">
-                Vui lòng đến trước giờ chiếu để được hỗ trợ tốt nhất. Không đổi
-                trả vé sau khi in.
-              </div>
-            </div>
-
-            <div className="my-5 border-t border-dashed border-neutral-300" />
-
-            <div className="text-center">
-              <div className="text-[13px] font-bold uppercase tracking-[0.6px] text-neutral-700">
-                BETA TWO CINEMAS - RẠP NGON GIÁ TỐT
-              </div>
-              <div className="mt-1 text-[10px] text-neutral-500">
-                www.betatwocinemas.vn - facebook.com/betatwocinemas
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <BarcodeFake value={ticket.ticketCode || root.bookingCode} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-sky-400">
-          <SideBrandColumn />
-        </div>
-      </div>
-    </div>
-  );
-}
-
+// --- MAIN COMPONENT ---
 export default function PrintableInvoiceTicket({
   data,
-}: PrintableInvoiceTicketProps) {
-  const tickets = data?.printedTickets ?? [];
+}: {
+  data: PrintTicketResponse;
+}) {
+  React.useEffect(() => {
+    document.body.classList.add("print-invoice-mode");
+    return () => {
+      document.body.classList.remove("print-invoice-mode");
+    };
+  }, []);
 
-  if (!data || tickets.length === 0) {
+  if (!data) return null;
+  console.log(data);
+
+  const allSeatCodes = data.printedTickets.map((t) => t.seatCode).join(", ");
+  const totalTicketPrice = data.printedTickets.reduce(
+    (sum, t) => sum + t.price,
+    0,
+  );
+
+  // Template dùng chung cho việc render 1 "Tờ vé"
+  const TicketTemplate = ({
+    isMasterTicket,
+    singleTicket,
+  }: {
+    isMasterTicket: boolean;
+    singleTicket?: PrintedTicket;
+  }) => {
     return (
-      <div className="flex min-h-[400px] items-center justify-center rounded-2xl bg-white text-neutral-500">
-        Không có dữ liệu vé để in
+      <div className="flex w-full  h-fit bg-white shadow-2xl print:shadow-none print:w-full break-inside-avoid">
+        {/* Cột trái */}
+        <SideBrandColumn />
+
+        {/* Nội dung chính */}
+        <div className="flex-1 px-8 py-6 font-sans text-neutral-900 flex flex-col">
+          {/* Logo & Header */}
+          <div className="flex text-center justify-center">
+            <Image
+              src="/logo/logo1.png"
+              alt="Beta Two Cinemas"
+              height={100}
+              width={100}
+              className="h-auto w-auto object-contain"
+              priority
+            />
+          </div>
+          <div className="text-center ">
+            <h1 className="text-[14px] font-bold uppercase tracking-wide">
+              {data.cinemaName}
+            </h1>
+            <p className="mt-1 text-[10px] text-neutral-500 leading-tight">
+              {data.cinemaAddress || "Địa chỉ rạp chưa cập nhật"}
+            </p>
+          </div>
+
+          <div className="my-2 border-t border-dashed border-neutral-300" />
+
+          {/* Tiêu đề vé (Tổng hay Lẻ) */}
+          <h2 className="text-center text-[18px] font-bold tracking-[3px] uppercase my-4 text-neutral-800">
+            {isMasterTicket ? "HÓA ĐƠN TỔNG" : "VÉ XEM PHIM"}
+          </h2>
+
+          {/* Thông tin vé cơ bản (Dùng chung) */}
+          <div className="space-y-1">
+            <InfoRow label="Tên phim:" value={data.movieTitle} boldValue />
+            <InfoRow label="Ngày giờ:" value={data.startTime} boldValue />
+            <InfoRow label="Phòng chiếu:" value={data.roomName} boldValue />
+
+            {/* Nếu là vé tổng -> Hiện tất cả ghế. Nếu là vé lẻ -> Hiện 1 ghế */}
+            <InfoRow
+              label="Ghế ngồi:"
+              value={isMasterTicket ? allSeatCodes : singleTicket?.seatCode}
+              boldValue
+            />
+          </div>
+
+          {/* Phân vùng riêng cho VÉ TỔNG (Hiển thị Tiền & Combo) */}
+          {isMasterTicket && (
+            <>
+              <div className="flex justify-between items-end mt-2 pt-2 border-t border-dotted border-neutral-200">
+                <span className="text-[13px] text-neutral-700">
+                  Tổng Giá Ghế ({data.printedTickets.length}):
+                </span>
+                <span className="text-[13px] font-bold text-neutral-900">
+                  {formatMoney(totalTicketPrice)}đ
+                </span>
+              </div>
+
+              {/* Combo Box */}
+              {data.combos && data.combos.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-[12px] font-bold mb-2 italic underline">
+                    Combo & Đồ ăn:
+                  </h3>
+                  <div className="space-y-2">
+                    {data.combos.map((combo, idx) => (
+                      <div
+                        key={idx}
+                        className="grid grid-cols-[1fr_auto] gap-2"
+                      >
+                        <div>
+                          <div className="text-[12px] font-semibold uppercase">
+                            {combo.name}
+                          </div>
+                        </div>
+                        <div className="text-[12px] font-bold">
+                          {formatMoney(combo.price)}đ
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="my-4 border-t-2 border-neutral-800" />
+              <div className="flex justify-between items-baseline mb-4">
+                <span className="text-[16px] font-bold uppercase">
+                  Tổng thanh toán:
+                </span>
+                <span className="text-[18px] font-bold text-[#1e73be] print:text-black">
+                  {formatMoney(data.totalPrice)}đ
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Spacer đẩy Barcode xuống đáy */}
+          <div className="flex-1 min-h-[40px]"></div>
+
+          {/* Footer & Barcode */}
+          <div className="mt-auto">
+            <div className="flex justify-between text-[10px] text-neutral-600 mb-2">
+              <span>Tên KH: {data.customerName || "Khách Vãng Lai"}</span>
+              <span>
+                In lúc: {dayjs(data.printedAt).format("DD/MM/YYYY HH:mm")}
+              </span>
+            </div>
+
+            <div className="my-3 border-t border-dashed border-neutral-300" />
+
+            {/* Barcode giả lập (Vé tổng dùng mã Booking, vé lẻ dùng mã TicketCode) */}
+            <div className="flex flex-col items-center">
+              <div className="flex h-[40px] w-full items-end justify-center gap-[2px]">
+                {Array.from({ length: 40 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-black"
+                    style={{
+                      width: i % 4 === 0 ? "3px" : "1.5px",
+                      height: `${60 + (i % 5) * 10}%`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="mt-1 text-[12px] font-mono tracking-[2px] font-bold">
+                {isMasterTicket ? data.bookingCode : singleTicket?.ticketCode}
+              </div>
+              <p className="text-[9px] text-neutral-500 mt-2">
+                VUI LÒNG GIỮ VÉ ĐỂ KIỂM TRA
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Cột phải */}
+        <SideBrandColumn />
       </div>
     );
-  }
+  };
 
   return (
-    <div className="flex min-h-screen justify-center bg-neutral-300 px-4 py-8 print:bg-white print:px-0 print:py-0">
-      <div className="flex w-full max-w-[900px] flex-col items-center gap-8 print:max-w-none print:gap-0">
-        {tickets.map((ticket, index) => (
-          <div
-            key={ticket.ticketCode || `${data.bookingCode}-${index}`}
-            className="print:mb-0 print:break-after-page"
-          >
-            <SingleTicketPaper root={data} ticket={ticket} index={index} />
-          </div>
-        ))}
+    <div className="printable-invoice-root fixed inset-0 z-[9999] overflow-y-auto bg-neutral-200 p-8 print:p-0 print:bg-white flex flex-col items-center gap-8">
+      {/* 1. Render Vé Tổng (Master Ticket) */}
+      <div className="print:break-after-page w-full flex justify-center">
+        <TicketTemplate isMasterTicket={true} />
       </div>
+
+      {/* 2. Lặp qua render từng Vé Lẻ (Single Tickets) */}
+      {data.printedTickets.map((ticket, index) => (
+        <div
+          key={ticket.ticketCode}
+          className="print:break-after-page w-full flex justify-center"
+        >
+          <TicketTemplate isMasterTicket={false} singleTicket={ticket} />
+        </div>
+      ))}
+
+      {/* Style hỗ trợ in ấn */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @media print {
+          body * { visibility: hidden; }
+          .printable-invoice-root, .printable-invoice-root * { visibility: visible; }
+          .printable-invoice-root { position: absolute; left: 0; top: 0; width: 100%; gap: 0; background: white; }
+          /* Định nghĩa lại trang in để fit máy in bill (ví dụ 80mm) nếu cần */
+          @page { margin: 0; }
+          /* Ép ngắt trang sau mỗi vé */
+          .print\\:break-after-page { page-break-after: always; break-after: page; margin-bottom: 0 !important; }
+        }
+      `,
+        }}
+      />
     </div>
   );
 }

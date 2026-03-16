@@ -15,7 +15,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useForm } from "react-hook-form";
-import { Movie, MovieFormData, useUpdateMovieMutation } from "@/types/data/movie";
+import { Movie, MovieFormData, MovieGenreList, useUpdateMovieMutation } from "@/types/data/movie";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -303,10 +303,12 @@ export default function MovieDetailPage() {
                         className={`${inputClass} appearance-none cursor-pointer`}
                         {...method.register("genre")}
                       >
-                        <option>Khoa học viễn tưởng</option>
-                        <option>Hành động</option>
-                        <option>Phiêu lưu</option>
-                        <option>Tâm lý</option>
+                        <option value="">Chọn thể loại</option>
+                        {MovieGenreList.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
                       </select>
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
                         <ExpandMoreIcon />
