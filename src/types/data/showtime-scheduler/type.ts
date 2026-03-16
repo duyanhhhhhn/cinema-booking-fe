@@ -30,6 +30,7 @@ export interface IAdminSchedulerMeta {
 }
 
 export interface IAdminSchedulerPayload {
+  cinemaName: string | null;
   resources: IAdminSchedulerResource[];
   events: IAdminSchedulerEvent[];
 }
@@ -38,8 +39,27 @@ export type IAdminSchedulerResponse = IResponse<IAdminSchedulerPayload> & {
   meta: IAdminSchedulerMeta;
 };
 
-export interface IAdminCreateShowtimeParams {
+export interface IAdminCinemaOption {
+  id: number;
+  name: string;
+}
+
+export interface IMePayload {
+  avatarUrl: string | null;
   cinemaId: number;
+  createdAt: string;
+  email: string;
+  fullName: string;
+  id: number;
+  isActive: number;
+  phone: string | null;
+  position: string | null;
+  publicPrefix: string | null;
+  role: string;
+}
+
+export interface IAdminCreateShowtimeParams {
+  cinemaId?: number;
   roomId: number;
   movieId: number;
   startAt: string;
@@ -47,7 +67,7 @@ export interface IAdminCreateShowtimeParams {
 }
 
 export interface IAdminMoveShowtimeParams {
-  cinemaId: number;
+  cinemaId?: number;
   roomId: number;
   startAt: string;
 }
@@ -63,7 +83,6 @@ export interface IAdminMovieOption {
 
 export interface IAdminShowtimeDetail {
   id: number;
-
   cinemaId: number;
 
   roomId: number;
@@ -85,7 +104,7 @@ export interface IAdminShowtimeDetail {
 export type IAdminShowtimeDetailResponse = IResponse<IAdminShowtimeDetail>;
 
 export interface IAdminEditShowtimeParams {
-  cinemaId: number;
+  cinemaId?: number;
   roomId: number;
   movieId: number;
   startAt: string;
