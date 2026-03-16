@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRedirectUrlByRole } from "@/config/routes.config";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,8 +26,10 @@ export default function LoginPage() {
       const result = await login(email, password);
 
       if (result.success) {
-        // Lấy redirect URL từ query params hoặc mặc định
-        const redirectUrl = searchParams.get("redirect") || "/";
+        // Redirect: ưu tiên query param, không thì staff/manager -> /admin, client -> /
+        const redirectUrl =
+          searchParams.get("redirect") ||
+          (result.user ? getRedirectUrlByRole(result.user.role) : "/");
         router.push(redirectUrl);
       } else {
         setError(result.error || "Đăng nhập thất bại");

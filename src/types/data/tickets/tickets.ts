@@ -1,17 +1,22 @@
 import { Model } from "@/types/core/model";
-import { ObjectsFactory } from "@/types/core/objectFactory";
 import type { IBookingDetail, ITicket } from "./type";
-import type { IPaginateResponse, IResponse } from "@/types/core/api";
+import type { IHttpError, IPaginateResponse, IResponse } from "@/types/core/api";
+import { useMutation } from "@tanstack/react-query";
 
 const modelConfig = {
   path: "users/me/bookings",
   modal: "tickets",
 };
+interface IPrintTicketsAdminPayload {
+  bookingCode: string;
+  ticketCodes: string[];
+}
 
 export class Tickets extends Model {
   static queryKeys = {
     all: "ME_TICKETS_ALL_QUERY",
-    detail: "ME_TICKETS_DETAIL_QUERY"
+    detail: "ME_TICKETS_DETAIL_QUERY",
+    print: "ME_TICKETS_PRINT_QUERY"
   };
 
    static {
@@ -52,4 +57,17 @@ export class Tickets extends Model {
       },
     };
   }
+  static printTicketsAdmin(payload: IPrintTicketsAdminPayload) {
+    return this.api.post<IResponse<void>>({
+      url: "/tickets/print",
+      data: payload,
+    });
+  }
 }
+export const usePrintTicketsAdminMutation = () => {
+  return useMutation<IResponse<void>, IHttpError, IPrintTicketsAdminPayload>({
+    mutationFn: (payload: IPrintTicketsAdminPayload) => {
+      return Tickets.printTicketsAdmin(payload).then((r) => r.data);
+    },
+  });
+};

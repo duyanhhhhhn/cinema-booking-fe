@@ -10,6 +10,7 @@ import { createMovieSchema } from "@/types/data/movie/schema/movie";
 import {
   initialData,
   MovieFormData,
+  MovieGenreList,
   useCreateMovieMutation,
 } from "@/types/data/movie";
 import { useNotification } from "@/hooks/useNotification";
@@ -312,19 +313,23 @@ export default function AddMovieModal({
                   name="durationMinutes"
                   {...methods.register("durationMinutes")}
                   type="number"
-                  placeholder="VD: 120"
                   className={inputClass}
                 />
               </div>
               <div>
                 <label className={labelClass}>Thể loại</label>
-                <input
+                <select
                   name="genre"
                   {...methods.register("genre")}
-                  type="text"
-                  placeholder="Hành động, Hài..."
                   className={inputClass}
-                />
+                >
+                  <option value=""></option>
+                  {MovieGenreList.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className={labelClass}>Ngôn ngữ</label>

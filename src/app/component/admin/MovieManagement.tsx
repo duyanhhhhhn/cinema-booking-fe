@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import { Search, Add, ArrowDropDown } from "@mui/icons-material";
-import { Movie } from "@/types/data/movie/movie";
+import { Movie, MovieGenreList } from "@/types/data/movie/movie";
 import MovieTable from "./movies/MovieTable";
 import CustomPagination from "./table/CustomPagination";
 import AddMoviePopup from "./movies/modal/AddMoviePopup";
@@ -10,12 +10,14 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 export default function MovieManagement() {
   const [openAddMovieModal, setopenAddMovieModal] = useState(false);
-  const { searchQuery } = useRouteQuery();
+  const { searchQuery,updateQuery } = useRouteQuery();
 
   const queryParams = useMemo(() => {
     return {
       page: searchQuery.get("page") || 1,
       perPage: searchQuery.get("perPage") || 10,
+      title: searchQuery.get("search"),
+      genre: searchQuery.get("genre"),
     };
   }, [searchQuery]);
   const { data: moviesData,refetch: refetchMovies } = useQuery({
@@ -49,6 +51,7 @@ export default function MovieManagement() {
                   <input
                     className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#ec131e] border border-zinc-300 border-l-0 bg-white h-full placeholder:text-zinc-500 px-4 pl-2 text-base font-normal"
                     placeholder="Tìm kiếm phim theo tên..."
+                    onChange={(e) => updateQuery({ search: e.target.value })}
                   />
                 </div>
               </label>
@@ -64,22 +67,24 @@ export default function MovieManagement() {
           </div>
 
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-zinc-200 px-4 hover:bg-zinc-300 transition-colors">
-              <p className="text-zinc-800 text-sm font-medium">Tất cả</p>
-            </button>
-            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-              <p className="text-zinc-600 text-sm font-medium">Đang chiếu</p>
-            </button>
-            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-              <p className="text-zinc-600 text-sm font-medium">Sắp chiếu</p>
-            </button>
-            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 px-4 hover:bg-zinc-200 transition-colors">
-              <p className="text-zinc-600 text-sm font-medium">Ngừng chiếu</p>
-            </button>
-            <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-transparent border border-zinc-300 pl-4 pr-3 hover:bg-zinc-200 transition-colors">
-              <p className="text-zinc-600 text-sm font-medium">Thể loại</p>
-              <ArrowDropDown className="text-zinc-600" fontSize="small" />
-            </button>
+            
+            <div className="relative flex h-8 shrink-0 items-center">
+              <select
+                value={searchQuery.get("genre") ?? ""}
+                onChange={(e) => updateQuery({ genre: e.target.value || undefined })}
+                className="h-full min-w-[140px] cursor-pointer appearance-none rounded-full border border-zinc-300 bg-white pl-4 pr-8 text-sm font-medium text-zinc-800 transition-colors hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#ec131e]/30 focus:border-[#ec131e]"
+              >
+                <option value="">Chọn thể loại</option>
+                {MovieGenreList.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500">
+                <ArrowDropDown fontSize="small" />
+              </span>
+            </div>
           </div>
         </div>
         {/* --- Main Content Area: Table & Pagination --- */}
@@ -90,7 +95,7 @@ export default function MovieManagement() {
             refetchMovies={refetchMovies}
           />
 
-        <CustomPagination
+          <CustomPagination
             itemsPerPage={moviesData?.meta.perPage || 0}
             totalItems={moviesData?.meta.total || 0}
           />

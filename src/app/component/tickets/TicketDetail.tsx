@@ -1,6 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Be_Vietnam_Pro } from "next/font/google";
 import { useTicketDetail } from "./TicketComponent/TicketDetail.logic";
@@ -14,12 +14,6 @@ const beVietnam = Be_Vietnam_Pro({
 export default function TicketDetail({ code }: { code: string }) {
   const router = useRouter();
   const { vm, statusUI, qrUrl } = useTicketDetail(code);
-
-  const handleDownloadTicket = () => {
-    if (vm.disabledDownload) return;
-    const bookingCode = vm.bookingCode || code;
-    window.open(`/print-ticket?code=${encodeURIComponent(bookingCode)}`, "_blank");
-  };
 
   return (
     <div className={`min-h-screen bg-[#0B0C0F] text-white ${beVietnam.className} antialiased`}>
@@ -85,12 +79,6 @@ export default function TicketDetail({ code }: { code: string }) {
                         <div key={i}>{x}</div>
                       ))}
                     </div>
-                    <Link
-                      href="#"
-                      className="mt-3 inline-flex text-xs font-extrabold text-red-400 transition hover:text-red-300"
-                    >
-                      Xem bản đồ ⟶
-                    </Link>
                   </div>
 
                   <div className="rounded-2xl border border-white/5 bg-white/5 p-5">
@@ -201,31 +189,6 @@ export default function TicketDetail({ code }: { code: string }) {
                   {vm.bookingCode}
                 </div>
               </div>
-
-              <div className="mt-6">
-                <button
-                  onClick={handleDownloadTicket}
-                  disabled={vm.disabledDownload}
-                  className={`group relative inline-flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border px-5 py-4 text-sm font-extrabold tracking-[0.02em] transition-all duration-300 ${
-                    vm.disabledDownload
-                      ? "cursor-not-allowed border-white/5 bg-white/5 text-white/30"
-                      : "border-red-400/50 bg-gradient-to-r from-red-600 via-red-500 to-rose-500 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_18px_40px_rgba(239,68,68,0.35)] hover:-translate-y-0.5 hover:from-red-500 hover:via-red-400 hover:to-rose-400 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_55px_rgba(248,113,113,0.45)] active:translate-y-0"
-                  }`}
-                >
-                  {!vm.disabledDownload && (
-                    <>
-                      <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                        <span className="absolute inset-y-0 left-[-30%] w-[40%] rotate-12 bg-white/20 blur-xl transition-all duration-500 group-hover:left-[110%]" />
-                      </span>
-                      <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10 animate-pulse" />
-                    </>
-                  )}
-
-                  <span className="relative text-lg">⬇</span>
-                  <span className="relative">Tải vé ngay</span>
-                </button>
-              </div>
-
               <div className="mt-7 space-y-3 border-t border-white/5 pt-5 text-xs">
                 <div className="flex items-center justify-between gap-4">
                   <div className="font-semibold text-white/40">Đặt vào lúc:</div>
