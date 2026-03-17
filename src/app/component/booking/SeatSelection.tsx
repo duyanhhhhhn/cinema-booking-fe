@@ -6,7 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Seat } from "@/types/data/seat/seat";
 import dayjs from "dayjs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setSeats, setSeatPriceMap, setStep, setMovieInfo, setHoldInfo } from "@/store/bookingSlice";
+import {
+  setSeats,
+  setSeatPriceMap,
+  setStep,
+  setMovieInfo,
+  setHoldInfo,
+} from "@/store/bookingSlice";
 import { selectBookingSeats } from "@/store/selectors";
 import BookingSidebar from "./BookingSidebar";
 import { useHoldBookingMutation } from "@/types/data/booking/booking";
@@ -21,9 +27,9 @@ export default function SeatSelection() {
   const n = useNotification();
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>(
-    seatsFromStore.length > 0 ? seatsFromStore : []
+    seatsFromStore.length > 0 ? seatsFromStore : [],
   );
-  
+
   const { showtimeId } = useParams();
 
   const toggleSeat = (seatId: string) => {
@@ -59,7 +65,6 @@ export default function SeatSelection() {
     });
     dispatch(setSeatPriceMap(map));
   }, [dataSeatMap, dispatch]);
-
 
   const handleContinue = () => {
     if (!dataSeatMap?.seatMap) return;
@@ -106,7 +111,7 @@ export default function SeatSelection() {
                 expiresAt: res.expiresAt,
                 holdToken: res.holdToken,
                 heldSeatIds: seatIds,
-              })
+              }),
             );
           }
           n.success(res.message ?? "Đặt ghế thành công.");
@@ -121,7 +126,7 @@ export default function SeatSelection() {
                 duration: dataSeatMap.duration,
                 roomName: dataSeatMap.roomName,
                 startTime: dataSeatMap.startTime,
-              })
+              }),
             );
           }
           dispatch(setStep(2));
@@ -129,7 +134,7 @@ export default function SeatSelection() {
         onError: (error) => {
           n.error(error.message || "Đặt ghế thất bại");
         },
-      }
+      },
     );
   };
 
@@ -151,7 +156,7 @@ export default function SeatSelection() {
             <div className="grid gap-3 min-w-[600px]">
               {dataSeatMap?.seatMap.map((row) => {
                 const standardSeats = row.seats?.filter(
-                  (s) => s.type !== "COUPLE"
+                  (s) => s.type !== "COUPLE",
                 );
 
                 if (!standardSeats || standardSeats.length === 0) {
@@ -212,14 +217,13 @@ export default function SeatSelection() {
               {dataSeatMap?.seatMap.map((row) => {
                 // 1. Lọc ghế Couple
                 const coupleSeats = row.seats?.filter(
-                  (s) => s.type === "COUPLE"
+                  (s) => s.type === "COUPLE",
                 );
 
                 // 2. Nếu không có ghế Couple, trả về null (không render gì)
                 if (!coupleSeats || coupleSeats.length === 0) {
                   return null;
                 }
-
 
                 // 3. QUAN TRỌNG: Phải có từ khóa RETURN ở đây
                 // Và nên bọc các ghế của hàng đó trong một div (hoặc Fragment)
@@ -288,4 +292,3 @@ export default function SeatSelection() {
     </main>
   );
 }
-

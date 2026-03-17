@@ -45,7 +45,7 @@ interface AuthContextType {
   login: (
     email: string,
     password: string,
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; user?: User }>;
   logout: () => Promise<void>;
 
   // Role checks
@@ -250,7 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string,
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; user?: User }> => {
     try {
       const response = await loginMutation.mutateAsync({ email, password });
       const data = response?.data || response;
@@ -258,13 +258,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data?.accessToken) {
         Auth.handleLoginSuccess(data);
 
+        let loggedInUser: User | null = null;
+
         // Gọi API /me để lấy thông tin user đầy đủ từ server
         try {
           const meResponse = await Auth.getMe();
           const userData = meResponse.data?.data || meResponse.data;
 
           if (userData) {
-            setUser({
+            loggedInUser = {
               id: userData.id || userData.userId,
               email: userData.email,
               fullName:
@@ -274,23 +276,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
               cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
-            });
+            };
+            setUser(loggedInUser);
           } else {
-            // Fallback: decode token nếu API /me không trả về data
-            const decodedUser = decodeToken(data.accessToken);
-            setUser(decodedUser);
+            loggedInUser = decodeToken(data.accessToken);
+            if (loggedInUser) setUser(loggedInUser);
           }
-        } catch (meError: any) {
-          // Nếu API /me fail, fallback về decode token
-          console.warn(
-            "Failed to fetch user from /me, using token decode:",
-            meError,
-          );
-          const decodedUser = decodeToken(data.accessToken);
-          setUser(decodedUser);
+        } catch (meError: unknown) {
+          loggedInUser = decodeToken(data.accessToken);
+          if (loggedInUser) setUser(loggedInUser);
         }
 
-        return { success: true };
+        return { success: true, user: loggedInUser ?? undefined };
       }
 
       return { success: false, error: "Đăng nhập thất bại" };

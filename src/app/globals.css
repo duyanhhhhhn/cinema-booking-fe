@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+  body.print-invoice-mode * {
+    visibility: hidden !important;
+  }
+
+  body.print-invoice-mode .printable-invoice-root,
+  body.print-invoice-mode .printable-invoice-root * {
+    visibility: visible !important;
+  }
+
+  body.print-invoice-mode .printable-invoice-root {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+}

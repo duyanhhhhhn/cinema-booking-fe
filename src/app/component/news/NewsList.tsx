@@ -189,7 +189,6 @@ export default function NewsList() {
           </div>
         </main>
       </>
-
     </>
   );
 }
