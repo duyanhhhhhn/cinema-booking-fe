@@ -8,9 +8,10 @@ export interface ISeatMap {
   moviePosterUrl: string;
   movieTitle: string;
   roomName: string;
-  seatMap: SeatRow[];
+  seatLayout: SeatRow[];
   showtimeId: number;
   startTime: string;
+  roomId: number;
 }
 
 export interface SeatRow {
