@@ -98,6 +98,7 @@ const menuItems = [
       { text: "Bán vé", path: "/admin/sell-tickets" },
       { text: "Combo & Đồ ăn", path: "/admin/combos" },
       { text: "Mã giảm giá", path: "/admin/vouchers" },
+      { text: "Quản lý cấu hình giá", path: "/admin/pricing" },
     ],
   },
   {
