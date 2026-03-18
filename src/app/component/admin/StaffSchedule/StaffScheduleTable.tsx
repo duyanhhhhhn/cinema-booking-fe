@@ -2,6 +2,8 @@
 
 import ISchedule from "@/types/data/staff/schedule/schedule";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface StaffScheduleTableProps {
     schedule: ISchedule[],
@@ -34,7 +36,26 @@ export default function StaffScheduleTable({ schedule, refetchSchedule }: StaffS
                                 <TableCell>{item.shift.startTime}</TableCell>
                                 <TableCell>{item.shift.endTime}</TableCell>
                                 <TableCell>{item.status}</TableCell>
-                                <TableCell>button</TableCell>
+                                <TableCell className="p-4">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            className="bg-yellow-500 text-white rounded-md p-1"
+                                            title="Chỉnh sửa"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">
+                                                <EditIcon></EditIcon>
+                                            </span>
+                                        </button>
+                                        <button
+                                            className="bg-red-500 text-white rounded-md transition-colors p-1"
+                                            title="Xóa"
+                                        >
+                                            <span className="text-[20px]">
+                                                <DeleteIcon></DeleteIcon>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </TableCell>
                             </TableRow>
                         ))
                     }

@@ -1,4 +1,4 @@
-import { IHttpError, IResponse } from "@/types/core/api";
+import { IHttpError, IPaginateResponse, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 import { useMutation } from "@tanstack/react-query";
@@ -49,7 +49,7 @@ export class Schedule extends Model {
             queryKey: [this.queryKeys.paginate, page, pageSize],
             queryFn: () => {
                 return this.api
-                    .get<ISchedule[]>({
+                    .get<IPaginateResponse<ISchedule>>({
                         url: '/staff/schedules',
                         params: {
                             page: page,

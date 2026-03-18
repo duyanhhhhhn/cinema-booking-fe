@@ -1,6 +1,6 @@
 "use client"
 
-import { Schedule } from "@/types/data/staff/schedule/schedule";
+import ISchedule, { Schedule } from "@/types/data/staff/schedule/schedule";
 import { Add, Search } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react"
@@ -14,8 +14,8 @@ export default function () {
             size: 10
         }
     }, [])
-    const { data, refetch: refetchSchedule } = useQuery(Schedule.getThisWeekSchedules());
-    const schedule = data;
+    const { data, refetch: refetchSchedule } = useQuery(Schedule.getSchedules(queryParams.page, queryParams.size));
+    const schedule = data?.data;
     console.log(schedule);
     return (
         <div>

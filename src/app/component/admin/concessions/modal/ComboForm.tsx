@@ -7,7 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Box } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,7 +35,6 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
     });
     const [cart, setCart] = useState<CartItem[]>([]);
     useEffect(() => {
-        console.log("Combo Item:", comboItem);
         if (comboItem) {
             setCart(
                 comboItem?.map(convertComboItemToCartItem) ?? []
@@ -62,7 +61,6 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                     : item
             )
         );
-        console.log("cart", cart);
     };
     const decrease = (id: number) => {
         setCart((prev) =>
@@ -85,7 +83,6 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                         : item
                 );
             }
-            console.log("cart", cart);
             return [
                 ...prev,
                 {
@@ -120,7 +117,6 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
         if (type === "edit") {
             formData.delete("comboItem");
         }
-        console.log("Cart Items:", cart);
         formData.append("comboItem", JSON.stringify(cart.map(convertCartItemToComboItemData)));
         formData.delete("bannerUrl");
         if (type === "create") {
@@ -138,7 +134,6 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
             });
         }
         else {
-            console.log("Form Data:", Array.from(formData.entries()));
             updateCombo({ id: Number(combo?.id), payload: formData }, {
                 onSuccess: () => {
                     onClose();
@@ -351,7 +346,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                                     sx={{
                                                         width: 48,
                                                         height: 64,
-                                                        backgroundImage: `url(${urlImage}${item.imageUrl})`,
+                                                        backgroundImage: `url(${urlImage}/media/${item.imageUrl})`,
                                                         backgroundSize: "cover",
                                                         backgroundPosition: "center",
                                                         borderRadius: 1,

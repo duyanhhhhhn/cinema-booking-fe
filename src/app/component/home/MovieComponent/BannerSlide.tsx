@@ -8,7 +8,6 @@ export default function () {
         ...Banner.objects.paginateQueryFactory()
     })
     const banners: IBanner[] = dataBanner?.data?.data || [];
-    console.log("banners", banners);
     const [index, setIndex] = useState(0)
     const total = banners.length;
     const next = () => setIndex((prev) => (prev + 1) % total);
