@@ -182,7 +182,7 @@ const menuItems = [
       {
         text: "Quản lý người dùng",
         path: "/admin/users",
-        roles: [UserRole.ADMIN, UserRole.MANAGER],
+        roles: [UserRole.ADMIN],
       },
       {
         text: "Nhân viên và phân quyền",
@@ -940,14 +940,6 @@ export default function AdminLayout({
             >
               <QrCodeScannerIcon />
             </IconButton>
-            {/* Notification */}
-            <IconButton>
-              <Badge badgeContent={4} color="error">
-                <NotificationsIcon sx={{ color: "#555" }} />
-              </Badge>
-            </IconButton>
-
-            {/* User Profile */}
             <Box
               sx={{
                 display: "flex",

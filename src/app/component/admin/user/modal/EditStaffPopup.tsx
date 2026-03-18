@@ -217,14 +217,21 @@ export default function EditStaffPopup({
               )}
 
               {roleType === "STAFF" && (
-                <TextField select label="Chức vụ" {...register("position")}>
-                  <MenuItem value="">-- Chọn vị trí --</MenuItem>
-                  <MenuItem value="TICKET_SELLER">TICKET_SELLER</MenuItem>
-                  <MenuItem value="TICKET_CHECKER">TICKET_CHECKER</MenuItem>
-                  <MenuItem value="CLEANER">CLEANER</MenuItem>
-                  <MenuItem value="SECURITY">SECURITY</MenuItem>
-                  <MenuItem value="TECHNICIAN">TECHNICIAN</MenuItem>
-                </TextField>
+                <Controller
+                  name="position"
+                  control={control}
+                  rules={{ required: "Vị trí là bắt buộc cho Staff" }}
+                  render={({ field }) => (
+                    <TextField select label="Chức vụ" {...field}>
+                      <MenuItem value="">-- Chọn vị trí --</MenuItem>
+                      <MenuItem value="TICKET_SELLER">TICKET_SELLER</MenuItem>
+                      <MenuItem value="TICKET_CHECKER">TICKET_CHECKER</MenuItem>
+                      <MenuItem value="CLEANER">CLEANER</MenuItem>
+                      <MenuItem value="SECURITY">SECURITY</MenuItem>
+                      <MenuItem value="TECHNICIAN">TECHNICIAN</MenuItem>
+                    </TextField>
+                  )}
+                />
               )}
 
               <Box>
