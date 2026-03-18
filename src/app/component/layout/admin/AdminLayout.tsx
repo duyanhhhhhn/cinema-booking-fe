@@ -93,27 +93,27 @@ const menuItems = [
     text: "Hệ thống rạp",
     icon: <DomainIcon />,
     path: "/admin/system",
-    roles: [UserRole.ADMIN, UserRole.MANAGER],
+    roles: [UserRole.ADMIN],
     children: [
       {
         text: "Quản lý chi nhánh",
         path: "/admin/branches",
-        roles: [UserRole.ADMIN, UserRole.MANAGER],
+        roles: [UserRole.ADMIN],
       },
       {
         text: "Quản lý rạp chiếu",
         path: "/admin/cinemas",
-        roles: [UserRole.ADMIN, UserRole.MANAGER],
+        roles: [UserRole.ADMIN],
       },
       {
         text: "Quản lý phòng chiếu",
         path: "/admin/rooms",
-        roles: [UserRole.ADMIN, UserRole.MANAGER],
+        roles: [UserRole.ADMIN],
       },
       {
         text: "Quản lý mẫu sơ đồ ghế",
         path: "/admin/seat-maps",
-        roles: [UserRole.ADMIN, UserRole.MANAGER],
+        roles: [UserRole.ADMIN],
       },
     ],
   },
