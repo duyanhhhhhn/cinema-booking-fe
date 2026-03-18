@@ -17,6 +17,7 @@ export interface IMoviePublic {
   posterUrl: string;
   bannerUrl: string;
   trailerUrl: string;
+  agerating: string;
   releaseDate: string; 
   endDate: string;     
   status: MovieStatus;
@@ -24,12 +25,13 @@ export interface IMoviePublic {
 }
 
 export interface IMovieStatus {
-    id: number;
-    title: string;
-    durationMinutes: number;
-    genre: string;
-    posterUrl: string;
-    status: MovieStatus;
+  id: number;
+  title: string;
+  durationMinutes: number;
+  genre: string;
+  posterUrl: string;
+  agerating: string;
+  status: MovieStatus;
 }
 
 export interface ICinemaMovie {
@@ -50,6 +52,7 @@ export interface ICinemaMovieShowtimeItem {
   cinemaImageUrl?: string | null;
   durationMinutes: number; 
   posterUrl: string | null;
+  agerating?: string | null;
   showtime: IShowtimeItem[];
 }
 
@@ -58,12 +61,12 @@ export type IMovieShowtimeGroup = Omit<ICinemaMovieShowtimeItem, "showtime"> & {
   showtime?: IShowtimeItem[];
 };
 
-
 export interface IMoviePublicGenre {
   id: number;
   title: string;
   posterUrl: string;
   durationMinutes: number;
   genre: string;
+  agerating: string;
   status: MovieStatus;
 }
