@@ -11,6 +11,7 @@ export interface ISeatMap {
   seatMap: SeatRow[];
   showtimeId: number;
   startTime: string;
+  roomId: number;
 }
 
 export interface SeatRow {

@@ -35,8 +35,8 @@ export default function LoginPage() {
         setError(result.error || "Đăng nhập thất bại");
       }
     } catch (err: any) {
-  setError(err.message);
-}
+      setError(err.message);
+    }
   };
 
   return (
@@ -79,7 +79,7 @@ export default function LoginPage() {
                   Mật khẩu
                 </label>
                 <Link
-                  href="#"
+                  href="/forgot-password"
                   className="text-gray-400 text-sm hover:text-white"
                 >
                   Quên mật khẩu?
