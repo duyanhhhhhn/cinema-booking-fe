@@ -29,8 +29,11 @@ export default function AddPostModal({ open, onClose, refetchPost }:
     })
     const editor = useEditor({
         extensions: [StarterKit],
-        content: "<p>Hello World!</p>",
-        immediatelyRender: false
+        content: "",
+        immediatelyRender: false,
+        onUpdate: ({ editor }) => {
+            methods.setValue("content", editor.getHTML());
+        }
     });
     const { mutate: createPost } = useCreatePostMutation()
     const onSubmit = async (data: PostFormData) => {
@@ -47,19 +50,20 @@ export default function AddPostModal({ open, onClose, refetchPost }:
                     formData.append(key, String(value));
                 }
             }
-            formData.delete("bannerUrl");
-            createPost(formData, {
-                onSuccess: () => {
-                    onClose();
-                    n.success("Success");
-                    methods.reset;
-                    refetchPost();
-                },
-                onError: (Error) => {
-                    n.error(Error.message);
-                }
-            })
+
         });
+        formData.delete("bannerUrl");
+        createPost(formData, {
+            onSuccess: () => {
+                onClose();
+                n.success("Success");
+                methods.reset;
+                refetchPost();
+            },
+            onError: (Error) => {
+                n.error(Error.message);
+            }
+        })
     }
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "bannerFile") => {
         const file = e.target.files?.[0];
@@ -201,12 +205,12 @@ export default function AddPostModal({ open, onClose, refetchPost }:
                                 <label className={labelClass}>Category</label>
                                 <div className="relative">
                                     <select
-                                        name="position"
-                                        {...methods.register("position")}
+                                        name="category"
+                                        {...methods.register("category")}
                                         className={`${inputClass} appearance-none cursor-pointer`}
                                     >
-                                        <option value="HOME">Home</option>
-                                        <option value="MOVIE_DETAIL">Movie Detail</option>
+                                        <option value="DISCOUNT">Discount</option>
+                                        <option value="NEWS">News</option>
                                         <option value="PROMO">Promotion</option>
                                     </select>
                                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">

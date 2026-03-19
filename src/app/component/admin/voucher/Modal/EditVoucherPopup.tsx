@@ -41,7 +41,7 @@ export default function EditVoucherModal({ open, onClose, refetchVoucher, id }: 
         id = 0
     }
 
-    console.log("Voucher Info :", data?.data?.data);
+    console.log("Voucher Info :", voucher);
     const discountType = methods.watch("discount_type");
     const { mutate: updateVoucher } = useUpdateVoucherMutation();
     const onSubmit = async (data: VoucherFormData) => {

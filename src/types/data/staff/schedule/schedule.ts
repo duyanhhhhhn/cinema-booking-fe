@@ -12,15 +12,19 @@ export enum ScheduleStatus {
     CANCELLED = "CANCELLED",
 }
 
+export interface IStaffSchedule extends IUser {
+    position: string;
+}
+
 export default interface ISchedule {
     id: number;
     staff_id: number;
     shift_id: number;
-    workdate: string;
-    shift: IWorkShift;
-    staff: IUser;
+    shift: IWorkShift[];
+    staff: IStaffSchedule;
     status: ScheduleStatus;
 }
+
 export interface ScheduleFormData {
     staff_id: number;
     shift_id: number;

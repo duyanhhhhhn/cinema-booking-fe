@@ -4,4 +4,5 @@ export default interface IWorkShift {
     name: String,
     startTime: String,
     endTime: String,
+    workdate: String
 }

@@ -110,7 +110,7 @@ export default function Dashboard() {
               search
             </span>
             <input
-              className="ml-3 w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none focus:outline-none border-none focus:ring-0 p-0"
+              className="ml-3 w-full bg-transparent text-sm placeholder-gray-500 outline-none focus:outline-none border-none focus:ring-0 p-0"
               placeholder="Tìm kiếm phim, đơn hàng, khách hàng..."
               type="text"
             />
