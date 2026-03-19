@@ -2,6 +2,8 @@
 
 import ISchedule from "@/types/data/staff/schedule/schedule";
 import { Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material"
+import CircleIcon from '@mui/icons-material/Circle';
+import AddIcon from '@mui/icons-material/Add';
 
 interface StaffScheduleTableProps {
     schedule: ISchedule[],
@@ -9,6 +11,7 @@ interface StaffScheduleTableProps {
 }
 
 export default function StaffScheduleThisWeek({ schedule }: StaffScheduleTableProps) {
+    const year = new Date().getFullYear();
     const getWeekDays = () => {
         const today = new Date();
         const day = today.getDay();
@@ -30,14 +33,13 @@ export default function StaffScheduleThisWeek({ schedule }: StaffScheduleTablePr
                 fullDate: d.toLocaleDateString("vi-VN", {
                     day: "2-digit",
                     month: "2-digit",
-                }),
+                }).replace("-", "/"),
             });
         }
 
         return result;
     };
     const weekDays = getWeekDays();
-    console.log(weekDays);
     if (!schedule) {
         return <div className="p-6 text-center text-slate-400">Không có lịch làm việc nào trong tuần này.</div>;
     }
@@ -61,7 +63,7 @@ export default function StaffScheduleThisWeek({ schedule }: StaffScheduleTablePr
                                 <i className="w-5 h-5" data-lucide="chevron-left" />
                             </button>
                             <span className="font-bold text-white px-3 text-sm">
-                                Tuần: 15/03 - 21/03/2026
+                                Tuần: {weekDays[0].fullDate} - {weekDays[6].fullDate}/{year}
                             </span>
                             <button className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition">
                                 <i className="w-5 h-5" data-lucide="chevron-right" />
@@ -75,7 +77,7 @@ export default function StaffScheduleThisWeek({ schedule }: StaffScheduleTablePr
                             className="bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-lg shadow-cinema-red/30 flex items-center gap-2"
                             data-purpose="manual-schedule-btn"
                         >
-                            <i className="w-4 h-4" data-lucide="plus" />
+                            <AddIcon className="w-4 h-4" />
                             Thêm ca làm
                         </button>
                     </div>
@@ -109,11 +111,11 @@ export default function StaffScheduleThisWeek({ schedule }: StaffScheduleTablePr
                     </div>
                     <div className="ml-auto flex items-center gap-4 text-xs font-bold text-slate-500">
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-cinema-gold" /> Chờ xác
+                            <CircleIcon className="w-2.5 h-2.5 text-yellow-500" fontSize="small" /> Chờ xác
                             nhận
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-cinema-success" /> Đã
+                            <CircleIcon className="w-2.5 h-2.5 text-green-500" fontSize="small" /> Đã
                             chốt
                         </div>
                     </div>
@@ -163,21 +165,21 @@ export default function StaffScheduleThisWeek({ schedule }: StaffScheduleTablePr
                                         {item.staff.fullName}
                                     </p>
                                     <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 mt-1 uppercase tracking-tight">
-                                        {item.staff.position}
+                                        {item.staff.roleName}
                                     </span>
                                 </div>
                             </TableCell>
                             {item.shift.map((shift) => (
                                 shift.id != 0 ? (
                                     <TableCell className="p-2 border-r border-slate-700 min-h-[120px] relative empty-cell-hover cursor-pointer">
-                                        <div className="shift-card bg-cinema-success/10 border border-cinema-success/30 border-l-4 border-l-cinema-success p-2.5 rounded-lg mb-2 shadow-sm">
+                                        <div className="shift-card bg-green-500/25 border border-green-500 border-l-4 border-l-cinema-success p-2.5 rounded-lg mb-2 shadow-sm">
                                             <div className="flex items-center justify-between mb-1">
-                                                <p className="text-xs font-bold text-cinema-success uppercase">
+                                                <p className="text-xs font-bold text-green-500 uppercase">
                                                     {shift.name}
                                                 </p>
                                                 <span className="w-1.5 h-1.5 rounded-full bg-cinema-success shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
                                             </div>
-                                            <p className="text-[10px] text-slate-300 font-medium">
+                                            <p className="text-[10px] font-medium">
                                                 {shift.startTime} - {shift.endTime}
                                             </p>
                                         </div>

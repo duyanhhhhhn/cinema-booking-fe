@@ -13,13 +13,14 @@ export enum ScheduleStatus {
 }
 
 export interface IStaffSchedule extends IUser {
-    position: string;
+    roleName: string;
 }
 
 export default interface ISchedule {
     id: number;
     staff_id: number;
     shift_id: number;
+    workdate: string;
     shift: IWorkShift[];
     staff: IStaffSchedule;
     status: ScheduleStatus;
