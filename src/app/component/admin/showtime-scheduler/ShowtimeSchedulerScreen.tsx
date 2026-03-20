@@ -432,26 +432,26 @@ export default function ShowtimeSchedulerScreen() {
   const totalConflicts = meta.totalConflicts ?? 0;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <Toaster position="bottom-center" richColors />
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.05),transparent_22%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-slate-900" style={{ fontFamily: "Manrope, Inter, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" }}>
+      <Toaster position="top-center" richColors expand visibleToasts={1} toastOptions={{ unstyled: true }} />
 
-      <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 pb-5 pt-8">
-        <div className="flex items-start justify-between gap-4">
+      <div className="sticky top-0 z-30 border-b border-white/70 bg-[rgba(248,250,252,0.92)] px-4 pb-4 pt-5 backdrop-blur-xl sm:px-6 sm:pb-5 sm:pt-6 xl:px-8 xl:pt-8">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold">Lịch Suất Chiếu</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <h1 className="text-[28px] sm:text-[34px] lg:text-4xl font-extrabold tracking-[-0.025em] text-slate-900 leading-tight">Lịch Suất Chiếu</h1>
+            <p className="mt-1 text-[13px] sm:text-sm leading-6 text-slate-500">
               Quản lý và sắp xếp lịch chiếu phim tại các phòng
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700">
+          <div className="flex items-center gap-2 self-start lg:self-auto">
+            <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm">
               {role || "—"}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             title="Tổng suất chiếu"
             value={`${events.length}`}
@@ -468,23 +468,23 @@ export default function ShowtimeSchedulerScreen() {
           />
 
           <div className="md:col-span-2 xl:col-span-2">
-            <div className="h-full rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="h-full rounded-[24px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-600">Lịch</div>
-                  <div className="mt-1 flex items-center gap-2 text-2xl font-extrabold text-gray-900">
+                  <div className="text-sm font-semibold text-slate-600">Lịch</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-slate-900">
                     <CalendarMonth fontSize="small" />
                     <span>{date}</span>
                   </div>
-                  <div className="mt-1 text-sm text-gray-500">
+                  <div className="mt-1 text-[13px] sm:text-sm leading-6 text-slate-500">
                     Điều hướng theo ngày để xem lịch suất chiếu
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 lg:items-end">
+                <div className="flex flex-col gap-3 xl:items-end">
                   {isAdmin ? (
-                    <div className="w-full lg:w-[280px]">
-                      <div className="mb-1 text-xs font-semibold text-gray-600">Cinema</div>
+                    <div className="w-full xl:w-[280px]">
+                      <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Cinema</div>
                       <div className="relative">
                         <Storefront
                           fontSize="small"
@@ -493,7 +493,7 @@ export default function ShowtimeSchedulerScreen() {
                         <select
                           value={cinemaId || 0}
                           onChange={(e) => setCinemaId(Number(e.target.value))}
-                          className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-gray-800 outline-none"
+                          className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm font-semibold text-slate-800 outline-none shadow-sm"
                         >
                           <option value={0}>-- Chọn rạp --</option>
                           {cinemas.map((c) => (
@@ -505,33 +505,33 @@ export default function ShowtimeSchedulerScreen() {
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 lg:w-[280px]">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    <div className="w-full rounded-2xl border border-white/70 bg-white/90 px-4 py-3 xl:w-[280px] shadow-sm">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
                         Cinema
                       </div>
-                      <div className="mt-1 truncate text-sm font-bold text-gray-900">
+                      <div className="mt-1 truncate text-sm font-black tracking-[-0.02em] text-slate-900">
                         {qScheduler.data?.data?.cinemaName}
                       </div>
                     </div>
                   )}
 
-                  <div className="grid w-full grid-cols-3 gap-2 lg:w-[280px]">
+                  <div className="grid w-full grid-cols-3 gap-2 xl:w-[280px]">
                     <button
-                      className="flex h-11 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white font-semibold text-gray-700 hover:bg-gray-50"
+                      className="flex h-11 items-center justify-center gap-1 rounded-2xl border border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50"
                       onClick={() => setDate((d) => addDays(d, -1))}
                     >
                       Trước
                     </button>
 
                     <button
-                      className="flex h-11 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-gray-900 font-semibold text-white hover:bg-black"
+                      className="flex h-11 items-center justify-center gap-1 rounded-2xl border border-red-500 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] font-bold text-white shadow-[0_18px_40px_rgba(239,68,68,0.28)] transition hover:-translate-y-[1px]"
                       onClick={() => setDate(todayYMD())}
                     >
                       Hôm nay
                     </button>
 
                     <button
-                      className="flex h-11 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white font-semibold text-gray-700 hover:bg-gray-50"
+                      className="flex h-11 items-center justify-center gap-1 rounded-2xl border border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50"
                       onClick={() => setDate((d) => addDays(d, 1))}
                     >
                       Sau
@@ -576,7 +576,7 @@ export default function ShowtimeSchedulerScreen() {
         <button
           onClick={openCreateModal}
           disabled={cinemaId <= 0}
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-[24px] border border-red-400 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] text-white shadow-[0_24px_60px_rgba(239,68,68,0.35)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
           <Add />
         </button>
