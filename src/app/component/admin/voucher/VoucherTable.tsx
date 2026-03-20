@@ -24,6 +24,7 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
         setOpenDeletePopup(true);
     };
     const handleClickIconEdit = (voucher: IVoucher) => {
+        console.log("Selected Voucher:", voucher);
         setSelectedVoucher(voucher);
         setEditVoucherModal(true);
     }
@@ -108,11 +109,13 @@ export default function VoucherTable({ voucher, refetchVoucher }: IVoucherTableP
                 </TableBody>
             </Table>
             <EditVoucherModal
+                key={"editvoucher"}
                 open={openEditVoucherModal} onClose={() => setEditVoucherModal(false)}
                 refetchVoucher={refetchVoucher}
-                id={selectedVoucher?.id || 0}
+                voucher={selectedVoucher}
             ></EditVoucherModal>
             <DeletePopup
+                key={"deletevoucher"}
                 open={openDeletePopup}
                 onClose={() => setOpenDeletePopup(false)}
                 onConfirm={handleConfirmDelete}

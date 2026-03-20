@@ -1,7 +1,7 @@
 "use client"
 import { useNotification } from "@/hooks/useNotification";
 import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
-import { initialVoucherData, useCreateVoucherMutation, useUpdateVoucherMutation, Voucher, VoucherFormData } from "@/types/data/voucher/voucher";
+import { initialVoucherData, IVoucher, useCreateVoucherMutation, useUpdateVoucherMutation, Voucher, VoucherFormData } from "@/types/data/voucher/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";
 import CloseIcon from "@mui/icons-material/Close";
 import { Backdrop, Fade, Modal } from "@mui/material";
@@ -9,15 +9,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
-export default function EditVoucherModal({ open, onClose, refetchVoucher, id }: {
+export default function EditVoucherModal({ open, onClose, refetchVoucher, voucher }: {
     open: boolean, onClose: () => void,
     refetchVoucher: () => void,
-    id: number
+    voucher: IVoucher
 }) {
 
     const n = useNotification();
-    const data = useQuery(Voucher.voucherInfo(id));
-    const voucher = data?.data?.data;
     const methods = useForm<any>({
         defaultValues: voucher,
         mode: "onChange",
@@ -37,9 +35,6 @@ export default function EditVoucherModal({ open, onClose, refetchVoucher, id }: 
             });
         }
     }, [voucher]);
-    if (id == null) {
-        id = 0
-    }
 
     console.log("Voucher Info :", voucher);
     const discountType = methods.watch("discount_type");
@@ -55,7 +50,7 @@ export default function EditVoucherModal({ open, onClose, refetchVoucher, id }: 
                 }
             }
         });
-        updateVoucher({ id: id, payload: formData }, {
+        updateVoucher({ id: voucher.id, payload: formData }, {
             onSuccess: () => {
                 onClose();
                 n.success("Success");
@@ -209,7 +204,7 @@ export default function EditVoucherModal({ open, onClose, refetchVoucher, id }: 
                                 form="add-voucher"
                                 className="rounded-lg bg-[#ec131e] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#ec131e]/90 transition-colors shadow-lg shadow-red-500/30 cursor-pointer"
                             >
-                                Add
+                                Confim
                             </button>
 
                         </form>
