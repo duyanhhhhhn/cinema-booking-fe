@@ -6,6 +6,19 @@ import { MoviePublic } from "@/types/data/movie-public";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
 import { useRouter } from "next/navigation";
 import { Pagination, Stack, Typography } from "@mui/material";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
+import UpcomingRoundedIcon from "@mui/icons-material/UpcomingRounded";
+import MovieFilterRoundedIcon from "@mui/icons-material/MovieFilterRounded";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
+import TheatersRoundedIcon from "@mui/icons-material/TheatersRounded";
+import { Be_Vietnam_Pro } from "next/font/google";
+
+const beVietnam = Be_Vietnam_Pro({
+  subsets: ["vietnamese"],
+  weight: ["500", "600", "700", "800"],
+});
 
 const GENRES = [
   "ACTION",
@@ -184,14 +197,13 @@ export default function CinemaList() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#0A0B0D] text-white">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_620px_at_18%_-10%,rgba(225,29,46,0.14),transparent_58%),radial-gradient(1000px_560px_at_90%_18%,rgba(255,255,255,0.04),transparent_52%),radial-gradient(900px_540px_at_50%_120%,rgba(127,29,29,0.08),transparent_55%)]" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#121419]/50 via-[#0A0B0D]/72 to-[#08090B]" />
+    <div className={`${beVietnam.className} relative min-h-screen w-full overflow-x-hidden bg-[#121212] text-white`}>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(900px_500px_at_15%_-5%,rgba(255,255,255,0.03),transparent_58%),radial-gradient(900px_500px_at_100%_10%,rgba(255,255,255,0.02),transparent_55%)]" />
 
       {loading && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/65 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 animate-spin border-4 border-red-500/25 border-t-red-400" />
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-red-500/20 border-t-red-500" />
             <p className="text-sm font-extrabold text-white/85">
               Đang tải chi tiết phim...
             </p>
@@ -201,19 +213,27 @@ export default function CinemaList() {
 
       {loadingPage && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="h-16 w-16 animate-spin border-[5px] border-red-500/20 border-t-red-400" />
+          <div className="h-16 w-16 animate-spin rounded-full border-[5px] border-red-500/20 border-t-red-500" />
         </div>
       )}
 
       <div className="relative z-10 mx-auto w-full max-w-[1680px] px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-            Danh sách Phim
-          </h1>
+        <div className="mb-9">
+          <div className="mb-6">
+            <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+              Danh sách Phim
+            </h1>
+            <p className="mt-2 text-sm font-medium text-white/45">
+              Khám phá các phim đang chiếu và sắp chiếu với giao diện trực quan hơn.
+            </p>
+          </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_auto_260px]">
-            <div className="flex w-full items-center gap-3 border border-white/10 bg-[#0E1014] px-4 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
-              <span className="text-base text-white/45">⌕</span>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.7fr)_auto_260px]">
+            <div className="flex w-full items-center gap-3 rounded-[22px] bg-[#191919] px-4 py-3 shadow-[0_20px_40px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.05]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#111111] text-white/55">
+                <SearchRoundedIcon sx={{ fontSize: 20 }} />
+              </div>
+
               <input
                 value={titleInput}
                 onChange={(e) => {
@@ -228,29 +248,30 @@ export default function CinemaList() {
                   if (e.key === "Enter") applyFilter(titleInput, genreInput);
                 }}
                 placeholder="Tìm kiếm theo tên phim..."
-                className="w-full bg-transparent text-[15px] font-medium text-white placeholder:text-white/35 outline-none"
+                className="w-full bg-transparent text-[15px] font-medium text-white placeholder:text-white/30 outline-none"
               />
 
               <button
                 type="button"
                 onClick={() => applyFilter(titleInput, genreInput)}
-                className="shrink-0 border border-[#F1263D]/25 bg-gradient-to-b from-[#F1263D] to-[#D7142A] px-5 py-3 text-sm font-extrabold text-white shadow-[0_14px_32px_rgba(225,29,46,0.28)] transition hover:from-[#ff3148] hover:to-[#da1830]"
+                className="shrink-0 rounded-[16px] bg-[#ff1f3d] px-6 py-3 text-sm font-black text-white shadow-[0_14px_32px_rgba(255,31,61,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ff314d]"
               >
                 Tìm
               </button>
             </div>
 
-            <div className="grid w-full grid-cols-2 overflow-hidden border border-white/10 bg-[#0E1014] shadow-[0_18px_45px_rgba(0,0,0,0.35)] xl:w-[360px]">
+            <div className="grid w-full grid-cols-2 gap-2 rounded-[22px] bg-[#191919] p-2 shadow-[0_20px_40px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.05] xl:w-[380px]">
               <button
                 type="button"
                 onClick={() => setTab("NOW_SHOWING")}
                 className={[
-                  "min-h-[58px] w-full text-center text-sm font-black transition-all duration-200",
+                  "inline-flex min-h-[58px] items-center justify-center gap-2 rounded-[16px] px-4 text-sm font-black transition-all duration-200",
                   activeTab === "NOW_SHOWING"
-                    ? "bg-gradient-to-b from-[#F1263D] to-[#D7142A] text-white"
-                    : "bg-transparent text-white/60 hover:bg-white/[0.04] hover:text-white",
+                    ? "bg-[#ff1f3d] text-white shadow-[0_14px_30px_rgba(255,31,61,0.30)]"
+                    : "bg-transparent text-white/55 hover:bg-white/[0.04] hover:text-white",
                 ].join(" ")}
               >
+                <PlayCircleRoundedIcon sx={{ fontSize: 18 }} />
                 Đang chiếu
               </button>
 
@@ -258,32 +279,39 @@ export default function CinemaList() {
                 type="button"
                 onClick={() => setTab("COMING_SOON")}
                 className={[
-                  "min-h-[58px] w-full border-l border-white/10 text-center text-sm font-black transition-all duration-200",
+                  "inline-flex min-h-[58px] items-center justify-center gap-2 rounded-[16px] px-4 text-sm font-black transition-all duration-200",
                   activeTab === "COMING_SOON"
-                    ? "bg-gradient-to-b from-[#7A2A2E] to-[#5E1D21] text-white"
-                    : "bg-transparent text-white/60 hover:bg-white/[0.04] hover:text-white",
+                    ? "bg-[#ff1f3d] text-white shadow-[0_14px_30px_rgba(255,31,61,0.30)]"
+                    : "bg-transparent text-white/55 hover:bg-white/[0.04] hover:text-white",
                 ].join(" ")}
               >
+                <UpcomingRoundedIcon sx={{ fontSize: 18 }} />
                 Sắp chiếu
               </button>
             </div>
 
-            <select
-              value={genreInput}
-              onChange={(e) => {
-                const g = e.target.value;
-                setGenreInput(g);
-                applyFilter(titleInput, g);
-              }}
-              className="w-full border border-white/10 bg-[#0E1014] px-5 py-4 text-[15px] font-semibold text-white outline-none shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
-            >
-              <option value="">Tất cả thể loại</option>
-              {GENRES.map((g) => (
-                <option key={g} value={g}>
-                  {viGenre(g)}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <MovieFilterRoundedIcon
+                sx={{ fontSize: 19 }}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45"
+              />
+              <select
+                value={genreInput}
+                onChange={(e) => {
+                  const g = e.target.value;
+                  setGenreInput(g);
+                  applyFilter(titleInput, g);
+                }}
+                className="h-full min-h-[64px] w-full appearance-none rounded-[22px] bg-[#191919] pl-12 pr-5 text-[15px] font-semibold text-white outline-none shadow-[0_20px_40px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.05]"
+              >
+                <option value="">Tất cả thể loại</option>
+                {GENRES.map((g) => (
+                  <option key={g} value={g}>
+                    {viGenre(g)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -292,7 +320,7 @@ export default function CinemaList() {
             Đang tải dữ liệu...
           </div>
         ) : movies.length === 0 ? (
-          <div className="py-16 text-center">
+          <div className="rounded-[28px] bg-[#171717] py-16 text-center shadow-[0_18px_35px_rgba(0,0,0,0.25)]">
             <div className="text-lg font-extrabold text-white">
               Không có phim phù hợp
             </div>
@@ -317,16 +345,15 @@ export default function CinemaList() {
               >
                 <div
                   className="
-                    h-full overflow-hidden border border-white/10 bg-[#0F1115]
-                    shadow-[0_22px_55px_rgba(0,0,0,0.42)]
+                    h-full overflow-hidden rounded-[24px] bg-[#171717]
+                    shadow-[0_22px_55px_rgba(0,0,0,0.38)]
                     transition-all duration-300
-                    group-hover:-translate-y-1
-                    group-hover:border-white/18
-                    group-hover:bg-[#12141A]
-                    group-hover:shadow-[0_28px_70px_rgba(0,0,0,0.56)]
+                    group-hover:-translate-y-1.5
+                    group-hover:bg-[#1b1b1b]
+                    group-hover:shadow-[0_30px_75px_rgba(0,0,0,0.55)]
                   "
                 >
-                  <div className="relative overflow-hidden border-b border-white/8">
+                  <div className="relative overflow-hidden">
                     <img
                       src={resolvePosterUrl(m.posterUrl)}
                       alt={m.title}
@@ -339,16 +366,16 @@ export default function CinemaList() {
                       }}
                     />
 
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
 
-                    <div className="absolute left-0 top-0">
+                    <div className="absolute left-4 top-4">
                       <span
                         className={[
-                          "inline-flex px-4 py-2 text-[11px] font-black uppercase tracking-[0.08em]",
+                          "inline-flex rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.08em] shadow-[0_8px_20px_rgba(0,0,0,0.22)]",
                           m.status === "NOW_SHOWING"
-                            ? "bg-[#E11D2E] text-white"
+                            ? "bg-[#ff1f3d] text-white"
                             : m.status === "COMING_SOON"
-                              ? "bg-[#8B5E1A] text-white"
+                              ? "bg-[#ff5b1f] text-white"
                               : "bg-[#3A3F47] text-white",
                         ].join(" ")}
                       >
@@ -357,40 +384,35 @@ export default function CinemaList() {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-b from-[#101216] to-[#0B0C0F] px-4 pb-4 pt-5 sm:px-5">
-                    <div className="min-h-[54px] line-clamp-2 text-[16px] font-black leading-snug text-white sm:text-[17px]">
+                  <div className="px-4 pb-4 pt-5 sm:px-5">
+                    <div className="min-h-[54px] line-clamp-2 text-[17px] font-black leading-snug text-white sm:text-[18px]">
                       {m.title}
                     </div>
 
-                    <div className="mt-2 text-sm font-medium text-white/55">
-                      {viGenre(m.genre)}
-                    </div>
-
-                    <div className="mt-3 border border-white/8 bg-[#141821] px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.08em] text-white/82">
-                      {viStatus(m.status)}
+                    <div className="mt-3 flex items-center gap-2 text-sm font-medium text-white/52">
+                      <TheatersRoundedIcon sx={{ fontSize: 16 }} />
+                      <span className="line-clamp-1">{viGenre(m.genre)}</span>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <span
                         className="
-                          inline-flex items-center justify-center border border-[#34527B]/50
-                          bg-gradient-to-r from-[#172233] to-[#23324A]
-                          px-3 py-2.5 text-xs font-black text-[#EAF2FF]
-                          shadow-[0_10px_24px_rgba(23,34,51,0.34)]
+                          inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[14px]
+                          bg-[#101010] px-3 text-xs font-black text-white/90
                         "
                       >
-                        {m.durationMinutes} phút
+                        <AccessTimeRoundedIcon sx={{ fontSize: 16 }} />
+                        <span className="leading-none">{m.durationMinutes} phút</span>
                       </span>
 
                       <span
                         className="
-                          inline-flex items-center justify-center border border-[#6C7B39]/45
-                          bg-gradient-to-r from-[#202714] to-[#38461D]
-                          px-3 py-2.5 text-xs font-black text-[#F2FFD9]
-                          shadow-[0_10px_24px_rgba(56,70,29,0.24)]
+                          inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[14px]
+                          bg-[#101010] px-3 text-xs font-black text-white/90
                         "
                       >
-                        {formatAgeRating(m.agerating)}
+                        <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />
+                        <span className="leading-none">{formatAgeRating(m.agerating)}</span>
                       </span>
                     </div>
                   </div>
@@ -400,7 +422,7 @@ export default function CinemaList() {
           </div>
         )}
 
-        <div className="mt-9">
+        <div className="mt-10">
           <Stack
             direction="row"
             justifyContent="center"
@@ -425,42 +447,40 @@ export default function CinemaList() {
               sx={{
                 "& .MuiPagination-ul": {
                   justifyContent: "center",
-                  gap: "10px",
+                  gap: "12px",
                 },
                 "& .MuiPaginationItem-root": {
-                  minWidth: 46,
-                  height: 46,
-                  borderRadius: "0px",
+                  minWidth: 48,
+                  height: 48,
+                  borderRadius: "16px",
                   fontSize: "15px",
                   fontWeight: 900,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.9)",
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                  backdropFilter: "blur(12px)",
+                  border: "none",
+                  color: "rgba(255,255,255,0.88)",
+                  backgroundColor: "#191919",
                   transition: "all 180ms ease",
+                  boxShadow: "0 12px 28px rgba(0,0,0,0.22)",
                 },
                 "& .MuiPaginationItem-root:hover": {
-                  backgroundColor: "rgba(225,29,46,0.10)",
-                  borderColor: "rgba(225,29,46,0.30)",
+                  backgroundColor: "#222222",
                   transform: "translateY(-1px)",
                 },
                 "& .MuiPaginationItem-root.Mui-selected": {
-                  backgroundColor: "#E11D2E",
+                  backgroundColor: "#ff1f3d",
                   color: "#FFFFFF",
-                  borderColor: "rgba(225,29,46,0.55)",
-                  boxShadow: "0 14px 30px rgba(225,29,46,0.28)",
+                  boxShadow: "0 14px 30px rgba(255,31,61,0.34)",
                 },
                 "& .MuiPaginationItem-root.Mui-selected:hover": {
-                  backgroundColor: "#C81B2A",
+                  backgroundColor: "#ff314d",
                 },
               }}
             />
           </Stack>
 
-          <Stack direction="row" justifyContent="center" sx={{ mt: 1.5 }}>
+          <Stack direction="row" justifyContent="center" sx={{ mt: 1.8 }}>
             <Typography
               variant="body2"
-              sx={{ color: "rgba(255,255,255,0.58)", fontWeight: 500 }}
+              sx={{ color: "rgba(255,255,255,0.55)", fontWeight: 600 }}
             >
               Hiển thị{" "}
               <b>

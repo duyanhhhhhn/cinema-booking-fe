@@ -20,7 +20,7 @@ import {
 function StatusPill({ status, conflict }: { status: string; conflict: boolean }) {
   if (conflict) {
     return (
-      <div className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
+      <div className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 shadow-sm px-2 py-1 text-xs text-red-700">
         <WarningAmber fontSize="inherit" />
         Xung đột
       </div>
@@ -73,7 +73,7 @@ function DroppableRoomColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`relative border-l border-gray-200 bg-white ${isOver ? "bg-blue-50/40" : ""}`}
+      className={`relative border-l border-slate-200/80 bg-white/80 backdrop-blur ${isOver ? "bg-red-50/50" : ""}`}
       style={{ height }}
     >
       {children}
@@ -88,7 +88,7 @@ function StartMarker({ top, label }: { top: number; label: string }) {
       style={{ top }}
     >
       <div className="relative">
-        <div className="h-[2px] bg-red-500/95" />
+        <div className="h-[2px] bg-red-500/95 shadow-[0_0_16px_rgba(239,68,68,0.55)]" />
         <div className="absolute left-3 -top-3 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
           {label}
         </div>
@@ -119,7 +119,7 @@ function ShowtimeCardBody({
     <motion.div
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ duration: 0.18 }}
-      className={`h-full overflow-hidden rounded-2xl border ${borderCls} bg-white shadow-sm select-none hover:shadow-md`}
+      className={`h-full overflow-hidden rounded-[24px] border ${borderCls} bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] select-none hover:shadow-[0_22px_54px_rgba(15,23,42,0.12)]`}
     >
       <div className={`h-full ${dense ? "p-4" : compact ? "p-2.5" : "p-4"}`}>
         {ultraCompact ? (
@@ -139,7 +139,7 @@ function ShowtimeCardBody({
           </div>
         ) : compact ? (
           <div className="flex h-full gap-3">
-            <div className="h-full w-14 min-w-14 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+            <div className="h-full w-14 min-w-14 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
               {src ? <img src={src} alt={e.text} className="h-full w-full object-cover" /> : null}
             </div>
 
@@ -157,7 +157,7 @@ function ShowtimeCardBody({
               </div>
 
               <div className="mt-auto pt-2">
-                <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-600">
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-gray-600">
                   <LocalOffer fontSize="inherit" />
                   {Number.isFinite(Number(e.basePrice)) ? `${e.basePrice}` : "—"}
                 </div>
@@ -166,7 +166,7 @@ function ShowtimeCardBody({
           </div>
         ) : (
           <div className={`flex h-full gap-4 ${dense ? "h-[104px]" : ""}`}>
-            <div className="h-full w-20 min-w-20 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+            <div className="h-full w-20 min-w-20 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
               {src ? <img src={src} alt={e.text} className="h-full w-full object-cover" /> : null}
             </div>
 
@@ -184,7 +184,7 @@ function ShowtimeCardBody({
               </div>
 
               <div className="mt-auto flex items-center justify-between pt-3 text-sm text-gray-600">
-                <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1">
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1">
                   <LocalOffer fontSize="inherit" />
                   {Number.isFinite(Number(e.basePrice)) ? `${e.basePrice}` : "—"}
                 </div>
@@ -347,7 +347,7 @@ export default function SchedulerBoard(props: {
                       </div>
                     </div>
 
-                    <div className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] text-gray-700">
+                    <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-gray-700">
                       {(r.type ?? "2D").toString()}
                     </div>
                   </div>
