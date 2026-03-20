@@ -96,11 +96,6 @@ const menuItems = [
     roles: [UserRole.ADMIN],
     children: [
       {
-        text: "Quản lý chi nhánh",
-        path: "/admin/branches",
-        roles: [UserRole.ADMIN],
-      },
-      {
         text: "Quản lý rạp chiếu",
         path: "/admin/cinemas",
         roles: [UserRole.ADMIN],
@@ -108,11 +103,6 @@ const menuItems = [
       {
         text: "Quản lý phòng chiếu",
         path: "/admin/rooms",
-        roles: [UserRole.ADMIN],
-      },
-      {
-        text: "Quản lý mẫu sơ đồ ghế",
-        path: "/admin/seat-maps",
         roles: [UserRole.ADMIN],
       },
     ],
@@ -1003,12 +993,6 @@ export default function AdminLayout({
               transformOrigin={{ horizontal: "right", vertical: "top" }}
               anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
-              <MenuItem onClick={handleProfileNavigate}>
-                <ListItemIcon>
-                  <AccountCircleIcon fontSize="small" />
-                </ListItemIcon>
-                Thông tin cá nhân
-              </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
