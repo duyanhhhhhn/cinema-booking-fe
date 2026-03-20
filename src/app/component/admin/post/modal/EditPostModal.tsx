@@ -1,7 +1,7 @@
 "use client"
 
 import { useNotification } from "@/hooks/useNotification";
-import { initialPostData, Post, PostFormData, useUpdatePostMutation } from "@/types/data/post/post";
+import { initialPostData, IPost, Post, PostFormData, useUpdatePostMutation } from "@/types/data/post/post";
 import { Backdrop, Fade, Modal } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
@@ -9,14 +9,29 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { createPostSchema } from "@/types/data/post/schema/post";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-export default function EditPostModal({ open, onClose, refetchPost, id }:
-    { open: boolean; onClose: () => void, refetchPost: () => void, id: number }
+export default function EditPostModal({ open, onClose, refetchPost, post }:
+    { open: boolean; onClose: () => void, refetchPost: () => void, post: IPost }
 ) {
-    const data = Post.getPostsInfo(id);
+    useEffect(() => {
+        if (post) {
+            methods.reset(post);
+        }
+    }, [post]);
+    const editor = useEditor({
+        extensions: [StarterKit],
+        content: "",
+        immediatelyRender: false
+    });
+    useEffect(() => {
+        if (editor && post?.content) {
+            editor.commands.setContent(post.content);
+        }
+    }, [post, editor]);
+    const data = post;
     console.log(data);
     const n = useNotification();
     const [previews, setPreviews] = useState<{
@@ -25,15 +40,11 @@ export default function EditPostModal({ open, onClose, refetchPost, id }:
         banner: null,
     });
     const methods = useForm<any>({
-        defaultValues: initialPostData,
+        defaultValues: post,
         mode: "onChange",
         resolver: yupResolver(createPostSchema())
     })
-    const editor = useEditor({
-        extensions: [StarterKit],
-        content: "<p>Hello World!</p>",
-        immediatelyRender: false
-    });
+
     const { mutate: updatePost } = useUpdatePostMutation()
     const onSubmit = async (data: PostFormData) => {
         const formData = new FormData();
@@ -49,19 +60,20 @@ export default function EditPostModal({ open, onClose, refetchPost, id }:
                     formData.append(key, String(value));
                 }
             }
-            formData.delete("bannerUrl");
-            updatePost({ id: Number(1), payload: formData }, {
-                onSuccess: () => {
-                    onClose();
-                    n.success("Success");
-                    methods.reset;
-                    refetchPost();
-                },
-                onError: (Error) => {
-                    n.error(Error.message);
-                }
-            })
+
         });
+        formData.delete("bannerUrl");
+        updatePost({ id: post.id, payload: formData }, {
+            onSuccess: () => {
+                onClose();
+                n.success("Success");
+                methods.reset;
+                refetchPost();
+            },
+            onError: (Error) => {
+                n.error(Error.message);
+            }
+        })
     }
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "bannerFile") => {
         const file = e.target.files?.[0];
@@ -104,7 +116,7 @@ export default function EditPostModal({ open, onClose, refetchPost, id }:
                 <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 shadow-2xl flex flex-col max-h-[90vh] outline-none font-sans">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
-                        <h3 className="text-xl font-bold text-zinc-900">Add New Banner</h3>
+                        <h3 className="text-xl font-bold text-zinc-900">Edit Post</h3>
                         <button
                             onClick={onClose}
                             className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded-full hover:bg-zinc-100"
@@ -203,12 +215,12 @@ export default function EditPostModal({ open, onClose, refetchPost, id }:
                                 <label className={labelClass}>Category</label>
                                 <div className="relative">
                                     <select
-                                        name="position"
-                                        {...methods.register("position")}
+                                        name="category"
+                                        {...methods.register("category")}
                                         className={`${inputClass} appearance-none cursor-pointer`}
                                     >
-                                        <option value="HOME">Home</option>
-                                        <option value="MOVIE_DETAIL">Movie Detail</option>
+                                        <option value="DISCOUNT">Discount</option>
+                                        <option value="NEWS">News</option>
                                         <option value="PROMO">Promotion</option>
                                     </select>
                                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">

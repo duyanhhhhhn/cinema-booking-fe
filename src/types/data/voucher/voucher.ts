@@ -53,7 +53,7 @@ export class Voucher extends Model {
             queryKey: [this.queryKeys.findOne],
             queryFn: () => {
                 return this.api
-                    .get<IVoucher>({
+                    .get<IResponse<IVoucher>>({
                         url: `/public/vouchers/${id}`,
                     })
                     .then((res) => res.data);

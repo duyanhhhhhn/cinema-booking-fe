@@ -83,7 +83,7 @@ export class Post extends Model {
     }
     static createPost(payload: FormData) {
         return this.api.post<IResponse<IPost>>({
-            url: "/admin/posts/new",
+            url: "/public/posts",
             data: payload
         })
     }

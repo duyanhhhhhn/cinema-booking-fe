@@ -127,7 +127,7 @@ export default function PostTable({ post, refetchPost }: PostTableProp) {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <EditPostModal open={openEditPostModal} onClose={() => setEditPostModal(false)} refetchPost={refetchPost} id={selectedPost?.id || 1}></EditPostModal>
+            <EditPostModal open={openEditPostModal} onClose={() => setEditPostModal(false)} refetchPost={refetchPost} post={selectedPost}></EditPostModal>
         </>
     );
 }

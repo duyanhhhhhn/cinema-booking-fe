@@ -16,6 +16,8 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import DownloadIcon from '@mui/icons-material/Download';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 
 export default function Dashboard() {
   const today = new Date().toISOString().slice(0, 10);
@@ -110,7 +112,7 @@ export default function Dashboard() {
               search
             </span>
             <input
-              className="ml-3 w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none focus:outline-none border-none focus:ring-0 p-0"
+              className="ml-3 w-full bg-transparent text-sm placeholder-gray-500 outline-none focus:outline-none border-none focus:ring-0 p-0"
               placeholder="Tìm kiếm phim, đơn hàng, khách hàng..."
               type="text"
             />
@@ -162,14 +164,15 @@ export default function Dashboard() {
                       </h3>
                     </div>
                     <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                      <PaymentsIcon></PaymentsIcon>
+                      {stat.icon === "ti ti-users" ? (
+                        <AccountCircleIcon></AccountCircleIcon>
+                      ) : (<PaymentsIcon></PaymentsIcon>)}
                     </div>
                   </div>
                   <div className="mt-4 flex items-center gap-2">
                     <span className="flex items-center text-xs font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
                       <TrendingUpIcon></TrendingUpIcon>
-                      {stat.change}
-                    </span>
+                      {stat.change}</span>
                     <span className="text-xs text-gray-500">so với hôm qua</span>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
