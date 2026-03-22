@@ -4,6 +4,7 @@ import { ObjectsFactory } from "@/types/core/objectFactory";
 import { useMutation } from "@tanstack/react-query";
 import IWorkShift from "../workshift";
 import { IUser } from "../../user";
+import IWorkShiftSmall from "../workshift";
 
 export enum ScheduleStatus {
     ASSIGNED = "ASSIGNED",
@@ -14,6 +15,7 @@ export enum ScheduleStatus {
 
 export interface IStaffSchedule extends IUser {
     roleName: string;
+    id: number;
 }
 
 export default interface ISchedule {
@@ -46,12 +48,15 @@ export class Schedule extends Model {
     static queryKeys = {
         paginate: 'SCHEDULES_PAGINATE_QUERY',
         findOne: 'SCHEDULES_FIND_ONE_QUERY',
-        getThisWeek: 'SCHEDULES_GET_THIS_WEEK_QUERY'
+        getThisWeek: 'SCHEDULES_GET_THIS_WEEK_QUERY',
+        getStaff: 'SCHEDULES_GET_STAFF',
+        getShift: 'SHEDULES_GET_SHIFT',
+        getMySchedule: 'SCHEDULES_GET_MY'
     }
     static objects = ObjectsFactory.factory<ISchedule>(modelConfig, this.queryKeys)
     static getSchedules(page: number, pageSize: number) {
         return {
-            queryKey: [this.queryKeys.paginate, page, pageSize],
+            queryKeys: [this.queryKeys.paginate, page, pageSize],
             queryFn: () => {
                 return this.api
                     .get<IPaginateResponse<ISchedule>>({
@@ -62,6 +67,26 @@ export class Schedule extends Model {
                         }
                     })
                     .then((res) => res.data);
+            }
+        }
+    }
+    static getAllStaff() {
+        return {
+            queryKey: [this.queryKeys.getStaff],
+            queryFn: () => {
+                return this.api.get<IStaffSchedule[]>({
+                    url: '/staff/schedules/getstaff',
+                }).then((res) => res.data);
+            }
+        }
+    }
+    static getAllShift() {
+        return {
+            queryKey: [this.queryKeys.getShift],
+            queryFn: () => {
+                return this.api.get<IWorkShiftSmall[]>({
+                    url: '/staff/shifts',
+                }).then((res) => res.data);
             }
         }
     }
@@ -77,9 +102,24 @@ export class Schedule extends Model {
             }
         }
     }
+    static getMySchedule(id: number, week: number) {
+        return {
+            queryKey: [this.queryKeys.getMySchedule],
+            queryFn: () => {
+                return this.api.get<ISchedule[]>({
+                    url: '/staff/schedules/my',
+                    params: {
+                        id: id,
+                        week: week,
+                    }
+                })
+                    .then((res) => res.data);
+            }
+        }
+    }
     static assign(payload: FormData) {
         return this.api.post<IResponse<ISchedule>>({
-            url: '/staff/schedules',
+            url: '/staff/assign',
             data: payload,
         });
     }
