@@ -93,6 +93,11 @@ const TicketFailed = () => {
     dataBookingDetail?.data?.remainingSeconds,
   );
   useEffect(() => {
+    if (dataBookingDetail?.data?.remainingSeconds !== undefined) {
+      setTimeLeft(dataBookingDetail.data.remainingSeconds);
+    }
+  }, [dataBookingDetail]);
+  useEffect(() => {
     if (timeLeft <= 0) {
       n.error("Thời gian giữ ghế của bạn đã hết");
       window.location.href = "/";
@@ -103,7 +108,7 @@ const TicketFailed = () => {
     return () => clearInterval(timer);
   }, [timeLeft]);
   const onSubmit = () => {
-    if (dataBookingDetail?.data?.durationMinutes < 0) {
+    if (timeLeft < 0) {
       n.error("Thời gian giữ ghế của bạn đã hết");
       return;
     }
@@ -127,6 +132,7 @@ const TicketFailed = () => {
       );
     }
   };
+
   return (
     <div className="min-h-screen bg-black text-white font-sans">
       <main className="max-w-250 mx-auto p-4 md:p-8">
@@ -305,10 +311,13 @@ const TicketFailed = () => {
                 <ArrowOutward sx={{ fontSize: 20 }} />
               </button>
 
-              <button className="w-full py-3 text-gray-500 font-medium text-sm hover:text-white transition-colors flex items-center justify-center gap-1">
+              <Link
+                href="/"
+                className="w-full py-3 text-gray-500 font-medium text-sm hover:text-white transition-colors flex items-center justify-center gap-1"
+              >
                 <HomeIcon sx={{ fontSize: 18 }} />
-                Hủy đơn hàng & Quay về trang chủ
-              </button>
+                Quay về trang chủ
+              </Link>
             </div>
 
             {/* Footer Info */}
