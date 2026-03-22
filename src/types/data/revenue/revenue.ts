@@ -1,3 +1,4 @@
+import { IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
 import { ObjectsFactory } from "@/types/core/objectFactory";
 
@@ -46,7 +47,7 @@ export class Revenue extends Model {
             queryKey: [this.queryKeys.paginate],
             queryFn: () => {
                 return this.api
-                    .get<IRevenue[]>({
+                    .get<IResponse<IRevenue[]>>({
                         url: '/revenue/month/all',
                     })
                     .then((res) => res.data);

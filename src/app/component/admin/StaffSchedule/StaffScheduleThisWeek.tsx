@@ -2,8 +2,6 @@
 
 import ISchedule from "@/types/data/staff/schedule/schedule";
 import { Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material"
-import { useState } from "react";
-import AssignStaffModal from "./AssignStaffModal";
 
 interface StaffScheduleTableProps {
     schedule: ISchedule[],

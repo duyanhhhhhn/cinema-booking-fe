@@ -287,7 +287,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                         <div className="flex-1 overflow-y-auto p-2 space-y-1">
                             {
                                 product1.map((item) => (
-                                    <div key={"pro1" + item.id} className="flex items-center justify-between p-2 hover:bg-surface-highlight/30 rounded-lg group transition-colors">
+                                    <div key={"pro1" + item.id} className="bg-surface-dark/60 border border-border-dark/50 p-2.5 rounded-lg flex items-center justify-between group">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded bg-surface-highlight flex items-center justify-center shrink-0">
                                                 <span className="material-symbols-outlined text-sm">
@@ -295,7 +295,7 @@ export default function ComboForm({ onClose, refetchCombo, type, combo, comboIte
                                                         component="div"
                                                         sx={{
                                                             width: 48,
-                                                            height: 64,
+                                                            height: 50,
                                                             backgroundImage: `url(${urlImage}${item.imageUrl})`,
                                                             backgroundSize: "cover",
                                                             backgroundPosition: "center",

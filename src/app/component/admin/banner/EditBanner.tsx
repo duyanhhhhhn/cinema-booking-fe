@@ -5,7 +5,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ImageIcon from "@mui/icons-material/Image";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { useParams } from "next/navigation";
+import { redirect, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useNotification } from "@/hooks/useNotification";
 import { useEffect, useState } from "react";
@@ -13,12 +13,14 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { Banner, BannerFormData, useUpdateBannerMutation } from "@/types/data/home/banner";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 
 export default function EditBanner() {
     const { id } = useParams();
     const { data: bannerData } = useQuery({
         ...Banner.getBannerDetail(Number(id)),
     });
+    const router = useRouter();
     const n = useNotification();
     const { mutate: updateBanner } = useUpdateBannerMutation();
     const [previews, setPreviews] = useState<{
@@ -49,16 +51,11 @@ export default function EditBanner() {
         });
     }, [id, method, bannerData]);
     const onSubmit = (data: BannerFormData) => {
-        const payload = {
-            ...data,
-        };
         const formData = new FormData();
-        Object.entries(payload).forEach(([key, value]) => {
-            if (
-                key === "bannerFile" &&
-                value instanceof FileList &&
-                value.length > 0
-            ) {
+        Object.entries(data).forEach(([key, value]) => {
+            if (key === "posterFile" && value instanceof FileList && value.length > 0) {
+                formData.append("posterFile", value[0]);
+            } else if (key === "bannerFile" && value instanceof FileList && value.length > 0) {
                 formData.append("bannerFile", value[0]);
             } else if (value !== undefined && value !== null) {
                 if (typeof value === "object") {
@@ -74,6 +71,7 @@ export default function EditBanner() {
             {
                 onSuccess: () => {
                     n.success("Cập nhật Banner thành công");
+                    router.push("/admin/banners");
                 },
                 onError: (error) => {
                     n.error(error.message);

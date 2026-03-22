@@ -1,8 +1,8 @@
 "use client"
 
-import ISchedule, { Schedule } from "@/types/data/staff/schedule/schedule";
+import { Schedule } from "@/types/data/staff/schedule/schedule";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import StaffScheduleThisWeek from "./StaffSchedule/StaffScheduleThisWeek";
 import CircleIcon from '@mui/icons-material/Circle';
 import AddIcon from '@mui/icons-material/Add';
@@ -41,7 +41,6 @@ export default function () {
     const weekDays = getWeekDays();
     const { data, refetch: refetchSchedule } = useQuery(Schedule.getThisWeekSchedules());
     const schedule = data;
-    console.log(schedule);
     return (
         <div>
             <div className="flex-1 flex flex-col min-w-0">

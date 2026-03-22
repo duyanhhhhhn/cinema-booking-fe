@@ -17,7 +17,6 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DownloadIcon from '@mui/icons-material/Download';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 
 export default function Dashboard() {
   const today = new Date().toISOString().slice(0, 10);

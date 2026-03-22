@@ -1,11 +1,49 @@
 "use client"
 
+import { useNotification } from "@/hooks/useNotification";
+import { initialScheduleData, Schedule, ScheduleFormData, useCreateScheduleMutation } from "@/types/data/staff/schedule/schedule"
 import { Backdrop, Modal } from "@mui/material"
+import { useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 
 export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
     open: boolean, onClose: () => void,
     refetchSchedule: () => void
 }) {
+    const n = useNotification();
+    const methods = useForm<any>({
+        defaultValues: initialScheduleData,
+        mode: "onChange",
+    });
+    const { mutate: createSchedule } = useCreateScheduleMutation();
+    const onSubmit = async (data: ScheduleFormData) => {
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                if (typeof value === "object") {
+                    formData.append(key, JSON.stringify(value));
+                } else {
+                    formData.append(key, String(value));
+                }
+            }
+        });
+        createSchedule(formData, {
+            onSuccess: () => {
+                onClose();
+                n.success("Success");
+                methods.reset();
+                refetchSchedule();
+            },
+            onError: (error) => {
+                n.error(error.message);
+            },
+        });
+    };
+
+    const staff = useQuery(Schedule.getAllStaff());
+    const data = staff?.data || [];
+    const shift = useQuery(Schedule.getAllShift());
+    const shiftData = shift?.data || []
     return <Modal open={open}
         onClose={onClose}
         closeAfterTransition
@@ -17,175 +55,6 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
             },
         }}>
         <div>
-            <main className="p-6">
-                <div
-                    className="bg-cinema-dark rounded-xl border border-slate-700 overflow-hidden shadow-2xl"
-                    data-purpose="scheduling-matrix"
-                >
-                    {/* Grid Header */}
-                    <div className="schedule-grid bg-slate-800/50 border-b border-slate-700">
-                        <div className="p-4 font-bold text-slate-400 uppercase text-xs tracking-widest border-r border-slate-700">
-                            Nhân viên
-                        </div>
-                        <div className="p-4 text-center border-r border-slate-700">
-                            <span className="block text-white font-bold">Thứ 2</span>
-                            <span className="text-xs text-slate-400">15/03</span>
-                        </div>
-                        <div className="p-4 text-center border-r border-slate-700 bg-slate-700/30">
-                            <span className="block text-white font-bold">Thứ 3</span>
-                            <span className="text-xs text-slate-400">16/03</span>
-                        </div>
-                        <div className="p-4 text-center border-r border-slate-700">
-                            <span className="block text-white font-bold">Thứ 4</span>
-                            <span className="text-xs text-slate-400">17/03</span>
-                        </div>
-                        <div className="p-4 text-center border-r border-slate-700">
-                            <span className="block text-white font-bold">Thứ 5</span>
-                            <span className="text-xs text-slate-400">18/03</span>
-                        </div>
-                        <div className="p-4 text-center border-r border-slate-700">
-                            <span className="block text-white font-bold">Thứ 6</span>
-                            <span className="text-xs text-slate-400">19/03</span>
-                        </div>
-                        <div className="p-4 text-center border-r border-slate-700">
-                            <span className="block text-white font-bold">Thứ 7</span>
-                            <span className="text-xs text-slate-400 text-cinema-red">20/03</span>
-                        </div>
-                        <div className="p-4 text-center">
-                            <span className="block text-white font-bold">Chủ Nhật</span>
-                            <span className="text-xs text-slate-400 text-cinema-red">21/03</span>
-                        </div>
-                    </div>
-                    {/* Grid Body */}
-                    <div className="divide-y divide-slate-700">
-                        {/* Row: Employee 1 */}
-                        <div className="schedule-grid group">
-                            <div className="p-4 border-r border-slate-700 flex items-center gap-3">
-                                <img
-                                    alt="Avatar"
-                                    className="w-10 h-10 rounded-full border-2 border-slate-600"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAZrGe11oVQx-LEmSUyGSwQ9fSAsINN_W21O5D1Dh2ERQbMSrL2e6OJoZUjYrCMoJEiXIamCmvLX6RGPVyRj0dAmiy29Fx8IDwaENZLmn-2ixrCLJXF1uGM9bz27LxpZphy8KtfrcH9XLek0ekqBkX7DwbH4upZMoD3GJ8Xd8JEWLKCvjE-l59ld8YQy8YLW4u6BLKojA6UHzou7grcOkMxqTemmzwdzc2p0I65CpEe-gMMB_jQufzrLN_NstJAClscH-8GGAK7rhN"
-                                />
-                                <div>
-                                    <p className="text-sm font-bold text-white leading-tight">
-                                        Nguyễn Văn An
-                                    </p>
-                                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 mt-1 uppercase">
-                                        Manager
-                                    </span>
-                                </div>
-                            </div>
-                            {/* Cells */}
-                            <div className="p-2 border-r border-slate-700 min-h-[100px] relative group/cell">
-                                <div className="shift-card bg-cinema-success/20 border-l-4 border-cinema-success p-2 rounded cursor-pointer mb-2">
-                                    <p className="text-xs font-bold text-cinema-success">Ca Sáng</p>
-                                    <p className="text-[10px] text-slate-300">08:00 - 15:00</p>
-                                </div>
-                                <button className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 bg-slate-900/40 transition">
-                                    <i className="text-slate-400 w-6 h-6" data-lucide="plus-circle" />
-                                </button>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 bg-slate-700/10">
-                                {/* Off Day */}
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell">
-                                <div className="shift-card bg-cinema-gold/20 border-l-4 border-cinema-gold p-2 rounded cursor-pointer">
-                                    <p className="text-xs font-bold text-cinema-gold uppercase">
-                                        Ca Đêm
-                                    </p>
-                                    <p className="text-[10px] text-slate-300">22:00 - 05:00</p>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 relative group/cell" />
-                        </div>
-                        {/* Row: Employee 2 */}
-                        <div className="schedule-grid group">
-                            <div className="p-4 border-r border-slate-700 flex items-center gap-3">
-                                <img
-                                    alt="Avatar"
-                                    className="w-10 h-10 rounded-full border-2 border-slate-600"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2B_vojL3drjE-xtB2mKQgBNrmIY6brfeTfvn5_OOAA-KhEf5y7Q7Oh8abSL9_RS6LNdHLz3wS7-ycfaneWNcGuWnjQ0CIKHFhiirKTe52jONmNAd6VUJJZcs6XGckaqSlqdrtZa1qqCFilri_iZHj5Ck0YciYZFibbuxk8K6ntxc3bD0NbwH-IUBYU-RpErSbEVymiNbv0Il95aaZHaqUYdq0b6uO7xdjdomSyY4ADnlSDB8AoszyY7QyaFwZ5tVE8y2CsCSlb_ik"
-                                />
-                                <div>
-                                    <p className="text-sm font-bold text-white leading-tight">
-                                        Lê Thị Hoa
-                                    </p>
-                                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400 mt-1 uppercase">
-                                        Ticket Seller
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 bg-slate-700/10 relative group/cell">
-                                <div className="shift-card bg-cinema-success/20 border-l-4 border-cinema-success p-2 rounded cursor-pointer mb-2">
-                                    <p className="text-xs font-bold text-cinema-success">Ca Chiều</p>
-                                    <p className="text-[10px] text-slate-300">14:00 - 21:00</p>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell">
-                                <div className="shift-card bg-cinema-success/20 border-l-4 border-cinema-success p-2 rounded cursor-pointer mb-2">
-                                    <p className="text-xs font-bold text-cinema-success">Ca Chiều</p>
-                                    <p className="text-[10px] text-slate-300">14:00 - 21:00</p>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell">
-                                <div className="shift-card bg-cinema-gold/20 border-l-4 border-cinema-gold p-2 rounded cursor-pointer">
-                                    <p className="text-xs font-bold text-cinema-gold uppercase">
-                                        Trực Lễ
-                                    </p>
-                                    <p className="text-[10px] text-slate-300">08:00 - 18:00</p>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 relative group/cell" />
-                        </div>
-                        {/* Row: Employee 3 */}
-                        <div className="schedule-grid group">
-                            <div className="p-4 border-r border-slate-700 flex items-center gap-3">
-                                <img
-                                    alt="Avatar"
-                                    className="w-10 h-10 rounded-full border-2 border-slate-600"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0v-DD4C6QQ6wcoDvYOJsFjhuYFiFGSMhANoEn2lys11fLilOYDt7ZiuGURxPqXHY1I8XDMx_xhu5xRQ05qOmLxq9HnJVGM1VpXXZFgWGcuMvr3J0YLjd45Ilmth-EtvriO8kSXpr5QsMXwBNOR8Z8WWl-oIklcgc6PXFGJq9dI7BJmJG7uZ8iIY6AsmLgI2ZZR0K3fsoK_hSsnsf6ujLJMw0tDt-fyuRza6qKbzCVjtxOc0HI_fqyVvMbzBtsdZHsbpVg88vB1xIg"
-                                />
-                                <div>
-                                    <p className="text-sm font-bold text-white leading-tight">
-                                        Trần Minh Tâm
-                                    </p>
-                                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 mt-1 uppercase">
-                                        F&amp;B Staff
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell">
-                                <div className="shift-card bg-cinema-success/20 border-l-4 border-cinema-success p-2 rounded cursor-pointer">
-                                    <p className="text-xs font-bold text-cinema-success">Ca Đêm</p>
-                                    <p className="text-[10px] text-slate-300">22:00 - 06:00</p>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 bg-slate-700/10 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 relative group/cell">
-                                <div className="shift-card bg-cinema-gold/20 border-l-4 border-cinema-gold p-2 rounded cursor-pointer mb-1">
-                                    <p className="text-xs font-bold text-cinema-gold">Ca Sáng</p>
-                                    <p className="text-[10px] text-slate-300">07:00 - 12:00</p>
-                                </div>
-                                <div className="shift-card bg-cinema-gold/20 border-l-4 border-cinema-gold p-2 rounded cursor-pointer">
-                                    <p className="text-xs font-bold text-cinema-gold">Tăng ca</p>
-                                    <p className="text-[10px] text-slate-300">18:00 - 21:00</p>
-                                </div>
-                            </div>
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 border-r border-slate-700 relative group/cell" />
-                            <div className="p-2 relative group/cell" />
-                        </div>
-                    </div>
-                </div>
-                {/* END: WeeklyScheduleGrid */}
-            </main>
             <div
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
                 data-purpose="edit-shift-modal"
@@ -202,42 +71,51 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
                         </button>
                     </div>
                     {/* Modal Body */}
-                    <form className="p-6 space-y-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Nhân viên
-                            </label>
-                            <div className="flex items-center gap-3 p-3 bg-slate-900 rounded-lg border border-slate-700">
-                                <img
-                                    alt="User"
-                                    className="w-8 h-8 rounded-full"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNKJ7YqH6k2FQWqInvKis0tdxEPYyYhfAEHMEhDYwm2AUnKNeFRfRxagm-oRFWekPFFSsnDz0rX2bnDT2apKvdH0O1015AwM4c-cf9kFqEs6hWmKF2rYUS6HLFgKPC-AHcEwNipo2wGLo5Q6xeVtddnbg2qDSjffp3wLzEj_INwaykDX0zmwF4LFCmzvfcwhJPe65p01LcxLljBfxLJ-DfGBP3H5zgrKDyuH1S8DG7Mb_tmvh0HW8vt8XAfhf9qynf-POKr4B0WF4j"
-                                />
-                                <span className="text-sm font-medium text-white">
-                                    Nguyễn Văn An (Manager)
-                                </span>
-                            </div>
-                        </div>
+                    <form className="p-6 space-y-4" onSubmit={methods.handleSubmit(onSubmit)}>
+                        <select className="text-white"
+                            {...methods.register("staff_id")}>
+                            <option selected value="" className="bg-gray"
+                            >Select staff</option>
+                            {data.map((item) => (
+                                <option value={item.id} className="bg-gray-500">
+                                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700">
+                                        <img
+                                            alt="User"
+                                            className="w-8 h-8 rounded-full"
+                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNKJ7YqH6k2FQWqInvKis0tdxEPYyYhfAEHMEhDYwm2AUnKNeFRfRxagm-oRFWekPFFSsnDz0rX2bnDT2apKvdH0O1015AwM4c-cf9kFqEs6hWmKF2rYUS6HLFgKPC-AHcEwNipo2wGLo5Q6xeVtddnbg2qDSjffp3wLzEj_INwaykDX0zmwF4LFCmzvfcwhJPe65p01LcxLljBfxLJ-DfGBP3H5zgrKDyuH1S8DG7Mb_tmvh0HW8vt8XAfhf9qynf-POKr4B0WF4j"
+                                        />
+                                        <span className="text-sm font-medium text-white">
+                                            {item.fullName} ({item.roleName})
+                                        </span>
+                                    </div>
+                                </option>
+                            ))}
+                        </select>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                                     Ngày làm việc
                                 </label>
                                 <input
-                                    className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg focus:ring-cinema-red focus:border-cinema-red"
+                                    className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg"
                                     type="date"
                                     defaultValue="2026-03-15"
+                                    {...methods.register("work_date")}
                                 />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                                     Ca làm việc
                                 </label>
-                                <select className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg focus:ring-cinema-red focus:border-cinema-red">
-                                    <option>Ca Sáng (08:00 - 15:00)</option>
-                                    <option>Ca Chiều (14:00 - 21:00)</option>
-                                    <option>Ca Đêm (21:00 - 04:00)</option>
-                                </select>
+                                {
+                                    <select {...methods.register("shift_id")}
+                                        className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg">
+                                        <option selected>Chọn ca làm</option>
+                                        {shiftData.map((item) => (
+                                            <option value={item.id}>{item.name} ({item.startTime} - {item.endTime})</option>
+                                        ))}
+                                    </select>
+                                }
                             </div>
                         </div>
                         <div>
@@ -247,8 +125,9 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer group">
                                     <input className="w-4 h-4 text-cinema-gold focus:ring-cinema-gold bg-slate-800 border-slate-600"
-                                        name="status"
                                         type="radio"
+                                        {...methods.register("status")}
+                                        value={"ASSIGNED"}
                                     />
                                     <span className="text-sm text-slate-300 group-hover:text-white transition">
                                         Chờ xác nhận
@@ -257,8 +136,9 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
                                 <label className="flex items-center gap-2 cursor-pointer group">
                                     <input
                                         className="w-4 h-4 text-cinema-success focus:ring-cinema-success bg-slate-800 border-slate-600"
-                                        name="status"
                                         type="radio"
+                                        {...methods.register("status")}
+                                        value={"CONFIRMED"}
                                     />
                                     <span className="text-sm text-slate-300 group-hover:text-white transition">
                                         Đã chốt
@@ -270,7 +150,7 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
                             <div className="flex gap-3">
                                 <button
                                     className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition"
-                                    type="button"
+                                    type="submit"
                                 >
                                     Lưu thay đổi
                                 </button>
