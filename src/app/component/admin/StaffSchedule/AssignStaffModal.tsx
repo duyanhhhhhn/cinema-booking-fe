@@ -72,7 +72,7 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
                     </div>
                     {/* Modal Body */}
                     <form className="p-6 space-y-4" onSubmit={methods.handleSubmit(onSubmit)}>
-                        <select className="text-white"
+                        <select className="text-white" required
                             {...methods.register("staff_id")}>
                             <option selected value="" className="bg-gray"
                             >Select staff</option>
@@ -108,7 +108,7 @@ export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
                                     Ca làm việc
                                 </label>
                                 {
-                                    <select {...methods.register("shift_id")}
+                                    <select {...methods.register("shift_id")} required
                                         className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg">
                                         <option selected>Chọn ca làm</option>
                                         {shiftData.map((item) => (

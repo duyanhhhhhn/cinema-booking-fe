@@ -1,6 +1,6 @@
 "use client"
 
-import ISchedule from "@/types/data/staff/schedule/schedule";
+import ISchedule, { ScheduleStatus } from "@/types/data/staff/schedule/schedule";
 import { Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material"
 
 interface StaffScheduleTableProps {
@@ -49,7 +49,7 @@ export default function StaffScheduleThisWeek({ schedule, refetchSchedule }: Sta
                             <span className="text-white">Nhân viên</span>
                         </TableCell>
                         {weekDays.map((day, index) => (
-                            <TableCell className="p-4 text-center bg-gray-500 border-r border-slate-700">
+                            <TableCell key={"week" + index} className="p-4 text-center bg-gray-500 border-r border-slate-700">
                                 <span className="block text-white font-bold text-sm">{day.dayName}</span>
                                 <span className="text-xs text-slate-400">{day.fullDate}</span>
                             </TableCell>
@@ -60,7 +60,6 @@ export default function StaffScheduleThisWeek({ schedule, refetchSchedule }: Sta
                 <TableBody>
                     {schedule.map((item) => (
                         <TableRow key={item.id}>
-
                             <TableCell className="p-5 border-r border-slate-700 flex items-center gap-3 bg-slate-800/20 group-hover:bg-slate-800/40 transition">
                                 <img
                                     alt="Avatar"
@@ -79,7 +78,7 @@ export default function StaffScheduleThisWeek({ schedule, refetchSchedule }: Sta
                             {item.shift.map((shift) => (
                                 shift.id != 0 ? (
                                     <TableCell className="p-2 border-r border-slate-700 min-h-[120px] relative empty-cell-hover cursor-pointer">
-                                        {item.status === "ASSIGNED" ? (
+                                        {shift.status === ScheduleStatus.ASSIGNED ? (
                                             <div className="shift-card bg-yellow-500/25 border border-yellow-500 border-l-4 border-l-cinema-success p-2.5 rounded-lg mb-2 shadow-sm">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <p className="text-xs font-bold text-yellow-500 uppercase">
