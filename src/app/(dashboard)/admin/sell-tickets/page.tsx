@@ -17,11 +17,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import React, { useCallback, useMemo, useState } from "react";
 import { Seat } from "@/types/data/seat/seat";
 import { Combo, IComboItem } from "@/types/data/combo/combo";
-import { ICreateBookingForAdminForm, useCreateBookingForAdminMutation } from "@/types/data/booking/booking";
+import {
+  ICreateBookingForAdminForm,
+  useCreateBookingForAdminMutation,
+} from "@/types/data/booking/booking";
 import { useNotification } from "@/hooks/useNotification";
 
 function flattenShowtimes(
-  data: unknown
+  data: unknown,
 ): { id: number; price: number; roomName: string; startTime: string }[] {
   if (!data) return [];
   const arr = Array.isArray(data) ? data : (data as { data?: unknown })?.data;
@@ -29,21 +32,28 @@ function flattenShowtimes(
   const first = arr[0];
   if (first && typeof first === "object" && "showtimes" in first) {
     return (arr as { showtimes?: IShowtimePublic[] }[]).flatMap((g) =>
-      Array.isArray(g.showtimes) ? g.showtimes : []
+      Array.isArray(g.showtimes) ? g.showtimes : [],
     );
   }
-  return arr as { id: number; price: number; roomName: string; startTime: string }[];
+  return arr as {
+    id: number;
+    price: number;
+    roomName: string;
+    startTime: string;
+  }[];
 }
 
 export default function AdminSellTicketsPage() {
   const { user, isAdmin } = useAuth();
   const { searchQuery, updateQuery, serializeQuery } = useRouteQuery();
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
-  const [selectedShowtime, setSelectedShowtime] = useState<IShowtimePublic | null>(null);
+  const [selectedShowtime, setSelectedShowtime] =
+    useState<IShowtimePublic | null>(null);
   const { mutate: createBookingForAdmin } = useCreateBookingForAdminMutation();
   const n = useNotification();
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"CASH" | "MOMO">("CASH");
-  
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
+    "CASH" | "MOMO"
+  >("CASH");
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
@@ -58,7 +68,10 @@ export default function AdminSellTicketsPage() {
         : dateFromUrl
       : "";
   const movieIdFromUrl = searchQuery.get("movieId");
-  const movieId = movieIdFromUrl && !isNaN(Number(movieIdFromUrl)) ? Number(movieIdFromUrl) : null;
+  const movieId =
+    movieIdFromUrl && !isNaN(Number(movieIdFromUrl))
+      ? Number(movieIdFromUrl)
+      : null;
   const effectiveCinemaId = isAdmin
     ? selectedCinemaId
     : user?.cinemaId != null
@@ -74,7 +87,7 @@ export default function AdminSellTicketsPage() {
             date: dateValue,
           })
         : null,
-    [effectiveCinemaId, movieId, dateValue, serializeQuery]
+    [effectiveCinemaId, movieId, dateValue, serializeQuery],
   );
 
   const { data: dataShowtime } = useQuery({
@@ -104,7 +117,7 @@ export default function AdminSellTicketsPage() {
       setSelectedCinemaId(id);
       resetShowtimeAndSeats();
     },
-    [resetShowtimeAndSeats]
+    [resetShowtimeAndSeats],
   );
 
   const handleDateChange = useCallback(
@@ -112,12 +125,14 @@ export default function AdminSellTicketsPage() {
       updateQuery({ date: e.target.value || undefined });
       resetShowtimeAndSeats();
     },
-    [updateQuery, resetShowtimeAndSeats]
+    [updateQuery, resetShowtimeAndSeats],
   );
 
   const toggleSeat = useCallback((seatId: string) => {
     setSelectedSeats((prev) =>
-      prev.includes(seatId) ? prev.filter((s) => s !== seatId) : [...prev, seatId]
+      prev.includes(seatId)
+        ? prev.filter((s) => s !== seatId)
+        : [...prev, seatId],
     );
   }, []);
 
@@ -145,7 +160,9 @@ export default function AdminSellTicketsPage() {
     return map;
   }, [dataSeatMap]);
 
-  const [selectedComboQtys, setSelectedComboQtys] = useState<Record<number, number>>({});
+  const [selectedComboQtys, setSelectedComboQtys] = useState<
+    Record<number, number>
+  >({});
 
   const updateComboQty = useCallback((comboId: number, delta: number) => {
     setSelectedComboQtys((prev) => {
@@ -161,12 +178,12 @@ export default function AdminSellTicketsPage() {
 
   const seatsSubtotal = useMemo(
     () => selectedSeats.reduce((sum, id) => sum + (seatPriceMap[id] ?? 0), 0),
-    [selectedSeats, seatPriceMap]
+    [selectedSeats, seatPriceMap],
   );
 
   const showtimes = useMemo(
     () => flattenShowtimes(dataShowtime),
-    [dataShowtime]
+    [dataShowtime],
   );
   const params = useMemo(() => {
     return serializeQuery({
@@ -193,7 +210,9 @@ export default function AdminSellTicketsPage() {
   }, [combosData?.data?.data]);
   const imgUrl = process.env.NEXT_PUBLIC_IMAGE_URL;
 
-  const [selectedProductQtys, setSelectedProductQtys] = useState<Record<number, number>>({});
+  const [selectedProductQtys, setSelectedProductQtys] = useState<
+    Record<number, number>
+  >({});
   const updateProductQty = useCallback((productId: number, delta: number) => {
     setSelectedProductQtys((prev) => {
       const next = (prev[productId] ?? 0) + delta;
@@ -210,17 +229,17 @@ export default function AdminSellTicketsPage() {
     () =>
       dataCombo.reduce(
         (sum, c) => sum + c.price * (selectedComboQtys[c.id] ?? 0),
-        0
+        0,
       ),
-    [dataCombo, selectedComboQtys]
+    [dataCombo, selectedComboQtys],
   );
   const productsSubtotal = useMemo(
     () =>
       dataProducts.reduce(
         (sum, p) => sum + p.price * (selectedProductQtys[p.id] ?? 0),
-        0
+        0,
       ),
-    [dataProducts, selectedProductQtys]
+    [dataProducts, selectedProductQtys],
   );
   const totalSubtotal = seatsSubtotal + combosSubtotal + productsSubtotal;
 
@@ -242,20 +261,21 @@ export default function AdminSellTicketsPage() {
   }, [dataCombo, selectedComboQtys]);
 
   /** Sản phẩm lẻ: gửi comboId: 0 để backend phân biệt với combo */
-  const productsForPayload = useMemo((): ICreateBookingForAdminForm["combos"] => {
-    return dataProducts
-      .filter((product) => (selectedProductQtys[product.id] ?? 0) > 0)
-      .map((product) => ({
-        id: product.id,
-        comboId: 0,
-        productId: product.id,
-        quantity: selectedProductQtys[product.id] ?? 0,
-      }));
-  }, [dataProducts, selectedProductQtys]);
+  const productsForPayload =
+    useMemo((): ICreateBookingForAdminForm["combos"] => {
+      return dataProducts
+        .filter((product) => (selectedProductQtys[product.id] ?? 0) > 0)
+        .map((product) => ({
+          id: product.id,
+          comboId: 0,
+          productId: product.id,
+          quantity: selectedProductQtys[product.id] ?? 0,
+        }));
+    }, [dataProducts, selectedProductQtys]);
 
   const allCombosAndProductsForPayload = useMemo(
     () => [...combosForPayload, ...productsForPayload],
-    [combosForPayload, productsForPayload]
+    [combosForPayload, productsForPayload],
   );
 
   const onSubmit = useCallback(() => {
@@ -273,22 +293,22 @@ export default function AdminSellTicketsPage() {
     };
     createBookingForAdmin(payload, {
       onSuccess: (data) => {
-        if(selectedPaymentMethod === "CASH") {
+        if (selectedPaymentMethod === "CASH") {
           n.success("Đặt vé thành công");
           resetShowtimeAndSeats();
           setSelectedComboQtys({});
           setSelectedProductQtys({});
           window.location.href = `/admin/tickets/${data.data?.bookingCode}`;
           return;
-        }else if(data.data?.paymentUrl) {
+        } else if (data.data?.paymentUrl) {
           window.location.href = data.data.paymentUrl;
           return;
         }
         n.success("Đặt vé thành công");
         resetShowtimeAndSeats();
         setSelectedComboQtys({});
-          setSelectedProductQtys({});
-        },
+        setSelectedProductQtys({});
+      },
       onError: (error) => {
         n.error(error.message);
       },
@@ -301,7 +321,7 @@ export default function AdminSellTicketsPage() {
     createBookingForAdmin,
     n,
     resetShowtimeAndSeats,
-    selectedPaymentMethod
+    selectedPaymentMethod,
   ]);
 
   return (
@@ -699,7 +719,7 @@ export default function AdminSellTicketsPage() {
                 placeholder="Nhập mã giảm giá..."
                 type="text"
               />
-              <button className="absolute right-1 top-2.5 bottom-2 sm:right-1.5 sm:top-3.5 sm:bottom-1.5 px-3 sm:px-4 bg-gray-800 hover:bg-gray-900 text-[10px] sm:text-xs font-bold text-white rounded-md transition-colors">
+              <button className="absolute cursor-pointer right-1 top-2.5 bottom-2 sm:right-1.5 sm:top-3.5 sm:bottom-1.5 px-3 sm:px-4 bg-gray-800 hover:bg-gray-900 text-[10px] sm:text-xs font-bold text-white rounded-md transition-colors">
                 ÁP DỤNG
               </button>
             </div>
@@ -750,13 +770,19 @@ export default function AdminSellTicketsPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1">
-              <button onClick={() => setSelectedPaymentMethod("CASH")} className={`flex ${selectedPaymentMethod === "CASH" ? "bg-indigo-50 border-indigo-200 text-indigo-600" : "bg-white border-gray-200 text-gray-600"} cursor-pointer flex-col items-center justify-center py-3 px-2 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 rounded-xl border transition-all shadow-sm group`}>
+              <button
+                onClick={() => setSelectedPaymentMethod("CASH")}
+                className={`flex ${selectedPaymentMethod === "CASH" ? "bg-indigo-50 border-indigo-200 text-indigo-600" : "bg-white border-gray-200 text-gray-600"} cursor-pointer flex-col items-center justify-center py-3 px-2 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 rounded-xl border transition-all shadow-sm group`}
+              >
                 <PaymentsIcon className="mb-1 group-hover:scale-110 transition-transform" />
                 <span className="text-[11px] font-bold uppercase tracking-wide mt-1">
                   Tiền mặt
                 </span>
               </button>
-              <button onClick={() => setSelectedPaymentMethod("MOMO")} className={`flex ${selectedPaymentMethod === "MOMO" ? "bg-indigo-50 border-indigo-200 text-indigo-600" : "bg-white border-gray-200 text-gray-600"} cursor-pointer flex-col items-center justify-center py-3 px-2 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 rounded-xl border transition-all shadow-sm group`}>
+              <button
+                onClick={() => setSelectedPaymentMethod("MOMO")}
+                className={`flex ${selectedPaymentMethod === "MOMO" ? "bg-indigo-50 border-indigo-200 text-indigo-600" : "bg-white border-gray-200 text-gray-600"} cursor-pointer flex-col items-center justify-center py-3 px-2 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 rounded-xl border transition-all shadow-sm group`}
+              >
                 <QrCode2Icon className="mb-1 group-hover:scale-110 transition-transform" />
                 <span className="text-[11px] font-bold uppercase tracking-wide mt-1">
                   Chuyển khoản
@@ -767,7 +793,7 @@ export default function AdminSellTicketsPage() {
             <button
               type="button"
               onClick={onSubmit}
-              disabled={selectedSeats.length === 0 }
+              disabled={selectedSeats.length === 0}
               className="w-full bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 text-white font-bold py-3 sm:py-4 rounded-xl text-sm sm:text-base shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2"
             >
               <PrintIcon fontSize="small" />

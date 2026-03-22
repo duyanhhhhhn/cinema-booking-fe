@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -50,6 +56,7 @@ import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import { Html5Qrcode } from "html5-qrcode";
+import { UserRole } from "@/types/role";
 
 const SCANNER_ELEMENT_ID = "admin-qr-scanner";
 
@@ -58,35 +65,69 @@ const collapsedWidth = 72;
 
 // --- Cấu hình Menu Data (Dữ liệu mới của bạn) ---
 const menuItems = [
-  { text: "Tổng quan", icon: <DashboardIcon />, path: "/admin" },
+  {
+    text: "Tổng quan",
+    icon: <DashboardIcon />,
+    path: "/admin",
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
+  },
   {
     text: "Thống kê",
     icon: <PieChartIcon />,
     path: "/admin/statistics",
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
     children: [
-      { text: "Doanh thu", path: "/admin/stats/revenue" },
-      { text: "Vé bán", path: "/admin/stats/tickets" },
+      {
+        text: "Doanh thu",
+        path: "/admin/stats/revenue",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Vé bán",
+        path: "/admin/stats/tickets",
+        oles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
     ],
   },
   {
     text: "Hệ thống rạp",
     icon: <DomainIcon />,
     path: "/admin/system",
+    roles: [UserRole.ADMIN],
     children: [
-      { text: "Quản lý chi nhánh", path: "/admin/branches" },
-      { text: "Quản lý rạp chiếu", path: "/admin/cinemas" },
-      { text: "Quản lý phòng chiếu", path: "/admin/rooms" },
-      { text: "Quản lý mẫu sơ đồ ghế", path: "/admin/seat-maps" },
+      {
+        text: "Quản lý rạp chiếu",
+        path: "/admin/cinemas",
+        roles: [UserRole.ADMIN],
+      },
+      {
+        text: "Quản lý phòng chiếu",
+        path: "/admin/rooms",
+        roles: [UserRole.ADMIN],
+      },
     ],
   },
   {
     text: "Phim và Suất Chiếu",
     icon: <MovieIcon />,
     path: "/admin/movies-group",
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
     children: [
-      { text: "Danh sách phim", path: "/admin/movies" },
-      { text: "Suất chiếu", path: "/admin/showtime-scheduler" },
-      { text: "Đánh giá", path: "/admin/movie-reviews" },
+      {
+        text: "Danh sách phim",
+        path: "/admin/movies",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Suất chiếu",
+        path: "/admin/showtime-scheduler",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Đánh giá",
+        path: "/admin/movie-reviews",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
     ],
   },
   {
@@ -94,29 +135,68 @@ const menuItems = [
     icon: <LocalActivityIcon />,
     path: "/admin/services",
     children: [
-      { text: "Vé đã bán", path: "/admin/tickets" },
-      { text: "Bán vé", path: "/admin/sell-tickets" },
-      { text: "Combo & Đồ ăn", path: "/admin/combos" },
-      { text: "Mã giảm giá", path: "/admin/vouchers" },
-      { text: "Quản lý cấu hình giá", path: "/admin/pricing" },
+      {
+        text: "Vé đã bán",
+        path: "/admin/tickets",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Bán vé",
+        path: "/admin/sell-tickets",
+        roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF],
+      },
+      {
+        text: "Combo & Đồ ăn",
+        path: "/admin/combos",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Mã giảm giá",
+        path: "/admin/vouchers",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Quản lý cấu hình giá",
+        path: "/admin/pricing",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
     ],
   },
   {
     text: "Người dùng",
     icon: <PersonIcon />,
     path: "/admin/user-management",
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
+
     children: [
-      { text: "Quản lý người dùng", path: "/admin/users" },
-      { text: "Nhân viên và phân quyền", path: "/admin/staffs" },
+      {
+        text: "Quản lý người dùng",
+        path: "/admin/users",
+        roles: [UserRole.ADMIN],
+      },
+      {
+        text: "Nhân viên và phân quyền",
+        path: "/admin/staffs",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
     ],
   },
   {
     text: "Nội dung",
     icon: <ArticleIcon />,
     path: "/admin/content",
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
     children: [
-      { text: "Bài viết", path: "/admin/posts" },
-      { text: "Banner", path: "/admin/banners" },
+      {
+        text: "Bài viết",
+        path: "/admin/posts",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Banner",
+        path: "/admin/banners",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
     ],
   },
 ];
@@ -698,6 +778,34 @@ export default function AdminLayout({
     await logout();
     router.push("/");
   };
+  const authorizedMenuItems = useMemo(() => {
+    // Nếu chưa có user (đang tải), trả về mảng rỗng
+    if (!user?.role) return [];
+
+    return menuItems
+      .map((item) => {
+        // 1. Lọc menu con (children) trước
+        if (item.children) {
+          const filteredChildren = item.children.filter(
+            (child) =>
+              // Trả về true nếu child không set roles HOẶC user.role nằm trong mảng roles
+              !child.roles || child.roles.includes(user.role),
+          );
+          // Trả về item cha với danh sách con đã được lọc
+          return { ...item, children: filteredChildren };
+        }
+        return item;
+      })
+      .filter((item) => {
+        // 2. Kiểm tra quyền truy cập của menu cha
+        const hasParentAccess = !item.roles || item.roles.includes(user.role);
+
+        // 3. Đảm bảo: Nếu menu cha có menu con, thì phải còn ít nhất 1 menu con mới hiển thị
+        const hasValidChildren = !item.children || item.children.length > 0;
+
+        return hasParentAccess && hasValidChildren;
+      });
+  }, [user?.role]);
 
   const renderDrawerContent = (collapsed: boolean) => (
     <Box
@@ -759,7 +867,7 @@ export default function AdminLayout({
           "-ms-overflow-style": "none",
         }}
       >
-        {menuItems.map((item) => (
+        {authorizedMenuItems.map((item) => (
           <SidebarItem
             key={item.text}
             item={item}
@@ -822,14 +930,6 @@ export default function AdminLayout({
             >
               <QrCodeScannerIcon />
             </IconButton>
-            {/* Notification */}
-            <IconButton>
-              <Badge badgeContent={4} color="error">
-                <NotificationsIcon sx={{ color: "#555" }} />
-              </Badge>
-            </IconButton>
-
-            {/* User Profile */}
             <Box
               sx={{
                 display: "flex",
@@ -893,12 +993,6 @@ export default function AdminLayout({
               transformOrigin={{ horizontal: "right", vertical: "top" }}
               anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
-              <MenuItem onClick={handleProfileNavigate}>
-                <ListItemIcon>
-                  <AccountCircleIcon fontSize="small" />
-                </ListItemIcon>
-                Thông tin cá nhân
-              </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>

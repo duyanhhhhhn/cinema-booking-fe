@@ -7,7 +7,6 @@ export interface IVoucher {
     id: number;
     code: string;
     description: string;
-    type: string;
     discountType: string;
     discountValue: number;
     minOrderAmount: number;

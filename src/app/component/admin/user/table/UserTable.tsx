@@ -124,9 +124,6 @@ export default function UserTable({
                 </TableCell>
                 <TableCell align="center">
                   <Box display="flex" gap={1} justifyContent="center">
-                    <IconButton size="small">
-                      <Visibility fontSize="small" />
-                    </IconButton>
                     <IconButton
                       size="small"
                       color={user.isActive ? "error" : "success"}

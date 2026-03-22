@@ -18,12 +18,12 @@ const paymentMethods = [
     icon: "M",
     bankCode: "ATM",
   },
-  // {
-  //   id: "vnpay" as const,
-  //   name: "Thanh toán bằng VNPay",
-  //   description: "Quét mã QR qua ứng dụng ngân hàng",
-  //   icon: "V",
-  // },
+  {
+    id: "vnpay" as const,
+    name: "Thanh toán bằng VNPay",
+    description: "Quét mã QR qua ứng dụng ngân hàng",
+    icon: "V",
+  },
 ];
 
 export default function PaymentMethodStep() {
@@ -32,7 +32,7 @@ export default function PaymentMethodStep() {
   const n = useNotification();
   const bookingState = useAppSelector(selectBooking);
   const [selected, setSelected] = useState<"momo" | "vnpay" | null>(
-    bookingState.paymentMethod
+    bookingState.paymentMethod,
   );
   const { mutate: createBooking } = useCreateBookingMutation();
 
@@ -42,11 +42,11 @@ export default function PaymentMethodStep() {
   };
 
   const handleProceed = () => {
-      const seatIds = bookingState.heldSeatIds ?? [];
-      if (seatIds.length === 0) {
-        n.error("Không có thông tin ghế. Vui lòng quay lại bước chọn ghế.");
-        return;
-      }
+    const seatIds = bookingState.heldSeatIds ?? [];
+    if (seatIds.length === 0) {
+      n.error("Không có thông tin ghế. Vui lòng quay lại bước chọn ghế.");
+      return;
+    }
     if (selected) {
       const combosPayload = (bookingState.combos ?? [])
         .filter((c) => c.quantity > 0)
@@ -78,7 +78,7 @@ export default function PaymentMethodStep() {
         },
       });
     }
-  }
+  };
   return (
     <div className="min-h-screen bg-[#0f0f1e]">
       <div className="container mx-auto px-6 py-8">
@@ -92,7 +92,7 @@ export default function PaymentMethodStep() {
                 Vui lòng chọn một trong các phương thức thanh toán dưới đây.
               </p>
             </div>
-           
+
             <div className="space-y-4">
               {paymentMethods.map((method) => (
                 <button
@@ -112,7 +112,15 @@ export default function PaymentMethodStep() {
                           : "bg-blue-600 text-white"
                       }`}
                     >
-                    {method.id === "momo"? <img src="/payment/momo.png" alt="Momo" className="w-10 h-10" /> : <span>{method.icon}</span>}  
+                      {method.id === "momo" ? (
+                        <img
+                          src="/payment/momo.png"
+                          alt="Momo"
+                          className="w-10 h-10"
+                        />
+                      ) : (
+                        <span>{method.icon}</span>
+                      )}
                     </div>
 
                     <div className="flex-1 text-left">
