@@ -107,6 +107,7 @@ export function useTicketHistory(initialCode: string) {
     ),
     retry: false,
   });
+  const metaTicket = ticketList?.data?.meta
 
   const raw = ticketList.data as any;
   const tickets = (raw?.data ?? []) as ITicket[];
@@ -145,5 +146,7 @@ export function useTicketHistory(initialCode: string) {
     ticketList,
     tickets,
     filteredTickets,
+    metaTicket
+
   };
 }
