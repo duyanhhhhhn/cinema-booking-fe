@@ -183,13 +183,10 @@ export default function RoomDetailModal({
         {/* CENTER PANEL */}
         <Box flex={1} p={2}>
           <SeatLayoutBuilder
-            initialLayout={seatLayout ? JSON.parse(seatLayout) : []}
+            initialLayout={
+              seatLayout && seatLayout !== "[]" ? JSON.parse(seatLayout) : []
+            }
             onChange={handleSeatChange}
-            seatPrices={seatPrices}
-            initialRows={Array.from({ length: 6 }, (_, i) =>
-              String.fromCharCode(65 + i),
-            )}
-            initialCols={12}
           />
         </Box>
 
