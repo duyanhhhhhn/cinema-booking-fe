@@ -61,7 +61,7 @@ export default function PaymentMethodStep() {
         showtimeId: Number(bookingState.showtimeId),
         seatIds,
         combos: combosPayload,
-        voucherCode: "",
+        voucherCode: bookingState.voucherCode || "",
         paymentMethod: selected.toUpperCase(),
         bankCode: selected === "momo" ? "ATM" : null,
       };

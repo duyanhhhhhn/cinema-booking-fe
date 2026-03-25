@@ -64,6 +64,10 @@ export interface BookingState {
   paymentMethod: 'momo' | 'vnpay' | null;
   combos: ICombo[];
   bookingFee: number;
+  /** Voucher code đã áp dụng ở bước combo */
+  voucherCode: string;
+  /** Số tiền được giảm từ voucher */
+  voucherDiscountAmount: number;
   /** Thời điểm hết hạn giữ ghế (ISO string từ API hold-seat) */
   holdExpiresAt?: string;
   holdToken?: string;

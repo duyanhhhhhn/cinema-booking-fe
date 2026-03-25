@@ -12,6 +12,8 @@ const initialBookingState: BookingState = {
   paymentMethod: null,
   combos: [],
   bookingFee: 0,
+  voucherCode: "",
+  voucherDiscountAmount: 0,
 };
 
 const bookingSlice = createSlice({
@@ -50,6 +52,17 @@ const bookingSlice = createSlice({
       if (combo) {
         combo.quantity = action.payload.quantity;
       }
+    },
+    setVoucherInfo: (
+      state,
+      action: PayloadAction<{ voucherCode: string; discountAmount: number }>
+    ) => {
+      state.voucherCode = action.payload.voucherCode;
+      state.voucherDiscountAmount = action.payload.discountAmount;
+    },
+    clearVoucherInfo: (state) => {
+      state.voucherCode = "";
+      state.voucherDiscountAmount = 0;
     },
     setMovieInfo: (
       state,
@@ -97,6 +110,8 @@ export const {
   setSeatPriceMap,
   setCombos,
   updateComboQuantity,
+  setVoucherInfo,
+  clearVoucherInfo,
   setMovieInfo,
   setHoldInfo,
   resetBooking,

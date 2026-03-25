@@ -711,18 +711,6 @@ export default function AdminSellTicketsPage() {
                 })}
               </div>
             </div>
-
-            {/* Box: Mã giảm giá */}
-            <div className="relative pt-2">
-              <input
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg text-sm py-3 pl-4 pr-20 sm:pr-24 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
-                placeholder="Nhập mã giảm giá..."
-                type="text"
-              />
-              <button className="absolute cursor-pointer right-1 top-2.5 bottom-2 sm:right-1.5 sm:top-3.5 sm:bottom-1.5 px-3 sm:px-4 bg-gray-800 hover:bg-gray-900 text-[10px] sm:text-xs font-bold text-white rounded-md transition-colors">
-                ÁP DỤNG
-              </button>
-            </div>
           </div>
 
           {/* KHU VỰC THANH TOÁN */}
