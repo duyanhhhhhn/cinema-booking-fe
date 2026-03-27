@@ -117,6 +117,8 @@ export default function EditStaffPopup({
 
     if (data.avatar) {
       formData.append("avatar", data.avatar);
+    } else if (staff.avatarUrl) {
+      formData.append("avatarUrl", staff.avatarUrl);
     }
 
     mutate(
