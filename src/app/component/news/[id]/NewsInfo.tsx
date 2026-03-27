@@ -1,114 +1,209 @@
+"use client";
+
 import { Post } from "@/types/data/post/post";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+function renderTextWithLinks(text: string) {
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      return (
+        <a
+          key={`link-${index}`}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-[#ff5a5c] underline underline-offset-4 transition hover:text-[#ff7b7d]"
+        >
+          {part}
+        </a>
+      );
+    }
+
+    return <span key={`text-${index}`}>{part}</span>;
+  });
+}
+
+function renderContent(content?: string) {
+  if (!content) return null;
+
+  return content
+    .split(/\n\s*\n/)
+    .filter((block) => block.trim())
+    .map((block, index) => (
+      <p
+        key={`paragraph-${index}`}
+        className="text-[16px] leading-8 text-[#d4d4d8]"
+      >
+        {renderTextWithLinks(block.trim())}
+      </p>
+    ));
+}
 
 export default function NewsInfo() {
-    const param = useParams();
-    const id = Number(param.id)
-    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
-    const data = useQuery(Post.getPostsInfo(id));
-    const data2 = data?.data?.data;
+  const param = useParams();
+  const id = Number(param.id);
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL || "";
 
-    const date = new Date(data2 && data2?.at(0).publishedAt).toLocaleString();
+  const { data, isLoading } = useQuery(Post.getPostsInfo(id));
+  const post = data?.data?.at(0);
+
+  const publishedDate = useMemo(() => {
+    if (!post?.publishedAt) return "";
+    return new Date(post.publishedAt).toLocaleString("vi-VN");
+  }, [post?.publishedAt]);
+
+  const coverImage = post?.coverUrl
+    ? `${urlImage}${post.coverUrl}`
+    : "";
+
+  const currentPath =
+    typeof window !== "undefined" ? window.location.href : "";
+
+  if (isLoading) {
     return (
-        <>
-            <div className="relative flex h-auto min-h-screen w-full flex-col">
-                {/* Main Content */}
-                <main className="container mx-auto px-4 py-8 md:py-12">
-                    <div className="max-w-4xl mx-auto">
-                        {/* Breadcrumbs */}
-                        <div className="flex flex-wrap gap-2 pb-4">
-                            <a
-                                className="text-sm font-medium leading-normal text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary"
-                                href="#"
-                            >
-                                Trang chủ
-                            </a>
-                            <span className="text-sm font-medium leading-normal text-gray-500 dark:text-gray-400">
-                                /
-                            </span>
-                            <a
-                                className="text-sm font-medium leading-normal text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary"
-                                href="#"
-                            >
-                                Tin tức
-                            </a>
-                            <span className="text-sm font-medium leading-normal text-gray-500 dark:text-gray-400">
-                                /
-                            </span>
-                            <span className="text-sm font-medium leading-normal text-gray-300 dark:text-gray-200">
-                                {data2?.at(0) && data2?.at(0).category}
-                            </span>
-                        </div>
-
-                        {/* HeadlineText */}
-                        <h1 className="text-3xl md:text-4xl font-bold leading-tight text-white dark:text-white tracking-tight text-left pb-3 pt-6">
-                            {data2?.at(0) && data2?.at(0).title}
-
-                        </h1>
-                        {/* MetaText */}
-                        <p className="text-sm font-normal leading-normal text-gray-500 dark:text-gray-400 pb-6 pt-1">
-                            Đăng bởi User vào {date}
-                        </p>
-                        {/* HeaderImage */}
-                        <div
-                            className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end rounded-xl min-h-[400px] mb-8"
-                            data-alt=""
-                            style={{
-                                backgroundImage:
-                                    `url(${data2?.at(0) && urlImage + data2?.at(0).coverUrl})`,
-                            }}
-                        />
-                        {/*Content Area */}
-                        <div key={"content"} className="text-white">
-                            {data2?.at(0) && data2?.at(0).content}
-                        </div>
-                        {/* Social Share Buttons */}
-                        <div className="mt-10 pt-6 border-t border-black/10 dark:border-white/10 flex items-center gap-4">
-                            <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">
-                                Chia sẻ bài viết:
-                            </h3>
-                            <div className="flex items-center gap-2">
-                                <a
-                                    className="flex items-center justify-center size-9 bg-gray-200 dark:bg-gray-700 hover:bg-primary dark:hover:bg-primary text-gray-700 dark:text-gray-300 hover:text-white rounded-full transition-colors"
-                                    data-alt="icon"
-                                    href="#"
-                                >
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M9.19795 21.5H13.198V13.4901H16.1618L16.6711 9.4901H13.198V7.5C13.198 6.94772 13.6457 6.5 14.198 6.5H16.5V2.5H13.198C11.0768 2.5 9.19795 4.37893 9.19795 6.5V9.4901H7.19795V13.4901H9.19795V21.5Z" />
-                                    </svg>
-                                </a>
-                                <a
-                                    className="flex items-center justify-center size-9 bg-gray-200 hover:text-white rounded-full transition-colors"
-                                    data-alt="icon"
-                                    href="#"
-                                >
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                    </svg>
-                                </a>
-                                <a
-                                    className="flex items-center justify-center size-9 bg-gray-200 hover:text-white rounded-full transition-colors"
-                                    data-alt="icon"
-                                    href="#"
-                                >
-                                    <span className="material-symbols-outlined text-xl">link</span>
-                                </a>
-                            </div>
-                        </div>
-                        {/* Related Articles Section */}
-                        {/* <div className="mt-12 pt-8 border-t border-black/10">
-                            <h2 className="text-2xl font-bold text-white">
-                                Bài viết liên quan
-                            </h2>
-                            <div key={"relate"} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                            </div>
-                        </div> */}
-                    </div>
-                </main>
+      <main className={`${plusJakartaSans.className} min-h-screen bg-[#121212]`}>
+        <div className="mx-auto max-w-5xl px-4 py-10 md:px-6 lg:px-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-5 w-40 rounded bg-[#232327]" />
+            <div className="h-12 w-3/4 rounded bg-[#232327]" />
+            <div className="h-5 w-52 rounded bg-[#232327]" />
+            <div className="h-[360px] rounded-[28px] bg-[#1a1a1d]" />
+            <div className="space-y-4 rounded-[28px] border border-[#2a2a2f] bg-[#1a1a1d] p-6">
+              <div className="h-5 w-full rounded bg-[#232327]" />
+              <div className="h-5 w-full rounded bg-[#232327]" />
+              <div className="h-5 w-4/5 rounded bg-[#232327]" />
             </div>
-        </>
-    )
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className={`${plusJakartaSans.className} min-h-screen bg-[#121212]`}>
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-6 lg:px-8">
+        <div className="mb-6">
+          <a
+            href="/news"
+            className="inline-flex items-center gap-2 rounded-full border border-[#2a2a2f] bg-[#1a1a1d] px-4 py-2 text-sm font-bold text-[#d4d4d8] transition hover:border-[#3a3a42] hover:bg-[#202024] hover:text-white"
+          >
+            <ArrowBackRoundedIcon fontSize="small" />
+            Quay lại tin tức
+          </a>
+        </div>
+
+        <section className="overflow-hidden rounded-[32px] border border-[#2a2a2f] bg-[#1a1a1d] shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+          <div className="relative h-[280px] w-full md:h-[360px] lg:h-[440px]">
+            <div
+              className="h-full w-full bg-cover bg-center"
+              style={{
+                backgroundImage: coverImage
+                  ? `url(${coverImage})`
+                  : "linear-gradient(135deg, #1b1b1f, #2a2a2f)",
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+
+            <div className="absolute inset-x-0 bottom-0 p-6 md:p-8 lg:p-10">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#2b1516]/95 px-4 py-2 text-sm font-bold text-[#ff5a5c]">
+                <LocalOfferRoundedIcon fontSize="small" />
+                {post?.category || "Tin tức"}
+              </div>
+
+              <h1 className="max-w-4xl text-3xl font-extrabold leading-tight tracking-[-0.03em] text-white md:text-4xl lg:text-5xl">
+                {post?.title || "Chi tiết bài viết"}
+              </h1>
+
+              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-[#d4d4d8]">
+                <div className="flex items-center gap-2">
+                  <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />
+                  <span>{publishedDate}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <LinkRoundedIcon sx={{ fontSize: 18 }} />
+                  <span>{post?.category || "Bài viết ưu đãi"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <article className="rounded-[28px] border border-[#2a2a2f] bg-[#1a1a1d] p-6 shadow-[0_14px_36px_rgba(0,0,0,0.22)] md:p-8">
+            <div className="mb-6 border-b border-[#2a2a2f] pb-5">
+              <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-white">
+                Nội dung chi tiết
+              </h2>
+              <p className="mt-2 text-sm font-medium text-[#a1a1aa]">
+                Thông tin ưu đãi, voucher hoặc tin tức liên quan được cập nhật đầy đủ bên dưới.
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              {renderContent(post?.content)}
+            </div>
+          </article>
+
+          <aside className="h-fit rounded-[28px] border border-[#2a2a2f] bg-[#1a1a1d] p-5 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
+            <h3 className="text-lg font-extrabold text-white">
+              Thông tin bài viết
+            </h3>
+
+            <div className="mt-5 space-y-4">
+              <div className="rounded-2xl border border-[#2a2a2f] bg-[#18181b] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#71717a]">
+                  Danh mục
+                </p>
+                <p className="mt-2 text-sm font-bold text-white">
+                  {post?.category || "Tin tức"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#2a2a2f] bg-[#18181b] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#71717a]">
+                  Thời gian đăng
+                </p>
+                <p className="mt-2 text-sm font-bold text-white">
+                  {publishedDate || "Đang cập nhật"}
+                </p>
+              </div>
+
+              {currentPath && (
+                <div className="rounded-2xl border border-[#2a2a2f] bg-[#18181b] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#71717a]">
+                    Liên kết bài viết
+                  </p>
+                  <a
+                    href={currentPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 block break-all text-sm font-bold text-[#ff5a5c] underline underline-offset-4 hover:text-[#ff7b7d]"
+                  >
+                    {currentPath}
+                  </a>
+                </div>
+              )}
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+  );
 }

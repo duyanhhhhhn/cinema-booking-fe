@@ -2,194 +2,326 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Post } from "@/types/data/post/post";
-import CustomPagination from "../admin/table/CustomPagination";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
+});
 
 export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
-  const { searchQuery } = useRouteQuery();
+  const [sortKey, setSortKey] = useState<"newest" | "oldest">("newest");
+  const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL || "";
+  const { searchQuery, updateQuery } = useRouteQuery();
+
+  const currentPage = Number(searchQuery.get("page") || 1);
+  const perPage = Number(searchQuery.get("perPage") || 6);
+
   const queryParam = useMemo(() => {
     return {
-      page: searchQuery.get("page") || 1,
-      perPage: searchQuery.get("perPage") || 6,
-    }
-  }, [searchQuery])
-  const { data, refetch: refetchPost } = useQuery({ ...Post.objects.paginateQueryFactory(queryParam) });
+      page: currentPage,
+      perPage,
+    };
+  }, [currentPage, perPage]);
+
+  const { data } = useQuery({
+    ...Post.objects.paginateQueryFactory(queryParam),
+  });
+
   const firstId = 1;
-  const data2 = useQuery(Post.getPostsInfo(firstId));
-  var first;
-  if (data2 != null && data2?.data != undefined) {
-    first = data2?.data?.data.at(0);
-  }
-  const firstDate = new Date(first?.publishedAt).toLocaleDateString();
+  const featuredQuery = useQuery(Post.getPostsInfo(firstId));
+
+  const featuredPost = featuredQuery?.data?.data?.at(0);
+  const featuredDate = featuredPost?.publishedAt
+    ? new Date(featuredPost.publishedAt).toLocaleDateString("vi-VN")
+    : "";
+
   const posts = data?.data ?? [];
-  const [sortKey, setSortKey] = useState<'newest' | 'oldest'>('newest');
-  const searchPosts = useMemo(() => {
+
+  const searchedPosts = useMemo(() => {
     if (!posts.length) return [];
-    if (searchTerm === "") return posts;
-    return posts.filter((post) =>
-      post.title.toLowerCase().includes(searchTerm.toLocaleLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.category.toLowerCase().includes(searchTerm.toLowerCase())
+    if (!searchTerm.trim()) return posts;
+
+    return posts.filter(
+      (post) =>
+        post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.category?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [posts, searchTerm]);
+
   const sortedPosts = useMemo(() => {
-    if (!searchPosts.length) return [];
+    const sorted = [...searchedPosts];
 
-    const sorted = [...searchPosts];
-
-    return sortKey === 'newest'
+    return sortKey === "newest"
       ? sorted.sort(
-        (a, b) =>
-          new Date(b.publishedAt).getTime() -
-          new Date(a.publishedAt).getTime()
-      )
+          (a, b) =>
+            new Date(b.publishedAt).getTime() -
+            new Date(a.publishedAt).getTime()
+        )
       : sorted.sort(
-        (a, b) =>
-          new Date(a.publishedAt).getTime() -
-          new Date(b.publishedAt).getTime()
-      );
-  }, [searchPosts, sortKey]);
+          (a, b) =>
+            new Date(a.publishedAt).getTime() -
+            new Date(b.publishedAt).getTime()
+        );
+  }, [searchedPosts, sortKey]);
+
+  const totalItems = data?.meta?.total || 0;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalItems / (data?.meta?.perPage || perPage || 6))
+  );
+
+  const createPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const delta = 1;
+
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      return pages;
+    }
+
+    pages.push(1);
+
+    const start = Math.max(2, currentPage - delta);
+    const end = Math.min(totalPages - 1, currentPage + delta);
+
+    if (start > 2) pages.push("...");
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 1) pages.push("...");
+
+    pages.push(totalPages);
+
+    return pages;
+  };
+
+  const pageNumbers = createPageNumbers();
+
+  const handlePageChange = (page: number) => {
+    updateQuery({
+      page: String(page),
+      perPage: String(perPage),
+    });
+  };
+
   return (
-    <>
-      <>
-        {/* Top Navigation */}
-        <main className="bg-[#121212] flex-grow w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-8 flex flex-col gap-10">
-          {/* Hero Section: Featured Article */}
-          <section className="bg-[#261c1c] relative w-full rounded-2xl overflow-hidden bg-surface-dark border border-border-dark group cursor-pointer shadow-2xl">
-            <div className="grid lg:grid-cols-2 gap-0">
-              <div className="relative w-full aspect-video lg:aspect-auto lg:h-[450px] overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent lg:hidden z-10"></div>
-                <div
-                  className="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  data-alt="Cinematic shot of a desert landscape from a new movie"
-                  style={{
-                    backgroundImage:
-                      `url(${urlImage}${first?.coverUrl})`,
-                  }}
-                ></div>
-                {/* Badge for mobile */}
-                <span className="absolute top-4 left-4 z-20 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  {first?.category}
-                </span>
+    <main className={`${plusJakartaSans.className} min-h-screen bg-[#121212]`}>
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+        <section className="mb-8 overflow-hidden rounded-[32px] border border-[#2a2a2f] bg-[#1a1a1d] shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+          <div className="grid gap-0 lg:grid-cols-2">
+            <div className="relative min-h-[300px] lg:min-h-[440px]">
+              <div
+                className="h-full w-full bg-cover bg-center"
+                style={{
+                  backgroundImage: featuredPost?.coverUrl
+                    ? `url(${urlImage}${featuredPost.coverUrl})`
+                    : "linear-gradient(135deg, #1b1b1f, #2a2a2f)",
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent lg:hidden" />
+            </div>
+
+            <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">
+              <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-[#2b1516] px-4 py-2 text-sm font-bold text-[#ff5a5c]">
+                <LocalOfferRoundedIcon fontSize="small" />
+                {featuredPost?.category || "Ưu đãi nổi bật"}
               </div>
-              <div className="flex flex-col justify-center p-6 lg:p-12 gap-6 relative">
-                <div className="flex flex-col gap-4">
-                  <span className="hidden lg:inline-block w-fit bg-red-900 outline text-red-600 outline-solid outline-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                    {first?.category}
-                  </span>
-                  <h1 className="text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight group-hover:text-primary transition-colors">
-                    {first?.title}
-                  </h1>
-                  <p className="text-gray-400 text-lg font-normal leading-relaxed line-clamp-3">
-                    {first?.excerpt}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
-                  <div className="flex items-center gap-1">
-                    <span>{firstDate}</span>
-                  </div>
-                  <div className="w-1 h-1 rounded-full bg-text-gray-500" />
-                </div>
-                <div className="mt-2">
-                  <a href={`/news/${firstId}`} className="inline-flex items-center gap-2 text-red-700 font-bold hover:text-white hover:bg-primary px-5 py-2.5 rounded-lg border border-primary transition-all duration-300">
-                    <span>Đọc chi tiết</span>
-                  </a>
-                </div>
+
+              <h1 className="text-3xl font-extrabold leading-tight tracking-[-0.03em] text-white md:text-4xl lg:text-5xl">
+                {featuredPost?.title || "Tin tức và ưu đãi mới nhất từ rạp"}
+              </h1>
+
+              <p className="mt-4 text-[15px] leading-7 text-[#a1a1aa] md:text-base">
+                {featuredPost?.excerpt ||
+                  "Khám phá những ưu đãi hấp dẫn, chương trình giảm giá mới và các cập nhật điện ảnh nổi bật trong tuần."}
+              </p>
+
+              <div className="mt-5 flex items-center gap-2 text-sm font-medium text-[#a1a1aa]">
+                <CalendarMonthRoundedIcon fontSize="small" />
+                <span>{featuredDate}</span>
+              </div>
+
+              <div className="mt-7">
+                <a
+                  href={`/news/${firstId}`}
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#ff2d2f] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(255,45,47,0.22)] transition hover:bg-[#ef1f21]"
+                >
+                  Đọc chi tiết
+                </a>
               </div>
             </div>
-          </section>
-          {/* Filters & Tools */}
-          <section className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-border-dark pb-6">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-bold text-white tracking-tight">
-                  Tin tức mới nhất
-                </h2>
-                <p style={{ color: "#9c8486" }}>
-                  Cập nhật tin tức điện ảnh, khuyến mãi và sự kiện nóng hổi.
-                </p>
+          </div>
+        </section>
+
+        <section className="mb-6 rounded-[28px] border border-[#2a2a2f] bg-[#1a1a1d] p-5 shadow-[0_10px_28px_rgba(0,0,0,0.22)] md:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-[28px] font-extrabold tracking-[-0.03em] text-white">
+                Tin tức ưu đãi & giảm giá
+              </h2>
+              <p className="mt-2 text-sm font-medium text-[#a1a1aa] md:text-base">
+                Cập nhật nhanh các chương trình khuyến mãi, combo và tin tức mới nhất.
+              </p>
+            </div>
+
+            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+              <div className="relative w-full sm:w-[300px]">
+                <SearchRoundedIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717a]" />
+                <input
+                  className="h-12 w-full rounded-2xl border border-[#2a2a2f] bg-[#18181b] pl-10 pr-4 text-sm font-medium text-white outline-none transition placeholder:text-[#71717a] focus:border-[#ff6b6d] focus:bg-[#1c1c20]"
+                  placeholder="Tìm bài viết..."
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  type="text"
+                  value={searchTerm}
+                />
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                {/* Search Field */}
-                <div className="relative w-full sm:w-64 bg-[#261c1c]">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-white">
-                    <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                      <svg className="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" /></svg>
+
+              <select
+                onChange={(e) => setSortKey(e.target.value as "newest" | "oldest")}
+                value={sortKey}
+                className="h-12 min-w-[180px] rounded-2xl border border-[#2a2a2f] bg-[#18181b] px-4 text-sm font-bold text-white outline-none transition focus:border-[#ff6b6d] focus:bg-[#1c1c20]"
+              >
+                <option value="newest">Mới nhất</option>
+                <option value="oldest">Cũ nhất</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {sortedPosts.map((post) => {
+            const dateLabel = post?.publishedAt
+              ? new Date(post.publishedAt).toLocaleDateString("vi-VN")
+              : "";
+
+            return (
+              <article
+                key={post?.id}
+                className="group overflow-hidden rounded-[28px] border border-[#2a2a2f] bg-[#1a1a1d] shadow-[0_12px_30px_rgba(0,0,0,0.22)] transition hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(0,0,0,0.3)]"
+              >
+                <a href={`/news/${post?.id}`} className="block">
+                  <div className="relative h-56 overflow-hidden bg-[#18181b]">
+                    <div
+                      className="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-105"
+                      style={{
+                        backgroundImage: post?.coverUrl
+                          ? `url(${urlImage}${post.coverUrl})`
+                          : "linear-gradient(135deg, #1b1b1f, #2a2a2f)",
+                      }}
+                    />
+                    <div className="absolute left-4 top-4 inline-flex rounded-full bg-[#151517]/95 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#ff5a5c] shadow-sm">
+                      {post?.category}
                     </div>
                   </div>
-                  <input
-                    className="block w-full rounded-lg border border-border-dark py-2.5 pl-10 pr-3 text-sm text-white focus:ring-1 placeholder-text-muted transition-colors"
-                    placeholder="Tìm bài viết..."
-                    onChange={e => setSearchTerm(e.target.value)}
-                    type="text"
-                  />
-                </div>
-                {/* Sort Field */}
-                <div className="relative w-full sm:w-48 ">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-white">
-                    <span className="material-symbols-outlined text-[20px]">
-                    </span>
+
+                  <div className="flex flex-col p-5">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[#a1a1aa]">
+                      <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />
+                      <span>{dateLabel}</span>
+                    </div>
+
+                    <h3 className="line-clamp-2 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-white transition group-hover:text-[#ff5a5c]">
+                      {post?.title}
+                    </h3>
+
+                    <p className="mt-3 line-clamp-3 text-sm leading-7 text-[#a1a1aa]">
+                      {post?.excerpt}
+                    </p>
+
+                    <div className="mt-5 flex items-center justify-between border-t border-[#2a2a2f] pt-4">
+                      <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#71717a]">
+                        Tin ưu đãi
+                      </span>
+                      <span className="text-sm font-bold text-[#ff5a5c]">
+                        Xem thêm
+                      </span>
+                    </div>
                   </div>
-                  <select
-                    onChange={
-                      e => setSortKey(e.target.value as 'newest' | 'oldest')
-                    }
-                    className="block w-full bg-[#261c1c] rounded-lg border py-2.5 pl-10 pr-8 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer appearance-none transition-colors">
-                    <option value="newest">Mới nhất</option>
-                    <option value="oldest">Cũ nhất</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {sortedPosts.map(post => {
-              return <article key={post?.id} style={{ borderColor: "#261c1c" }} className="group flex flex-col h-full bg-[#261c1c] rounded-xl border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1 cursor-pointer">
-                <a href={`/news/${post?.id}`} className="relative h-56 overflow-hidden">
-                  <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider border border-white/10">
-                    {post?.category}
-                  </div>
-                  <div
-                    className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                    data-alt="Popcorn buckets and movie tickets on a red background"
-                    style={{
-                      backgroundImage: `url(${urlImage}${post.coverUrl})`,
-                    }}
-                  ></div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60" />
                 </a>
-                <div className="flex flex-col flex-1 p-5 gap-3">
-                  <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                    {post?.title}
-                  </h3>
-                  <p style={{ color: "#9c8486" }} className="text-text-muted text-sm line-clamp-2 leading-relaxed mb-auto">
-                    {post?.excerpt}
-                  </p>
-                  <div style={{ color: "#9c8486" }} className="flex items-center justify-between pt-4 border-t border-border-dark mt-2">
-                    <span className="text-xs text-text-muted font-medium">
-                      {post?.publishedAt}
-                    </span>
-                    <a href={`/news/${post?.id}`} className="text-xs font-bold text-red-500 flex items-center gap-1 group/btn">
-                      Info
-                    </a>
-                  </div>
-                </div>
               </article>
-            })}
+            );
+          })}
+        </section>
+
+        {sortedPosts.length === 0 && (
+          <section className="mt-8 rounded-[28px] border border-dashed border-[#2a2a2f] bg-[#1a1a1d] px-6 py-16 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2b1516] text-[#ff5a5c]">
+              <LocalOfferRoundedIcon />
+            </div>
+            <h3 className="text-xl font-extrabold text-white">
+              Không tìm thấy bài viết phù hợp
+            </h3>
+            <p className="mt-2 text-sm font-medium text-[#a1a1aa]">
+              Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc sắp xếp.
+            </p>
           </section>
-          {/* Pagination */}
-          <div className="flex justify-center pt-8 pb-12 text-white bg-gray-400">
-            <CustomPagination
-              totalItems={data?.meta?.total || 0}
-              itemsPerPage={data?.meta?.perPage || 0}
-            />
+        )}
+
+        <section className="mt-10 pb-10">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <p className="text-sm font-medium text-[#a1a1aa]">
+              Hiển thị{" "}
+              <span className="font-bold text-white">
+                {totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1}-
+                {Math.min(currentPage * perPage, totalItems)}
+              </span>{" "}
+              trên <span className="font-bold text-white">{totalItems}</span> bài viết
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2a2a2f] bg-[#1a1a1d] text-[#ff5a5c] transition hover:bg-[#221314] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ArrowBackIosNewRoundedIcon sx={{ fontSize: 16 }} />
+              </button>
+
+              {pageNumbers.map((page, index) =>
+                page === "..." ? (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="inline-flex h-10 min-w-[40px] items-center justify-center text-sm font-bold text-[#71717a]"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => handlePageChange(Number(page))}
+                    className={`inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl px-3 text-sm font-bold transition ${
+                      currentPage === page
+                        ? "bg-[#ff2d2f] text-white shadow-[0_10px_24px_rgba(255,45,47,0.22)]"
+                        : "border border-[#2a2a2f] bg-[#1a1a1d] text-[#d4d4d8] hover:bg-[#221314] hover:text-[#ff5a5c]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2a2a2f] bg-[#1a1a1d] text-[#ff5a5c] transition hover:bg-[#221314] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ArrowForwardIosRoundedIcon sx={{ fontSize: 16 }} />
+              </button>
+            </div>
           </div>
-        </main>
-      </>
-    </>
+        </section>
+      </div>
+    </main>
   );
 }
-

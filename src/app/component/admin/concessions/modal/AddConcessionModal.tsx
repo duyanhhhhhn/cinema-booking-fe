@@ -1,103 +1,200 @@
 "use client";
 
 import CloseIcon from "@mui/icons-material/Close";
+import LunchDiningRoundedIcon from "@mui/icons-material/LunchDiningRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import { Backdrop, Fade, Modal } from "@mui/material";
-import { useState } from "react";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { useEffect, useState } from "react";
+import { Toaster } from "sonner";
 import SingleForm from "./SingleForm";
 import ComboForm from "./ComboForm";
 
-export default function AddConcessionModal({ open, onClose, refetchCombo }: {
-    open: boolean, onClose: () => void,
-    refetchCombo: () => void
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+export default function AddConcessionModal({
+  open,
+  onClose,
+  refetchCombo,
+}: {
+  open: boolean;
+  onClose: () => void;
+  refetchCombo: () => void;
 }) {
-    const [type, setType] = useState<"single" | "combo">("combo");
-    return (
-        <Modal
-            open={open}
-            onClose={onClose}
-            closeAfterTransition
-            slots={{ backdrop: Backdrop }}
-            slotProps={{
-                backdrop: {
-                    timeout: 500,
-                    className: "bg-black/60 backdrop-blur-sm",
-                },
-            }}
-            className="flex items-center justify-center p-4 overflow-y-auto"
-        >
-            <Fade in={open}>
-                <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 flex flex-col max-h-[90vh] font-sans">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
-                        <h3 className="text-xl font-bold text-zinc-900">Add New Combo</h3>
-                        <button
-                            onClick={onClose}
-                            className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded-full hover:bg-zinc-100"
-                        >
-                            <CloseIcon />
-                        </button>
-                    </div>
-                    <div className="px-6 pt-4">
-                        <div className="flex p-1 rounded-lg border border-border-dark">
-                            <button
-                                onClick={() => setType("single")}
-                                className={`flex-1 py-2 px-4 rounded-md text-sm transition-all
-      ${type === "single"
-                                        ? "bg-red-500 text-white font-bold shadow-sm"
-                                        : "text-black"} `}>
-                                Sản phẩm lẻ
-                            </button>
-                            <button
-                                onClick={() => setType("combo")}
-                                className={`flex-1 py-2 px-4 rounded-md text-sm transition-all
-      ${type === "combo"
-                                        ? "bg-red-500 text-white font-bold shadow-sm"
-                                        : "text-black"}`}>
-                                Combo
-                            </button>
-                        </div>
-                    </div>
+  const [type, setType] = useState<"single" | "combo">("combo");
 
-                    {/* Form Body */}
-                    <div className="bg-white backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div>
-                            {
-                                type === "single" ? (
-                                    <SingleForm onClose={onClose} refetchCombo={refetchCombo} type="create" combo={undefined}></SingleForm>
-                                ) : (
-                                    <ComboForm onClose={onClose} refetchCombo={refetchCombo} type="create" combo={undefined}></ComboForm>
-                                )
-                            }
+  useEffect(() => {
+    if (open) {
+      setType("combo");
+    }
+  }, [open]);
 
-                        </div>
-                    </div>
-                    <div className="flex h-screen w-full overflow-hidden blur-[4px] pointer-events-none select-none">
-                        <aside className="hidden w-64 flex-col bg-background-dark border-r border-border-dark lg:flex shrink-0">
-                            <div className="flex h-full flex-col justify-between p-4">
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex gap-3 items-center pb-4 border-b border-border-dark">
-                                        <div
-                                            className="bg-center bg-no-repeat bg-cover rounded-full size-12 border-2 border-primary"
-                                            style={{
-                                                backgroundImage:
-                                                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDlSCxDP50sM2DnE56TVE5Ka9ysqNGnVRptwX6XPFuWuDoLe7NW_uYA6D-VK8WTFw50MpyrwacRKAoRX3MlpVudwzW8U4G8bFjfy1qfb5dZazsiJT50lLFZIX_1PFXlKzjzXzw-JMEmrnBZJZGF7j8y6YSrmSk3YChbGxemJEAsWuYIk1lTTH36ABFjdf8oBAwEH8XJp1P_CsoIm7cD2nghmus_ahOUeRJFl9EXq0KCo4O6ymb10O3_LNGsDEERTyjm07fRXG5EiLh-")'
-                                            }}
-                                        />
-                                        <div className="flex flex-col">
-                                            <h1 className="text-white text-base font-bold">Cinema Admin</h1>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </aside>
-                        <main className="flex-1 flex flex-col h-full bg-background-dark relative">
-                            <header className="border-b border-border-dark p-6">
-                                <h1 className="text-white text-3xl font-bold">Quản lý F&amp;B</h1>
-                            </header>
-                        </main>
-                    </div>
+  return (
+    <>
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        expand={false}
+        visibleToasts={4}
+        toastOptions={{
+          duration: 3200,
+          className:
+            "!rounded-[20px] !border !border-[#ffd9d9] !bg-white !text-[#111827] !shadow-[0_20px_60px_rgba(255,45,47,0.14)]",
+          style: {
+            padding: "16px",
+          },
+        }}
+      />
+
+      <Modal
+        open={open}
+        onClose={onClose}
+        closeAfterTransition
+        slots={{ backdrop: Backdrop }}
+        slotProps={{
+          backdrop: {
+            timeout: 250,
+            className: "bg-black/40 backdrop-blur-[3px]",
+          },
+        }}
+        className={`${plusJakartaSans.className} flex items-center justify-center p-4`}
+      >
+        <Fade in={open}>
+          <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-[#ececf2] bg-[#fcfcfd] shadow-[0_28px_80px_rgba(15,23,42,0.16)] outline-none">
+            <div className="border-b border-[#eef0f4] bg-white px-6 py-5 md:px-7">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ff6b6d]">
+                    Quản lý F&amp;B
+                  </p>
+                  <h3 className="mt-2 text-[28px] font-extrabold tracking-[-0.03em] text-[#111827]">
+                    Thêm sản phẩm mới
+                  </h3>
+                  <p className="mt-1.5 text-sm font-medium text-[#6b7280]">
+                    Chọn loại sản phẩm và nhập thông tin bên dưới.
+                  </p>
                 </div>
-            </Fade>
-        </Modal>
-    )
+
+                <button
+                  onClick={onClose}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#ececf2] bg-white text-[#6b7280] transition hover:border-[#ffd8d8] hover:bg-[#fff5f5] hover:text-[#ff2d2f]"
+                  aria-label="Đóng"
+                  type="button"
+                >
+                  <CloseIcon fontSize="small" />
+                </button>
+              </div>
+            </div>
+
+            <div className="border-b border-[#eef0f4] bg-white px-6 py-4 md:px-7">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setType("single")}
+                  className={`flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition ${
+                    type === "single"
+                      ? "border-[#ffb8b9] bg-[#fff5f5]"
+                      : "border-[#ececf2] bg-white hover:border-[#ffd8d8] hover:bg-[#fffafa]"
+                  }`}
+                >
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition ${
+                      type === "single"
+                        ? "bg-[#ff2d2f] text-white shadow-[0_10px_22px_rgba(255,45,47,0.18)]"
+                        : "bg-[#f4f5f7] text-[#6b7280]"
+                    }`}
+                  >
+                    <LunchDiningRoundedIcon fontSize="small" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p
+                      className={`text-[15px] font-extrabold ${
+                        type === "single" ? "text-[#ff2d2f]" : "text-[#111827]"
+                      }`}
+                    >
+                      Sản phẩm lẻ
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">
+                      Món đơn hoặc nước uống bán riêng
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setType("combo")}
+                  className={`flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition ${
+                    type === "combo"
+                      ? "border-[#ffb8b9] bg-[#fff5f5]"
+                      : "border-[#ececf2] bg-white hover:border-[#ffd8d8] hover:bg-[#fffafa]"
+                  }`}
+                >
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition ${
+                      type === "combo"
+                        ? "bg-[#ff2d2f] text-white shadow-[0_10px_22px_rgba(255,45,47,0.18)]"
+                        : "bg-[#f4f5f7] text-[#6b7280]"
+                    }`}
+                  >
+                    <LocalOfferRoundedIcon fontSize="small" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p
+                      className={`text-[15px] font-extrabold ${
+                        type === "combo" ? "text-[#ff2d2f]" : "text-[#111827]"
+                      }`}
+                    >
+                      Combo
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">
+                      Gói sản phẩm bán kèm hấp dẫn hơn
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto bg-[#fcfcfd] px-6 py-6 md:px-7">
+              <div className="rounded-[24px] border border-[#ececf2] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)] md:p-6">
+                <div className="mb-5 border-b border-[#f1f2f6] pb-4">
+                  <h4 className="text-[18px] font-extrabold tracking-[-0.02em] text-[#111827]">
+                    {type === "single" ? "Thông tin sản phẩm lẻ" : "Thông tin combo"}
+                  </h4>
+                  <p className="mt-1 text-sm font-medium text-[#6b7280]">
+                    {type === "single"
+                      ? "Nhập tên, giá bán, hình ảnh và các thông tin liên quan."
+                      : "Cấu hình thông tin combo và danh sách sản phẩm đi kèm."}
+                  </p>
+                </div>
+
+                <div className="[&_.MuiInputBase-root]:rounded-2xl [&_.MuiInputBase-root]:font-medium [&_.MuiOutlinedInput-notchedOutline]:border-[#e5e7eb] [&_.MuiInputBase-root:hover_.MuiOutlinedInput-notchedOutline]:border-[#ffb3b4] [&_.Mui-focused_.MuiOutlinedInput-notchedOutline]:border-[#ff2d2f] [&_.MuiFormLabel-root]:font-semibold [&_.MuiFormLabel-root]:text-[#6b7280] [&_.MuiButton-contained]:rounded-2xl [&_.MuiButton-contained]:bg-[#ff2d2f] [&_.MuiButton-contained]:px-5 [&_.MuiButton-contained]:py-3 [&_.MuiButton-contained]:font-bold [&_.MuiButton-contained]:shadow-[0_10px_24px_rgba(255,45,47,0.18)] [&_.MuiButton-contained:hover]:bg-[#ef1f21] [&_.MuiButton-outlined]:rounded-2xl [&_.MuiButton-outlined]:border-[#e5e7eb] [&_.MuiButton-outlined]:px-5 [&_.MuiButton-outlined]:py-3 [&_.MuiButton-outlined]:font-bold [&_.MuiButton-outlined]:text-[#374151]">
+                  {type === "single" ? (
+                    <SingleForm
+                      onClose={onClose}
+                      refetchCombo={refetchCombo}
+                      type="create"
+                      combo={undefined}
+                    />
+                  ) : (
+                    <ComboForm
+                      onClose={onClose}
+                      refetchCombo={refetchCombo}
+                      type="create"
+                      combo={undefined}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </Fade>
+      </Modal>
+    </>
+  );
 }
