@@ -1,7 +1,7 @@
 "use client"
 
 import { useNotification } from "@/hooks/useNotification";
-import { initialPostData, PostFormData, useCreatePostMutation } from "@/types/data/post/post";
+import { initialPostData, IPost, Post, PostFormData, useUpdatePostMutation } from "@/types/data/post/post";
 import { Backdrop, Fade, Modal } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined";
@@ -9,13 +9,30 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { createPostSchema } from "@/types/data/post/schema/post";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-export default function AddPostModal({ open, onClose, refetchPost }:
-    { open: boolean; onClose: () => void, refetchPost: () => void }
+export default function EditPostModal({ open, onClose, refetchPost, post }:
+    { open: boolean; onClose: () => void, refetchPost: () => void, post: IPost }
 ) {
+    useEffect(() => {
+        if (post) {
+            methods.reset(post);
+        }
+    }, [post]);
+    const editor = useEditor({
+        extensions: [StarterKit],
+        content: "",
+        immediatelyRender: false
+    });
+    useEffect(() => {
+        if (editor && post?.content) {
+            editor.commands.setContent(post.content);
+        }
+    }, [post, editor]);
+    const data = post;
+    console.log(data);
     const n = useNotification();
     const [previews, setPreviews] = useState<{
         banner: string | null;
@@ -23,19 +40,12 @@ export default function AddPostModal({ open, onClose, refetchPost }:
         banner: null,
     });
     const methods = useForm<any>({
-        defaultValues: initialPostData,
+        defaultValues: post,
         mode: "onChange",
         resolver: yupResolver(createPostSchema())
     })
-    const editor = useEditor({
-        extensions: [StarterKit],
-        content: "",
-        immediatelyRender: false,
-        onUpdate: ({ editor }) => {
-            methods.setValue("content", editor.getHTML());
-        }
-    });
-    const { mutate: createPost } = useCreatePostMutation()
+
+    const { mutate: updatePost } = useUpdatePostMutation()
     const onSubmit = async (data: PostFormData) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
@@ -53,7 +63,7 @@ export default function AddPostModal({ open, onClose, refetchPost }:
 
         });
         formData.delete("bannerUrl");
-        createPost(formData, {
+        updatePost({ id: post.id, payload: formData }, {
             onSuccess: () => {
                 onClose();
                 n.success("Success");
@@ -106,7 +116,7 @@ export default function AddPostModal({ open, onClose, refetchPost }:
                 <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 shadow-2xl flex flex-col max-h-[90vh] outline-none font-sans">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
-                        <h3 className="text-xl font-bold text-zinc-900">Add New Banner</h3>
+                        <h3 className="text-xl font-bold text-zinc-900">Edit Post</h3>
                         <button
                             onClick={onClose}
                             className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded-full hover:bg-zinc-100"

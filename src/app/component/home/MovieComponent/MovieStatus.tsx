@@ -622,22 +622,21 @@ export default function MovieStatus() {
           )}
         </div>
       )}
-
       {openSchedule && (
         <div className="fixed inset-0 z-[999]">
           <div
-            className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(42,46,56,0.35),rgba(5,7,11,0.92))]"
+            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,22,27,0.72),rgba(5,6,8,0.94))]"
             onClick={closeScheduleModal}
           />
 
           <div className="absolute inset-0 overflow-y-auto p-4 sm:p-6 md:p-10">
-            <div className="mx-auto w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-white/10 bg-[#11161f] shadow-[0_30px_100px_rgba(0,0,0,0.65)]">
-              <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 sm:px-8">
+            <div className="mx-auto w-full max-w-[1280px] overflow-hidden border border-white/10 bg-[#0f1115] shadow-[0_30px_100px_rgba(0,0,0,0.68)]">
+              <div className="flex items-center justify-between border-b border-white/10 bg-[#12151b] px-6 py-5 sm:px-8">
                 <div>
-                  <p className="text-[13px] font-semibold uppercase tracking-[0.28em] text-[#7d8aa5]">
+                  <p className="text-[12px] font-black uppercase tracking-[0.24em] text-[#7c8596]">
                     Quick Booking
                   </p>
-                  <p className="mt-1 text-[22px] font-extrabold text-white">
+                  <p className="mt-1 text-[22px] font-black text-white">
                     {selectedMovie?.title ? `Lịch chiếu - ${selectedMovie.title}` : "Lịch chiếu"}
                   </p>
                 </div>
@@ -645,7 +644,7 @@ export default function MovieStatus() {
                 <button
                   type="button"
                   onClick={closeScheduleModal}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                  className="inline-flex h-11 w-11 items-center justify-center border border-white/10 bg-[#1a1d24] text-neutral-300 transition hover:bg-[#222730] hover:text-white"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path
@@ -658,19 +657,19 @@ export default function MovieStatus() {
                 </button>
               </div>
 
-              <div className="px-6 py-6 sm:px-8 sm:py-8">
+              <div className="px-6 py-6 sm:px-8 sm:py-8 bg-[#0f1115]">
                 {qMovieShowtimes.isLoading && (
-                  <div className="py-14 text-center text-[#98a2b3]">
+                  <div className="py-14 text-center text-[#99a1af] font-semibold">
                     Đang tải lịch chiếu...
                   </div>
                 )}
 
                 {!qMovieShowtimes.isLoading && availableDateKeys.length === 0 && (
-                  <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] py-14 text-center">
-                    <p className="text-lg font-bold text-white">
+                  <div className="border border-dashed border-white/10 bg-[#14171d] py-14 text-center">
+                    <p className="text-lg font-black text-white">
                       Chưa có lịch chiếu
                     </p>
-                    <p className="mt-2 text-sm text-[#98a2b3]">
+                    <p className="mt-2 text-sm font-medium text-[#98a2b3]">
                       Phim này hiện chưa có suất chiếu khả dụng.
                     </p>
                   </div>
@@ -679,11 +678,11 @@ export default function MovieStatus() {
                 {!qMovieShowtimes.isLoading && availableDateKeys.length > 0 && (
                   <>
                     <div className="mb-7">
-                      <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(135deg,rgba(32,40,56,0.95),rgba(14,18,26,0.98))] px-5 py-5 sm:px-6">
-                        <p className="text-[13px] font-semibold uppercase tracking-[0.25em] text-[#7d8aa5]">
+                      <div className="border border-white/10 bg-[#151921] px-5 py-5 sm:px-6">
+                        <p className="text-[12px] font-black uppercase tracking-[0.24em] text-[#7c8596]">
                           Cinema
                         </p>
-                        <p className="mt-2 text-[28px] font-extrabold text-white">
+                        <p className="mt-2 text-[28px] font-black text-white">
                           {cinemaBlocksByDate.length > 0
                             ? cinemaBlocksByDate[0]?.cinemaName
                             : "Hệ thống rạp"}
@@ -701,21 +700,21 @@ export default function MovieStatus() {
                             key={dateKey}
                             type="button"
                             onClick={() => setActiveDateKey(dateKey)}
-                            className={`min-w-[128px] rounded-2xl border px-4 py-4 text-left transition ${
+                            className={`min-w-[128px] border px-4 py-4 text-left transition ${
                               active
-                                ? "border-[#3b82f6] bg-[#132033] text-white shadow-[0_12px_30px_rgba(59,130,246,0.18)]"
-                                : "border-white/10 bg-white/[0.03] text-[#d7deea] hover:border-white/20 hover:bg-white/[0.05]"
+                                ? "border-[#e11d2e]/50 bg-[#191d26] text-white shadow-[0_12px_28px_rgba(225,29,46,0.10)]"
+                                : "border-white/10 bg-[#14171d] text-[#d7deea] hover:border-white/20 hover:bg-[#181c23]"
                             }`}
                           >
                             <div className="flex items-end gap-1">
-                              <span className="text-[34px] font-extrabold leading-none">
+                              <span className="text-[34px] font-black leading-none">
                                 {label.day}
                               </span>
-                              <span className="pb-[4px] text-[15px] font-bold">
+                              <span className="pb-[4px] text-[15px] font-black">
                                 /{label.month}
                               </span>
                             </div>
-                            <div className="mt-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#93a1b9]">
+                            <div className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#8b95a8]">
                               {label.weekday}
                             </div>
                           </button>
@@ -738,14 +737,14 @@ export default function MovieStatus() {
                         return (
                           <div
                             key={cinema.cinemaId}
-                            className="rounded-[26px] border border-white/10 bg-white/[0.03] p-5 sm:p-6"
+                            className="border border-white/10 bg-[#13161c] p-5 sm:p-6"
                           >
                             <div className="mb-4">
-                              <p className="text-[22px] font-extrabold text-white">
+                              <p className="text-[22px] font-black text-white">
                                 {cinema.cinemaName}
                               </p>
                               {cinema.address ? (
-                                <p className="mt-1 text-sm text-[#98a2b3]">
+                                <p className="mt-1 text-sm font-medium text-[#98a2b3]">
                                   {cinema.address}
                                 </p>
                               ) : null}
@@ -755,7 +754,7 @@ export default function MovieStatus() {
                               {Object.entries(formatGroups).map(
                                 ([formatLabel, items]) => (
                                   <div key={formatLabel}>
-                                    <p className="mb-4 text-[14px] font-bold uppercase tracking-[0.22em] text-[#8ea0bf]">
+                                    <p className="mb-4 text-[13px] font-black uppercase tracking-[0.2em] text-[#8f98aa]">
                                       {formatLabel}
                                     </p>
 
@@ -780,23 +779,23 @@ export default function MovieStatus() {
                                                 timeLabel: show.timeLabel,
                                               })
                                             }
-                                            className={`rounded-2xl border px-4 py-4 text-center transition ${
+                                            className={`border px-4 py-4 text-center transition ${
                                               soldOut
-                                                ? "cursor-not-allowed border-white/10 bg-white/[0.04] opacity-60"
-                                                : "border-white/10 bg-[#171e2a] hover:border-[#3b82f6] hover:bg-[#1b2636] hover:shadow-[0_10px_24px_rgba(59,130,246,0.12)]"
+                                                ? "cursor-not-allowed border-white/10 bg-[#181b21] opacity-60"
+                                                : "border-white/10 bg-[#171a20] hover:border-[#e11d2e]/30 hover:bg-[#1d222b] hover:shadow-[0_10px_24px_rgba(0,0,0,0.26)]"
                                             }`}
                                           >
                                             <div
-                                              className={`text-[20px] font-extrabold ${
+                                              className={`text-[20px] font-black ${
                                                 soldOut
                                                   ? "text-[#f87171]"
-                                                  : "text-[#60a5fa]"
+                                                  : "text-white"
                                               }`}
                                             >
                                               {show.timeLabel}
                                             </div>
 
-                                            <div className="mt-2 text-[13px] font-semibold text-[#aab4c5]">
+                                            <div className="mt-2 text-[12px] font-bold text-[#aab4c5]">
                                               {typeof availableSeats === "number"
                                                 ? `${availableSeats} ghế trống`
                                                 : "Chọn suất chiếu"}
@@ -824,26 +823,22 @@ export default function MovieStatus() {
       {openConfirmBooking && selectedShowtime && (
         <div className="fixed inset-0 z-[1000]">
           <div
-            className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(55,65,81,0.28),rgba(2,6,12,0.94))]"
+            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0, 0, 0, 0.76),rgba(0, 0, 0, 0.95))]"
             onClick={closeConfirmModal}
           />
 
           <div className="absolute inset-0 overflow-y-auto p-4 sm:p-6 md:p-10">
-            <div className="mx-auto mt-6 w-full max-w-[980px] overflow-hidden rounded-[30px] border border-white/10 bg-[#0f141d] shadow-[0_35px_120px_rgba(0,0,0,0.7)]">
-              <div className="relative overflow-hidden border-b border-white/10">
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(30,41,59,0.95),rgba(11,15,23,0.98))]" />
-                <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
-                <div className="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
-
+            <div className="mx-auto mt-6 w-full max-w-[980px] overflow-hidden border border-white/10 bg-[#0f1115] shadow-[0_35px_120px_rgba(0,0,0,0.72)]">
+              <div className="relative overflow-hidden border-b border-white/10 bg-[#12151b]">
                 <div className="relative flex items-start justify-between px-6 py-6 sm:px-8">
                   <div>
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.3em] text-[#8aa0c2]">
+                    <p className="text-[12px] font-black uppercase tracking-[0.24em] text-[#7c8596]">
                       Quick Booking
                     </p>
-                    <h3 className="mt-2 text-[24px] font-extrabold text-white sm:text-[28px]">
+                    <h3 className="mt-2 text-[24px] font-black text-white sm:text-[28px]">
                       Xác nhận suất chiếu
                     </h3>
-                    <p className="mt-2 max-w-[520px] text-sm leading-6 text-[#aab6ca]">
+                    <p className="mt-2 max-w-[520px] text-sm font-medium leading-6 text-[#aab6ca]">
                       Kiểm tra lại thông tin trước khi chuyển sang bước chọn ghế.
                     </p>
                   </div>
@@ -851,7 +846,7 @@ export default function MovieStatus() {
                   <button
                     type="button"
                     onClick={closeConfirmModal}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                    className="inline-flex h-11 w-11 items-center justify-center border border-white/10 bg-[#1a1d24] text-neutral-300 transition hover:bg-[#222730] hover:text-white"
                   >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path
@@ -865,9 +860,9 @@ export default function MovieStatus() {
                 </div>
               </div>
 
-              <div className="px-6 py-6 sm:px-8 sm:py-8">
+              <div className="px-6 py-6 sm:px-8 sm:py-8 bg-[#040404]">
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-                  <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[#111926] shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+                  <div className="overflow-hidden border border-white/10 bg-[#0C0F0F] shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
                     <div
                       className="aspect-[2/3] w-full bg-cover bg-center"
                       style={{
@@ -879,37 +874,37 @@ export default function MovieStatus() {
                   </div>
 
                   <div className="flex flex-col gap-5">
-                    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(135deg,rgba(20,27,38,0.98),rgba(13,18,27,0.98))] p-5 sm:p-6">
+                    <div className="border border-white/10 bg-[#141820] p-5 sm:p-6">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#7f94b4]">
+                          <p className="text-[12px] font-black uppercase tracking-[0.22em] text-[#7c8596]">
                             Bộ phim bạn chọn
                           </p>
-                          <h4 className="mt-2 text-[26px] font-extrabold leading-tight text-white sm:text-[30px]">
+                          <h4 className="mt-2 text-[26px] font-black leading-tight text-white sm:text-[30px]">
                             {selectedMovie?.title ?? "Tên phim"}
                           </h4>
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             {selectedMovie?.genre ? (
-                              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-[#d6ddeb]">
+                              <span className="border border-white/10 bg-[#1a1e26] px-3 py-1 text-xs font-black text-[#d6ddeb]">
                                 {getGenreLabelVi(selectedMovie?.genre)}
                               </span>
                             ) : null}
                             {typeof selectedMovie?.durationMinutes === "number" ? (
-                              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-[#d6ddeb]">
+                              <span className="border border-white/10 bg-[#1a1e26] px-3 py-1 text-xs font-black text-[#d6ddeb]">
                                 {selectedMovie.durationMinutes} phút
                               </span>
                             ) : null}
-                            <span className="rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-[#8ec5ff]">
+                            <span className="border border-[#e11d2e]/20 bg-[#261217] px-3 py-1 text-xs font-black text-[#ff9eaa]">
                               Suất chiếu nhanh
                             </span>
                           </div>
                         </div>
 
-                        <div className="rounded-2xl border border-emerald-400/15 bg-emerald-500/10 px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200/80">
+                        <div className="border border-[#2f6c4d]/20 bg-[#132119] px-4 py-3">
+                          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#8ec7a5]">
                             Trạng thái
                           </p>
-                          <p className="mt-1 text-sm font-bold text-emerald-300">
+                          <p className="mt-1 text-sm font-black text-[#bbf7d0]">
                             Sẵn sàng đặt ghế
                           </p>
                         </div>
@@ -917,37 +912,37 @@ export default function MovieStatus() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="rounded-[22px] border border-white/10 bg-[#131b27] p-5">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#7e91af]">
+                      <div className="border border-white/10 bg-[#141820] p-5">
+                        <p className="text-[12px] font-black uppercase tracking-[0.2em] text-[#7c8596]">
                           Rạp chiếu
                         </p>
-                        <p className="mt-3 text-lg font-extrabold leading-snug text-white">
+                        <p className="mt-3 text-lg font-black leading-snug text-white">
                           {selectedShowtime.cinemaName}
                         </p>
                       </div>
 
-                      <div className="rounded-[22px] border border-white/10 bg-[#131b27] p-5">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#7e91af]">
+                      <div className="border border-white/10 bg-[#141820] p-5">
+                        <p className="text-[12px] font-black uppercase tracking-[0.2em] text-[#7c8596]">
                           Ngày chiếu
                         </p>
-                        <p className="mt-3 text-lg font-extrabold text-white">
+                        <p className="mt-3 text-lg font-black text-white">
                           {formatDateDisplay(selectedShowtime.dateKey)}
                         </p>
                       </div>
 
-                      <div className="rounded-[22px] border border-white/10 bg-[#131b27] p-5">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#7e91af]">
+                      <div className="border border-white/10 bg-[#141820] p-5">
+                        <p className="text-[12px] font-black uppercase tracking-[0.2em] text-[#7c8596]">
                           Giờ chiếu
                         </p>
-                        <p className="mt-3 text-lg font-extrabold text-[#7cc2ff]">
+                        <p className="mt-3 text-lg font-black text-[#f3f4f6]">
                           {selectedShowtime.timeLabel}
                         </p>
                       </div>
                     </div>
 
-                    <div className="rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4">
+                    <div className="border border-white/10 bg-[#141820] px-5 py-4">
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 text-[#7cc2ff]">
+                        <div className="mt-0.5 flex h-9 w-9 items-center justify-center border border-white/10 bg-[#1a1e26] text-[#d5d9e1]">
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             <path
                               d="M12 8v4l2.5 2.5M22 12a10 10 0 11-20 0 10 10 0 0120 0z"
@@ -959,10 +954,10 @@ export default function MovieStatus() {
                           </svg>
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white">
+                          <p className="text-sm font-black text-white">
                             Bước tiếp theo là chọn ghế
                           </p>
-                          <p className="mt-1 text-sm leading-6 text-[#9ba8bb]">
+                          <p className="mt-1 text-sm font-medium leading-6 text-[#9ba8bb]">
                             Sau khi xác nhận, hệ thống sẽ chuyển bạn đến màn hình chọn ghế của suất chiếu này.
                           </p>
                         </div>
@@ -970,11 +965,11 @@ export default function MovieStatus() {
                     </div>
 
                     {!user && (
-                      <div className="rounded-[22px] border border-amber-400/15 bg-amber-500/10 px-5 py-4">
-                        <p className="text-sm font-bold text-amber-200">
+                      <div className="border border-[#8a6a2d]/20 bg-[#221b12] px-5 py-4">
+                        <p className="text-sm font-black text-[#f5d08a]">
                           Bạn chưa đăng nhập
                         </p>
-                        <p className="mt-1 text-sm leading-6 text-amber-100/80">
+                        <p className="mt-1 text-sm font-medium leading-6 text-[#e8d3a8]/85">
                           Khi bấm tiếp tục, hệ thống sẽ chuyển đến trang đăng nhập rồi quay lại đúng bước hiện tại.
                         </p>
                       </div>
@@ -984,7 +979,7 @@ export default function MovieStatus() {
                       <button
                         type="button"
                         onClick={closeConfirmModal}
-                        className="inline-flex min-w-[160px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+                        className="inline-flex min-w-[160px] items-center justify-center border border-white/10 bg-[#1a1e26] px-6 py-3.5 text-sm font-black text-white transition hover:bg-[#222730]"
                       >
                         Quay lại
                       </button>
@@ -992,7 +987,7 @@ export default function MovieStatus() {
                       <button
                         type="button"
                         onClick={handleFinalConfirm}
-                        className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#1d4ed8,#2563eb,#38bdf8)] px-6 py-3.5 text-sm font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(37,99,235,0.35)] transition hover:scale-[1.01] hover:shadow-[0_22px_45px_rgba(37,99,235,0.42)] active:scale-[0.99]"
+                        className="inline-flex min-w-[220px] items-center justify-center border border-[#e11d2e]/20 bg-gradient-to-b from-[#f1263d] to-[#d7142a] px-6 py-3.5 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_18px_40px_rgba(225,29,46,0.22)] transition hover:brightness-110 active:scale-[0.99]"
                       >
                         Tiếp tục đặt ghế
                       </button>

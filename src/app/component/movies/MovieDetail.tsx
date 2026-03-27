@@ -244,6 +244,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   };
 
   const genreLabel = getGenreLabelVi(movie?.genre);
+  const ageRatingLabel = String(
+    (movie as any)?.agerating ?? (movie as any)?.ageRating ?? "TBA",
+  ).trim();
 
   const RELATED_LIMIT = 6;
 
@@ -467,7 +470,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   }, [movie?.cast]);
 
   const Glass =
-    "rounded-2xl border border-white/10 bg-black/25 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl";
+    "rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,17,21,0.96),rgba(11,12,15,0.98))] shadow-[0_28px_80px_rgba(0,0,0,0.58)] backdrop-blur-xl";
 
   const pageWindow = useMemo(() => {
     const total = reviewsTotalPages;
@@ -515,7 +518,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   }
 
   return (
-    <main className="relative min-h-screen bg-[#0B0C0F] text-white">
+    <main className={`${beVN.className} relative min-h-screen bg-[#0B0C0F] text-white`}>
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1100px_560px_at_25%_-10%,rgba(225,29,46,0.14),transparent_60%),radial-gradient(900px_520px_at_85%_20%,rgba(255,255,255,0.06),transparent_55%),radial-gradient(1000px_560px_at_30%_110%,rgba(153,27,27,0.10),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#17181D]/40 via-[#0B0C0F]/60 to-[#0B0C0F]" />
       <div className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-[1px]" />
@@ -535,7 +538,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-10 pt-24 md:flex-row md:px-6 lg:px-8 lg:pb-16 lg:pt-28">
           <div className="flex justify-center md:justify-start">
-            <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.65)]">
+            <div className="overflow-hidden rounded-[28px] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.68)]">
               <img
                 alt={`${movie?.title} Poster`}
                 src={resolveUrl(movie?.posterUrl, "/poster/poster.jpg")}
@@ -551,32 +554,41 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
           </div>
 
           <div className="flex flex-1 flex-col gap-4 md:gap-6">
-            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl lg:text-5xl">
-              {movie?.title}
-            </h1>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-black leading-tight tracking-tight md:text-4xl lg:text-5xl">
+                {movie?.title}
+              </h1>
+              <p className="text-base font-semibold text-white/75">
+                Rated: {ageRatingLabel}
+              </p>
+            </div>
 
-            <p className="max-w-2xl text-sm text-white/75 md:text-base">
+            <p className="max-w-2xl text-sm leading-7 text-white/75 md:text-base">
               {movie?.shortDescription}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2.5 text-sm backdrop-blur-md">
                 <Star className="text-yellow-400" fontSize="small" />
-                <span className="font-extrabold text-white">
+                <span className="font-black text-white">
                   {reviews_rating?.avgRating ?? 0}
                 </span>
-                <span className="text-white/60">/ 5</span>
+                <span className="text-white/55">/ 5</span>
               </div>
 
-              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
+              <div className="rounded-full border border-white/10 bg-black/30 px-4 py-2.5 text-sm font-semibold text-white/85 backdrop-blur-md">
                 {movie?.durationMinutes} phút
               </div>
 
               {genreLabel ? (
-                <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm text-white/80 backdrop-blur-md">
+                <div className="rounded-full border border-white/10 bg-black/30 px-4 py-2.5 text-sm font-semibold text-white/85 backdrop-blur-md">
                   {genreLabel}
                 </div>
               ) : null}
+
+              <div className="rounded-full border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm font-black text-red-100 shadow-[0_10px_30px_rgba(225,29,46,0.12)]">
+                {ageRatingLabel}
+              </div>
             </div>
 
             <div className="mt-2 flex flex-wrap gap-3">
@@ -584,7 +596,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 href={movie?.trailerUrl || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-[#E11D2E] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.25)] transition hover:brightness-110 active:brightness-95"
+                className="inline-flex items-center gap-2 rounded-[16px] bg-[#FF1F3D] px-5 py-3 text-sm font-black text-white shadow-[0_18px_50px_rgba(255,31,61,0.32)] transition hover:-translate-y-0.5 hover:bg-[#ff314d] active:brightness-95"
               >
                 <PlayCircleOutline className="text-lg" />
                 <span>Xem Trailer</span>
@@ -600,97 +612,85 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             <div className="flex-1 space-y-10">
               <section className={Glass}>
                 <div className="p-5 md:p-6 lg:p-7">
-                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
-                    Thông Tin Phim
-                  </h2>
-
-                  <div className="grid gap-4 text-sm text-white/85 md:grid-cols-2">
-                    <div className="flex items-start gap-3">
-                      <EventAvailable
-                        className="mt-0.5 text-white/70"
-                        fontSize="small"
-                      />
-                      <span>
-                        Khởi chiếu:{" "}
-                        <span className="font-extrabold text-white">
-                          {formatDMY(movie?.releaseDate as any)}
-                        </span>
-                      </span>
+                  <div className="mb-6 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.32em] text-white/40">
+                        Movie details
+                      </p>
+                      <h2 className="mt-2 text-2xl font-black tracking-tight md:text-[30px]">
+                        Thông Tin Phim
+                      </h2>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <Person
-                        className="mt-0.5 text-white/70"
-                        fontSize="small"
-                      />
-                      <span>
-                        Đạo diễn:{" "}
-                        <span className="font-extrabold text-white">
-                          {movie?.director}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Schedule
-                        className="mt-0.5 text-white/70"
-                        fontSize="small"
-                      />
-                      <span>
-                        Thời lượng:{" "}
-                        <span className="font-extrabold text-white">
-                          {movie?.durationMinutes} phút
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Star
-                        className="mt-0.5 text-yellow-400"
-                        fontSize="small"
-                      />
-                      <span>
-                        Đánh giá:{" "}
-                        <span className="font-extrabold text-white">
-                          {reviews_rating?.avgRating ?? 0}/5
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Language
-                        className="mt-0.5 text-white/70"
-                        fontSize="small"
-                      />
-                      <span>
-                        Ngôn ngữ:{" "}
-                        <span className="font-extrabold text-white">
-                          {movie?.language}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <LocalOffer
-                        className="mt-0.5 text-white/70"
-                        fontSize="small"
-                      />
-                      <span>
-                        Phân loại:{" "}
-                        <span className="font-extrabold text-white">C18</span>
-                      </span>
+                    <div className="hidden rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-white/55 md:inline-flex">
+                      Chi tiết
                     </div>
                   </div>
 
-                  <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {[
+                      {
+                        icon: <EventAvailable fontSize="small" className="text-white/70" />,
+                        label: "Khởi chiếu",
+                        value: formatDMY(movie?.releaseDate as any),
+                      },
+                      {
+                        icon: <Person fontSize="small" className="text-white/70" />,
+                        label: "Đạo diễn",
+                        value: movie?.director,
+                      },
+                      {
+                        icon: <Schedule fontSize="small" className="text-white/70" />,
+                        label: "Thời lượng",
+                        value: `${movie?.durationMinutes} phút`,
+                      },
+                      {
+                        icon: <Star fontSize="small" className="text-yellow-400" />,
+                        label: "Đánh giá",
+                        value: `${reviews_rating?.avgRating ?? 0}/5`,
+                      },
+                      {
+                        icon: <Language fontSize="small" className="text-white/70" />,
+                        label: "Ngôn ngữ",
+                        value: movie?.language,
+                      },
+                      {
+                        icon: <LocalOffer fontSize="small" className="text-white/70" />,
+                        label: "Phân loại",
+                        value: ageRatingLabel,
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-4 py-4 shadow-[0_14px_40px_rgba(0,0,0,0.25)]"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-black/35">
+                            {item.icon}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                              {item.label}
+                            </div>
+                            <div className="mt-1 text-[15px] font-black text-white">
+                              {item.value || "Đang cập nhật"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-8">
+                    <h3 className="mb-3 text-sm font-black uppercase tracking-[0.22em] text-white/45">
                       Diễn viên
                     </h3>
-                    <ul className="flex flex-wrap gap-2 text-sm">
+                    <ul className="flex flex-wrap gap-2.5 text-sm">
                       {cast_list?.map((actor) => (
                         <li
                           key={actor}
-                          className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-white/90 backdrop-blur-md"
+                          className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-white/90 backdrop-blur-md transition hover:bg-white/[0.07]"
                         >
                           {actor}
                         </li>
@@ -698,11 +698,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </ul>
                   </div>
 
-                  <div className="mt-6">
-                    <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white/60">
+                  <div className="mt-8 rounded-[22px] bg-black/25 p-5 ring-1 ring-white/[0.05]">
+                    <h3 className="mb-3 text-sm font-black uppercase tracking-[0.22em] text-white/45">
                       Nội Dung Phim
                     </h3>
-                    <p className="text-sm leading-relaxed text-white/75">
+                    <p className="text-sm leading-7 text-white/75">
                       {movie?.description}
                     </p>
                   </div>
@@ -713,10 +713,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 <div className="p-5 md:p-6 lg:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <h2 className="text-xl font-extrabold md:text-2xl">
+                      <h2 className="text-xl font-black tracking-tight md:text-2xl">
                         Lịch Chiếu
                       </h2>
-                      <p className="mt-1 text-xs text-white/55 md:text-sm">
+                      <p className="mt-1 text-xs text-white/50 md:text-sm">
                         Chọn ngày để xem suất chiếu theo rạp.
                       </p>
                     </div>
@@ -729,7 +729,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   <div className="mt-5">
-                    <div className="text-xs font-extrabold uppercase tracking-wide text-white/70">
+                    <div className="text-xs font-black uppercase tracking-[0.2em] text-white/55">
                       Chọn ngày
                     </div>
 
@@ -744,10 +744,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             type="button"
                             onClick={() => setSelectedDate(k)}
                             className={[
-                              "min-w-[76px] rounded-xl border px-4 py-3 text-center transition cursor-pointer",
+                              "min-w-[76px] rounded-[18px] border px-4 py-3 text-center transition cursor-pointer",
                               active
-                                ? "border-red-400/30 bg-red-500/15 text-white shadow-[0_16px_40px_rgba(225,29,46,0.16)]"
-                                : "border-white/10 bg-black/25 text-white/85 hover:border-red-400/20 hover:bg-red-500/10",
+                                ? "border-red-400/20 bg-[linear-gradient(180deg,rgba(255,31,61,0.18),rgba(255,31,61,0.08))] text-white shadow-[0_18px_45px_rgba(255,31,61,0.14)]"
+                                : "border-white/8 bg-black/25 text-white/85 hover:border-white/14 hover:bg-white/[0.04]",
                               has
                                 ? ""
                                 : "opacity-40 hover:bg-black/25 hover:border-white/10",
@@ -755,13 +755,13 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           >
                             <div
                               className={[
-                                "text-[12px] font-extrabold",
+                                "text-[12px] font-black",
                                 active ? "text-white/90" : "text-white/55",
                               ].join(" ")}
                             >
                               {weekdayBadge(k)}
                             </div>
-                            <div className="mt-0.5 text-xl font-extrabold tabular-nums">
+                            <div className="mt-0.5 text-xl font-black tabular-nums">
                               {dayOfMonth(k)}
                             </div>
                           </button>
@@ -771,9 +771,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </div>
 
                   {dataMovieCinemaShowtimes.isError ? (
-                    <div className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                      Không tải được danh sách rạp & suất chiếu. Vui lòng thử
-                      lại.
+                    <div className="mt-5 rounded-[18px] border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                      Không tải được danh sách rạp & suất chiếu. Vui lòng thử lại.
                     </div>
                   ) : null}
 
@@ -784,7 +783,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     </p>
                   ) : scheduleRows.length === 0 &&
                     !dataMovieCinemaShowtimes.isLoading ? (
-                    <div className="mt-6 rounded-xl border border-white/10 bg-black/25 px-4 py-4 text-sm text-white/65">
+                    <div className="mt-6 rounded-[18px] border border-white/8 bg-black/20 px-4 py-4 text-sm text-white/65">
                       Không có suất chiếu cho ngày đã chọn.
                     </div>
                   ) : (
@@ -826,7 +825,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         return (
                           <div
                             key={cinemaId || cinemaName}
-                            className="overflow-hidden rounded-2xl border border-white/10 bg-black/25 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+                            className="overflow-hidden rounded-[24px] border border-white/8 bg-black/25 shadow-[0_16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                           >
                             <div className="p-4 md:p-5">
                               <div className="flex items-start gap-4">
@@ -849,7 +848,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 </div>
 
                                 <div className="flex-1">
-                                  <div className="text-base font-extrabold text-white">
+                                  <div className="text-base font-black text-white">
                                     {cinemaName}
                                   </div>
                                   {address ? (
@@ -860,7 +859,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 </div>
                               </div>
 
-                              <div className="mt-4 border-t border-white/10 pt-4">
+                              <div className="mt-4 border-t border-white/8 pt-4">
                                 {dataMovieCinemaShowtimes.isLoading ? (
                                   <div className="space-y-3">
                                     <div className="grid grid-cols-[76px_1fr] gap-3">
@@ -881,7 +880,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                     </div>
                                   </div>
                                 ) : showtimes.length === 0 ? (
-                                  <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/50">
+                                  <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/50">
                                     Chưa có suất chiếu trong ngày này.
                                   </div>
                                 ) : (
@@ -904,7 +903,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                           className="grid grid-cols-1 gap-2 md:grid-cols-[88px_1fr]"
                                         >
                                           <div className="flex items-start md:pt-2">
-                                            <div className="inline-flex min-w-[72px] items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">
+                                            <div className="inline-flex min-w-[72px] items-center justify-center rounded-[16px] border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-white/70">
                                               {group.label}
                                             </div>
                                           </div>
@@ -921,16 +920,16 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                                   onClick={() =>
                                                     setSelectedShowtimeId(st.id)
                                                   }
-                                                  className={`group inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-extrabold text-white transition ${
+                                                  className={`group inline-flex cursor-pointer items-center gap-2 rounded-[16px] border px-4 py-2.5 text-sm font-black text-white transition ${
                                                     isSelected
-                                                      ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/50"
-                                                      : "border-white/10 bg-black/25 hover:border-red-400/25 hover:bg-red-500/10"
+                                                      ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/45"
+                                                      : "border-white/8 bg-black/25 hover:border-red-400/20 hover:bg-red-500/10"
                                                   }`}
                                                 >
                                                   <span className="tabular-nums">
                                                     {formatHM(st.startTime)}
                                                   </span>
-                                                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white/80 transition group-hover:border-red-400/20 group-hover:bg-red-500/10">
+                                                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide text-white/80 transition group-hover:border-red-400/20 group-hover:bg-red-500/10">
                                                     {st.type}
                                                   </span>
                                                 </button>
@@ -952,31 +951,37 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
               </section>
 
-              {/* { đây là phần review xử lý đánh giá} */}
               <section className={Glass} id="review">
                 <div className="p-5 md:p-6 lg:p-7">
-                  <h2 className="mb-5 text-xl font-extrabold md:text-2xl">
-                    Đánh giá
-                  </h2>
-
-                  <div className="mb-6 flex items-center gap-4">
-                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm backdrop-blur-md">
-                      <Star className="text-yellow-400" fontSize="small" />
-                      <span className="font-extrabold text-white">
-                        {reviews_rating?.avgRating ?? 0}
-                      </span>
-                      <span className="text-white/60">/ 5</span>
+                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.32em] text-white/40">
+                        Community reviews
+                      </p>
+                      <h2 className="mt-2 text-2xl font-black tracking-tight md:text-[30px]">
+                        Đánh giá
+                      </h2>
                     </div>
 
-                    <span className="text-sm text-white/60">
-                      {reviewsTotal} đánh giá
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-4 py-2.5 text-sm backdrop-blur-md">
+                        <Star className="text-yellow-400" fontSize="small" />
+                        <span className="font-black text-white">
+                          {reviews_rating?.avgRating ?? 0}
+                        </span>
+                        <span className="text-white/55">/ 5</span>
+                      </div>
+
+                      <span className="text-sm font-semibold text-white/50">
+                        {reviewsTotal} đánh giá
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="mb-6 rounded-2xl border border-white/10 bg-black/25 p-4 backdrop-blur-md">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="mb-7 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-4 shadow-[0_20px_45px_rgba(0,0,0,0.25)]">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-white/80">
+                        <span className="text-sm font-black text-white/85">
                           Rating
                         </span>
 
@@ -986,7 +991,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             onChange={(e) =>
                               setRatingInput(Number(e.target.value))
                             }
-                            className="appearance-none rounded-xl border border-white/10 bg-black/25 pl-3 pr-20 py-2 text-sm text-white outline-none"
+                            className="appearance-none rounded-[14px] border border-white/10 bg-black/30 pl-3 pr-20 py-2.5 text-sm text-white outline-none"
                           >
                             {[5, 4, 3, 2, 1].map((v) => (
                               <option key={v} value={v}>
@@ -1000,15 +1005,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           </span>
 
                           <span className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2">
-                            <Star
-                              fontSize="small"
-                              className="text-yellow-400"
-                            />
+                            <Star fontSize="small" className="text-yellow-400" />
                           </span>
                         </div>
                       </div>
 
-                      <div className="sm:ml-auto flex gap-2">
+                      <div className="lg:ml-auto flex gap-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -1017,7 +1019,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             setFormError("");
                             setNeedLogin(false);
                           }}
-                          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-white/85 hover:bg-white/10"
+                          className="rounded-[14px] border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-black text-white/90 transition hover:bg-white/[0.08]"
                         >
                           Xóa
                         </button>
@@ -1026,11 +1028,9 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           type="button"
                           disabled={createCommentMutation.isPending}
                           onClick={onSubmitReview}
-                          className="rounded-xl bg-[#E11D2E] px-4 py-2 text-sm font-extrabold text-white shadow-[0_18px_45px_rgba(225,29,46,0.18)] hover:brightness-110 disabled:opacity-60"
+                          className="rounded-[14px] bg-[#FF1F3D] px-5 py-2.5 text-sm font-black text-white shadow-[0_18px_45px_rgba(255,31,61,0.22)] transition hover:-translate-y-0.5 hover:bg-[#ff314d] disabled:opacity-60"
                         >
-                          {createCommentMutation.isPending
-                            ? "Đang gửi..."
-                            : "Gửi"}
+                          {createCommentMutation.isPending ? "Đang gửi..." : "Gửi"}
                         </button>
                       </div>
                     </div>
@@ -1038,20 +1038,20 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     <textarea
                       value={commentInput}
                       onChange={(e) => setCommentInput(e.target.value)}
-                      rows={3}
+                      rows={4}
                       placeholder="Chia sẻ cảm nhận của bạn về bộ phim..."
-                      className="mt-3 w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/45"
+                      className="mt-4 w-full rounded-[18px] border border-white/10 bg-black/30 px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-white/40"
                     />
 
                     {needLogin ? (
-                      <div className="mt-3 flex flex-col gap-2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3">
-                        <p className="text-sm font-extrabold text-red-200">
+                      <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-red-400/25 bg-red-500/10 px-4 py-4">
+                        <p className="text-sm font-black text-red-200">
                           Bạn cần đăng nhập để thực hiện chức năng đánh giá.
                         </p>
                         <button
                           type="button"
                           onClick={goLogin}
-                          className="w-fit rounded-lg bg-[#E11D2E] px-4 py-2 text-sm font-extrabold text-white hover:brightness-110"
+                          className="w-fit rounded-[14px] bg-[#FF1F3D] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#ff314d]"
                         >
                           Đăng nhập
                         </button>
@@ -1059,16 +1059,14 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     ) : null}
 
                     {formError ? (
-                      <p className="mt-3 text-sm font-extrabold text-red-300">
+                      <p className="mt-3 text-sm font-black text-red-300">
                         {formError}
                       </p>
                     ) : null}
                   </div>
 
                   {dataMovieReviews.isLoading ? (
-                    <p className="text-sm text-white/55">
-                      Đang tải đánh giá...
-                    </p>
+                    <p className="text-sm text-white/55">Đang tải đánh giá...</p>
                   ) : reviews.length === 0 ? (
                     <p className="text-sm text-white/55">
                       Chưa có đánh giá nào cho phim này.
@@ -1079,35 +1077,29 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         {reviews.map((review: any) => (
                           <li
                             key={review.id}
-                            className="rounded-xl border border-white/10 bg-black/25 p-4 backdrop-blur-md"
+                            className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-5 shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
                           >
-                            <div className="mb-2 flex items-center justify-between">
-                              <span className="text-sm font-extrabold text-white">
-                                {review.full_name}
-                              </span>
-
-                              <div className="flex items-center gap-1 text-xs text-yellow-400">
-                                <Star
-                                  fontSize="small"
-                                  className="text-yellow-400"
-                                />
-                                <span className="font-extrabold">
-                                  {review.rating}
+                            <div className="mb-3 flex items-start justify-between gap-4">
+                              <div>
+                                <span className="text-[15px] font-black text-white">
+                                  {review.full_name}
                                 </span>
-                                <span className="text-white/60">/5</span>
+                                <p className="mt-1 text-xs text-white/40">
+                                  {review.createdAt
+                                    ? new Date(review.createdAt).toLocaleDateString("vi-VN")
+                                    : ""}
+                                </p>
+                              </div>
+
+                              <div className="inline-flex items-center gap-1 rounded-full bg-black/30 px-3 py-1.5 text-xs text-yellow-400">
+                                <Star fontSize="small" className="text-yellow-400" />
+                                <span className="font-black">{review.rating}</span>
+                                <span className="text-white/55">/5</span>
                               </div>
                             </div>
 
-                            <p className="text-sm text-white/80">
+                            <p className="text-sm leading-7 text-white/78">
                               {review.comment}
-                            </p>
-
-                            <p className="mt-2 text-xs text-white/45">
-                              {review.createdAt
-                                ? new Date(review.createdAt).toLocaleDateString(
-                                    "vi-VN",
-                                  )
-                                : ""}
                             </p>
                           </li>
                         ))}
@@ -1123,7 +1115,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             disabled={
                               reviewPage <= 1 || dataMovieReviews.isFetching
                             }
-                            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-white/85 hover:bg-white/10 disabled:opacity-50"
+                            className="rounded-[14px] border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-black text-white/85 transition hover:bg-white/[0.08] disabled:opacity-50"
                           >
                             Trước
                           </button>
@@ -1134,7 +1126,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 type="button"
                                 onClick={() => setReviewPage(1)}
                                 disabled={dataMovieReviews.isFetching}
-                                className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm font-extrabold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                                className="rounded-[12px] border border-white/10 bg-black/25 px-3 py-2 text-sm font-black text-white/80 hover:bg-white/5 disabled:opacity-50"
                               >
                                 1
                               </button>
@@ -1153,13 +1145,11 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                   onClick={() => setReviewPage(p)}
                                   disabled={dataMovieReviews.isFetching}
                                   className={[
-                                    "rounded-lg border px-3 py-2 text-sm font-extrabold",
+                                    "rounded-[12px] border px-3 py-2 text-sm font-black",
                                     active
-                                      ? "border-red-400/30 bg-red-500/20 text-white"
+                                      ? "border-red-400/25 bg-red-500/15 text-white shadow-[0_12px_30px_rgba(255,31,61,0.12)]"
                                       : "border-white/10 bg-black/25 text-white/80 hover:bg-white/5",
-                                    dataMovieReviews.isFetching
-                                      ? "opacity-50"
-                                      : "",
+                                    dataMovieReviews.isFetching ? "opacity-50" : "",
                                   ].join(" ")}
                                 >
                                   {p}
@@ -1178,7 +1168,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                 type="button"
                                 onClick={() => setReviewPage(reviewsTotalPages)}
                                 disabled={dataMovieReviews.isFetching}
-                                className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm font-extrabold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                                className="rounded-[12px] border border-white/10 bg-black/25 px-3 py-2 text-sm font-black text-white/80 hover:bg-white/5 disabled:opacity-50"
                               >
                                 {reviewsTotalPages}
                               </button>
@@ -1196,7 +1186,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                               reviewPage >= reviewsTotalPages ||
                               dataMovieReviews.isFetching
                             }
-                            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-white/85 hover:bg-white/10 disabled:opacity-50"
+                            className="rounded-[14px] border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-black text-white/85 transition hover:bg-white/[0.08] disabled:opacity-50"
                           >
                             Sau
                           </button>
@@ -1209,23 +1199,21 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             </div>
 
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
-              <section
-                className={`relative overflow-hidden rounded-[26px] ${beVN?.className ?? ""}`}
-              >
+              <section className="relative overflow-hidden rounded-[30px]">
                 <div className="pointer-events-none absolute inset-0 -z-10">
-                  <div className="absolute -inset-10 rounded-[34px] bg-[radial-gradient(520px_260px_at_50%_35%,rgba(255,42,42,0.38),transparent_68%)] blur-3xl" />
-                  <div className="absolute -inset-10 rounded-[34px] bg-[radial-gradient(720px_360px_at_50%_120%,rgba(255,42,42,0.22),transparent_72%)] blur-3xl" />
+                  <div className="absolute -inset-12 rounded-[42px] bg-[radial-gradient(540px_280px_at_50%_30%,rgba(255,31,61,0.65),transparent_65%)] blur-3xl" />
+                  <div className="absolute -inset-12 rounded-[42px] bg-[radial-gradient(760px_360px_at_50%_120%,rgba(255,31,61,0.28),transparent_74%)] blur-3xl" />
                 </div>
 
-                <div className="rounded-[26px] bg-[linear-gradient(135deg,rgba(255,42,42,0.95),rgba(255,42,42,0.35),rgba(255,42,42,0.95))] p-[2px] shadow-[0_0_0_1px_rgba(255,42,42,0.40),0_0_55px_rgba(255,42,42,0.22)]">
-                  <div className="relative rounded-[24px] bg-[linear-gradient(180deg,rgba(110,10,26,0.96),rgba(46,6,14,0.96))] px-7 py-7 text-center shadow-[0_26px_80px_rgba(0,0,0,0.55)]">
-                    <div className="pointer-events-none absolute inset-0 rounded-[24px] bg-[radial-gradient(520px_240px_at_50%_0%,rgba(255,255,255,0.06),transparent_62%)]" />
+                <div className="rounded-[30px] bg-[linear-gradient(135deg,rgba(255,31,61,1),rgba(255,31,61,0.72),rgba(255,74,99,1))] p-[2px] shadow-[0_0_0_1px_rgba(255,31,61,0.45),0_0_85px_rgba(255,31,61,0.34)]">
+                  <div className="relative rounded-[28px] bg-[linear-gradient(180deg,rgba(120,9,28,0.95),rgba(62,5,15,0.96))] px-7 py-7 text-center shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+                    <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(520px_260px_at_50%_0%,rgba(255,255,255,0.08),transparent_62%)]" />
 
-                    <p className="relative text-[13px] font-extrabold uppercase tracking-[0.34em] text-white/90 [text-shadow:0_0_16px_rgba(255,42,42,0.45)]">
+                    <p className="relative text-[13px] font-black uppercase tracking-[0.38em] text-white [text-shadow:0_0_20px_rgba(255,31,61,0.58)]">
                       ĐẶT VÉ NHANH
                     </p>
 
-                    <p className="relative mx-auto mt-3 max-w-[42ch] text-[14px] font-semibold leading-relaxed text-white/85">
+                    <p className="relative mx-auto mt-3 max-w-[42ch] text-[14px] font-semibold leading-relaxed text-white/88">
                       Chọn suất chiếu phù hợp và đặt vé chỉ với vài bước.
                     </p>
 
@@ -1237,9 +1225,13 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         }
                       }}
                       disabled={selectedShowtimeId == null}
-                      className="cursor-pointer relative mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#FF2A2A] px-5 py-3.5 text-[15px] font-extrabold text-black shadow-[0_18px_48px_rgba(255,42,42,0.45)] transition hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
+                      className="relative mt-6 inline-flex w-full items-center justify-center rounded-full bg-[linear-gradient(180deg,#ffffff,#ffd9df)] px-5 py-4 text-[15px] font-black text-[#A4001C] shadow-[0_24px_65px_rgba(255,31,61,0.38),inset_0_2px_0_rgba(255,255,255,0.65)] transition hover:-translate-y-0.5 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
                     >
-                      Đặt Vé Ngay
+                      <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),transparent_55%)]" />
+                      <span className="relative inline-flex items-center gap-2">
+                        <ConfirmationNumber fontSize="small" />
+                        Đặt Vé Ngay
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -1247,7 +1239,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
 
               <section className={`${Glass} p-4`}>
                 <div className="mb-4 flex items-end justify-between gap-3">
-                  <h2 className="text-base font-extrabold md:text-lg">
+                  <h2 className="text-base font-black md:text-lg">
                     Phim Liên Quan
                   </h2>
 
@@ -1261,7 +1253,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 </div>
 
                 {movieGenre.isError ? (
-                  <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  <div className="rounded-[18px] border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                     Không tải được phim liên quan.
                   </div>
                 ) : movieGenre.isPending || movieGenre.isLoading ? (
@@ -1269,7 +1261,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     {Array.from({ length: 3 }).map((_, i) => (
                       <div
                         key={i}
-                        className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2"
+                        className="flex w-full items-center gap-3 rounded-[18px] border border-white/8 bg-black/25 p-2"
                       >
                         <div className="h-16 w-12 rounded-lg border border-white/10 bg-black/30" />
                         <div className="flex-1">
@@ -1281,9 +1273,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     ))}
                   </div>
                 ) : (relatedMovies ?? []).length === 0 ? (
-                  <p className="text-sm text-white/55">
-                    Chưa có phim liên quan.
-                  </p>
+                  <p className="text-sm text-white/55">Chưa có phim liên quan.</p>
                 ) : (
                   <div
                     className={[
@@ -1320,7 +1310,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             if (!safeId) return;
                             router.push(`/movies/${safeId}`);
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl transition hover:border-red-400/20 hover:bg-red-500/10"
+                          className="flex w-full items-center gap-3 rounded-[18px] border border-white/8 bg-black/25 p-2 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl transition hover:border-red-400/20 hover:bg-red-500/10"
                         >
                           <div className="h-16 w-12 overflow-hidden rounded-lg border border-white/10 bg-black/30">
                             <img
@@ -1337,7 +1327,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                           </div>
 
                           <div className="flex flex-1 flex-col">
-                            <p className="line-clamp-2 text-sm font-extrabold text-white">
+                            <p className="line-clamp-2 text-sm font-black text-white">
                               {title}
                             </p>
                             <p className="mt-0.5 text-[11px] text-white/55">

@@ -6,6 +6,8 @@ import { Delete, Edit } from "@mui/icons-material";
 import { Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import dayjs from "dayjs";
 import Link from "next/link";
+import EditPostModal from "./modal/EditPostModal";
+import { useState } from "react";
 
 interface PostTableProp {
     post: IPost[],
@@ -15,6 +17,17 @@ interface PostTableProp {
 export default function PostTable({ post, refetchPost }: PostTableProp) {
     const n = useNotification();
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
+    const [openEditPostModal, setEditPostModal] = useState(false);
+    const [openDeletePopup, setOpenDeletePopup] = useState(false);
+    const [selectedPost, setSelectedPost] = useState<IPost | null>(null);
+    const handleClickIconDelete = (post: IPost) => {
+        setSelectedPost(post);
+        setOpenDeletePopup(true);
+    };
+    const handleClickIconEdit = (post: IPost) => {
+        setSelectedPost(post);
+        setEditPostModal(true);
+    }
 
     return (
         <>
@@ -97,11 +110,9 @@ export default function PostTable({ post, refetchPost }: PostTableProp) {
                                 </TableCell>
                                 <TableCell>
                                     <Box display="flex" justifyContent="center" gap={1}>
-                                        <Link href={`/admin/posts/${item.id}`}>
-                                            <IconButton size="small" sx={{ color: "#52525b" }}>
-                                                <Edit fontSize="small" />
-                                            </IconButton>
-                                        </Link>
+                                        <button onClick={() => handleClickIconEdit(item)} >
+                                            <Edit fontSize="small" />
+                                        </button>
 
                                         <IconButton
                                             size="small"
@@ -116,6 +127,7 @@ export default function PostTable({ post, refetchPost }: PostTableProp) {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <EditPostModal open={openEditPostModal} onClose={() => setEditPostModal(false)} refetchPost={refetchPost} post={selectedPost}></EditPostModal>
         </>
     );
 }

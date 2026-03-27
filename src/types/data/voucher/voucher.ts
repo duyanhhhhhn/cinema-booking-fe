@@ -7,7 +7,6 @@ export interface IVoucher {
     id: number;
     code: string;
     description: string;
-    type: string;
     discountType: string;
     discountValue: number;
     minOrderAmount: number;
@@ -15,6 +14,14 @@ export interface IVoucher {
     endAt: string;
     usageLimit: number;
     usedCount: number;
+}
+export interface ICheckVoucher{
+  discountAmount: number
+  discountType: string
+  discountValue: number
+  finalPrice: number
+  voucherCode: string
+  voucherId: number
 }
 export interface VoucherFormData {
     code: string;
@@ -54,7 +61,7 @@ export class Voucher extends Model {
             queryKey: [this.queryKeys.findOne],
             queryFn: () => {
                 return this.api
-                    .get<IVoucher>({
+                    .get<IResponse<IVoucher>>({
                         url: `/public/vouchers/${id}`,
                     })
                     .then((res) => res.data);
@@ -76,6 +83,12 @@ export class Voucher extends Model {
     static deleteVoucher(id: Number) {
         return this.api.delete<IResponse<IVoucher>>({
             url: `/vouchers/${id}`
+        })
+    }
+    static checkVoucher(payload: { code: string, price: number }) {
+        return this.api.get<IResponse<ICheckVoucher>>({
+            url: "/vouchers/check",
+            params: payload,
         })
     }
 }
@@ -100,4 +113,11 @@ export function useDeleteVoucherMutation() {
             return Voucher.deleteVoucher(id).then((r) => r.data);
         }
     })
+}
+export function useCheckVoucherMutation() {
+    return useMutation<IResponse<ICheckVoucher>, IHttpError, { code: string; price: number }>({
+        mutationFn: (payload: { code: string; price: number }) => {
+            return Voucher.checkVoucher(payload).then((r) => r.data);
+        },
+    });
 }

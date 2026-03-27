@@ -1,5 +1,5 @@
 import { useNotification } from "@/hooks/useNotification";
-import { Banner, IBanner, useDeleteBannerMutation } from "@/types/data/home/banner";
+import { IBanner, useDeleteBannerMutation } from "@/types/data/home/banner";
 import { Delete, Edit } from "@mui/icons-material";
 import { Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import dayjs from "dayjs";
@@ -14,6 +14,7 @@ interface BannerTableProps {
 export default function BannerTable({ banner, refetchBanner }: BannerTableProps) {
     const n = useNotification();
     const [openDeletePopup, setOpenDeletePopup] = useState(false);
+    const [openEditBannerModal, setEditBannerModal] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
     const { mutate: deleteBanner } = useDeleteBannerMutation();
@@ -21,6 +22,10 @@ export default function BannerTable({ banner, refetchBanner }: BannerTableProps)
         setSelectedId(id);
         setOpenDeletePopup(true);
     };
+    const handleClickIconEdit = (id: number) => {
+        setSelectedId(id);
+        setEditBannerModal(true);
+    }
     const handleConfirmDelete = () => {
         if (selectedId) {
             deleteBanner(selectedId, {

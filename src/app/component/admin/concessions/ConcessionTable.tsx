@@ -1,15 +1,12 @@
 "use client";
 
-import { Combo, ICombo, useDeleteComboMutation, useDeleteProductMutation } from "@/types/data/concession/combo";
-import { useQuery } from "@tanstack/react-query";
+import { ICombo, useDeleteComboMutation, useDeleteProductMutation } from "@/types/data/concession/combo";
 import CustomPagination from "../table/CustomPagination";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useState } from "react";
 import EditComboModal from "./modal/EditConcessionModal";
-import EditVoucherModal from "../voucher/Modal/EditVoucherPopup";
 import DeletePopup from "../user/DeletePopup";
 import { useNotification } from "@/hooks/useNotification";
 

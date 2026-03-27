@@ -18,6 +18,7 @@ import {
   selectBooking,
   selectSeatPrice,
   selectTotalPrice,
+  selectVoucherDiscountAmount,
 } from "@/store/selectors";
 import type { ISeatMap } from "@/types/data/seat/seat";
 
@@ -45,6 +46,7 @@ export default function BookingSidebar({
   const booking = useAppSelector(selectBooking);
   const seatPrice = useAppSelector(selectSeatPrice);
   const totalPrice = useAppSelector(selectTotalPrice);
+  const voucherDiscountAmount = useAppSelector(selectVoucherDiscountAmount);
 
   const hasCombos = step >= 2 && booking.combos.some((c) => c.quantity > 0);
 
@@ -59,9 +61,11 @@ export default function BookingSidebar({
   const cinemaName = seatMapData?.cinemaName ?? booking.cinema;
   const startTime = seatMapData?.startTime ?? booking.startTime;
   const roomName = seatMapData?.roomName ?? booking.roomName ?? "";
-  const seatsDisplay = booking.seats.length > 0 ? booking.seats.join(", ") : "—";
+  const seatsDisplay =
+    booking.seats.length > 0 ? booking.seats.join(", ") : "—";
 
   const showTotal = step >= 2;
+  const showVoucherDiscount = step >= 2 && voucherDiscountAmount > 0;
   const amount = showTotal ? totalPrice : seatPrice;
   const amountLabel = showTotal ? "Tổng thanh toán" : "Tạm tính";
 
@@ -114,7 +118,9 @@ export default function BookingSidebar({
                   <ScheduleIcon sx={{ fontSize: 20, color: "#94a3b8" }} />
                   <span className="font-medium">Thời lượng</span>
                 </div>
-                <span className="font-semibold text-white">{duration} phút</span>
+                <span className="font-semibold text-white">
+                  {duration} phút
+                </span>
               </div>
             )}
 
@@ -191,7 +197,8 @@ export default function BookingSidebar({
                         {combo.name} x{combo.quantity}
                       </span>
                       <span className="font-semibold text-white">
-                        {(combo.price * combo.quantity).toLocaleString("vi-VN")}đ
+                        {(combo.price * combo.quantity).toLocaleString("vi-VN")}
+                        đ
                       </span>
                     </div>
                   ))}
@@ -202,6 +209,17 @@ export default function BookingSidebar({
 
         {/* PHẦN DƯỚI: TỔNG TIỀN + NÚT */}
         <div className="bg-[#111111] p-6 border-t border-[#2e2e2e]">
+          {showVoucherDiscount && (
+            <div className="flex justify-between items-center mb-3 text-sm">
+              <span className="text-slate-400 font-medium">
+                Giảm giá voucher:
+              </span>
+              <span className="font-semibold text-green-400">
+                -{voucherDiscountAmount.toLocaleString("vi-VN")}đ
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-6">
             <span className="text-slate-400 font-medium">{amountLabel}:</span>
             <span className="text-2xl font-bold text-white tracking-tight">
@@ -217,18 +235,15 @@ export default function BookingSidebar({
             >
               {actionButton.label}
             </button>
-           
           </div>
         </div>
       </div>
 
       <div className="bg-[#1a1111] border border-[#3a1a1a] rounded-xl p-4 flex gap-3">
-        <InfoIcon
-          sx={{ color: "#ef4444", fontSize: 20, marginTop: "2px" }}
-        />
+        <InfoIcon sx={{ color: "#ef4444", fontSize: 20, marginTop: "2px" }} />
         <p className="text-[13px] text-slate-400 leading-relaxed">
-          Vui lòng xác nhận chính xác thông tin suất chiếu và ghế ngồi. Vé
-          không thể thay đổi sau khi thanh toán thành công.
+          Vui lòng xác nhận chính xác thông tin suất chiếu và ghế ngồi. Vé không
+          thể thay đổi sau khi thanh toán thành công.
         </p>
       </div>
     </div>

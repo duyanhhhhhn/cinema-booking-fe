@@ -1,6 +1,6 @@
 import { IHttpError, IResponse } from "@/types/core/api";
 import { Model } from "@/types/core/model";
-import { useMutation } from "@tanstack/react-query";
+import { Query, useMutation } from "@tanstack/react-query";
 
 export interface MovieBooking {
   movie: string;
@@ -64,6 +64,10 @@ export interface BookingState {
   paymentMethod: 'momo' | 'vnpay' | null;
   combos: ICombo[];
   bookingFee: number;
+  /** Voucher code đã áp dụng ở bước combo */
+  voucherCode: string;
+  /** Số tiền được giảm từ voucher */
+  voucherDiscountAmount: number;
   /** Thời điểm hết hạn giữ ghế (ISO string từ API hold-seat) */
   holdExpiresAt?: string;
   holdToken?: string;
@@ -131,6 +135,49 @@ export interface ICreateBookingForAdminResponse {
   totalPrice: number;
   voucherCode: string;
 }
+
+export interface IBookingHold {
+  ageRating: any
+  bookingCode: string
+  checkin: boolean
+  cinemaAddress: string
+  cinemaName: string
+  createdAt: string
+  durationMinutes: number
+  endTime: string
+  format: string
+  id: number
+  items: ItemHoldBooking[]
+  movieTitle: string
+  paymentMethod: string
+  posterUrl: string
+  qrData: string
+  remainingSeconds: number
+  roomName: string
+  seatCodes: string
+  showDate: string
+  startTime: string
+  status: string
+  statusLabel: string
+  tagline: string
+  tickets: ITicketHold[]
+  totalPrice: number
+}
+
+export interface ItemHoldBooking {
+  name: string
+  quantity: number
+  price: number
+}
+
+export interface ITicketHold {
+  seatName: string
+  ticketType: string
+  price: number
+  ticketCode: string
+  printed: boolean
+}
+
 export class Booking extends Model {
   static queryKeys = {
     holdBooking: "HOLD_BOOKING_QUERY",
@@ -165,6 +212,32 @@ export class Booking extends Model {
       data: payload,
     });
   }
+  static getDetailBooking(bookingcode:string){
+    return{
+      queryKey: ["bookingDetail", bookingcode],
+      queryFn:()=>{
+        return this.api.get<IResponse<IBookingHold>>({
+          url:`/bookings/detail/${bookingcode}`
+        }).then(r=>r.data);
+    }
+  }
+  }
+  static getHoldDetailBooking(bookingCode:string){
+    return{
+      queryKey: ["holdBookingDetail", bookingCode],
+      queryFn:()=>{
+        return this.api.get<IResponse<any>>({
+          url:`/bookings/hold-detail/${bookingCode}`
+        }).then(r=>r.data);
+    }
+  }
+}
+static retryPayment(payload: {bookingCode: string, paymentMethod:string}){
+  return this.api.post<IResponse<any>>({
+    url: "/payment/retry",
+    data: payload
+   }).then(r=>r.data);
+}
 }
 
 Booking.setup();
@@ -213,4 +286,12 @@ export function useCreateBookingForAdminMutation() {
       return Booking.createBookingForAdmin(payload).then((r) => r.data);
     },
   });
+}
+export function useRetryPayment(){
+  return useMutation<any, IHttpError, {bookingCode: string, paymentMethod:string}>({
+    mutationFn: (payload: {bookingCode: string, paymentMethod:string}) => {
+      return Booking.retryPayment(payload);
+    },
+  });
+
 }

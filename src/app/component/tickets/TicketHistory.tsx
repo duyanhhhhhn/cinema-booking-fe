@@ -1,6 +1,13 @@
 "use client";
 
-import { Box, Typography, Button, Divider, InputAdornment, OutlinedInput } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  InputAdornment,
+  OutlinedInput,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { Be_Vietnam_Pro } from "next/font/google";
@@ -14,6 +21,7 @@ import {
   splitSeats,
   buildPosterSrc,
 } from "./TicketComponent/TicketHistory.logic";
+import CustomPagination from "../admin/table/CustomPagination";
 
 type TabKey = "all" | "PENDING" | "PAID" | "CANCELLED";
 
@@ -30,7 +38,11 @@ const beVietnam = Be_Vietnam_Pro({
   display: "swap",
 });
 
-export default function TicketHistory({ initialCode = "" }: { initialCode?: string }) {
+export default function TicketHistory({
+  initialCode = "",
+}: {
+  initialCode?: string;
+}) {
   const {
     tab,
     setTab,
@@ -43,10 +55,13 @@ export default function TicketHistory({ initialCode = "" }: { initialCode?: stri
     commit,
     goDetail,
     filteredTickets,
+    perPage,
+    metaTicket,
   } = useTicketHistory(initialCode);
-
   return (
-    <Box className={`min-h-screen bg-[#0B0C0F] text-white p-6 md:p-12 ${beVietnam.className} antialiased`}>
+    <Box
+      className={`min-h-screen bg-[#0B0C0F] text-white p-6 md:p-12 ${beVietnam.className} antialiased`}
+    >
       <Box className="mx-auto max-w-5xl">
         <Typography
           component="h1"
@@ -93,9 +108,15 @@ export default function TicketHistory({ initialCode = "" }: { initialCode?: stri
             variant="contained"
             startIcon={<CalendarMonthIcon />}
             onClick={() => {
-              const s = window.prompt("Nhập ngày bắt đầu (YYYY-MM-DD):", startDate || "");
+              const s = window.prompt(
+                "Nhập ngày bắt đầu (YYYY-MM-DD):",
+                startDate || "",
+              );
               if (s === null) return;
-              const e = window.prompt("Nhập ngày kết thúc (YYYY-MM-DD):", endDate || "");
+              const e = window.prompt(
+                "Nhập ngày kết thúc (YYYY-MM-DD):",
+                endDate || "",
+              );
               if (e === null) return;
               setStartDate(s.trim());
               setEndDate(e.trim());
@@ -150,7 +171,11 @@ export default function TicketHistory({ initialCode = "" }: { initialCode?: stri
                 </Box>
 
                 <Box className="w-full md:w-52 h-64 md:h-auto shrink-0">
-                  <img src={posterSrc} alt={ticket.movieTitle} className="h-full w-full object-cover" />
+                  <img
+                    src={posterSrc}
+                    alt={ticket.movieTitle}
+                    className="h-full w-full object-cover"
+                  />
                 </Box>
 
                 <Box className="flex-1 p-6 flex flex-col justify-between">
@@ -166,30 +191,51 @@ export default function TicketHistory({ initialCode = "" }: { initialCode?: stri
 
                     <Box className="grid grid-cols-2 gap-y-4 sm:grid-cols-4">
                       <Box>
-                        <div className="text-[10px] font-bold text-white/20 uppercase">Ngày chiếu</div>
-                        <div className="text-sm font-semibold text-white/80">{date}</div>
+                        <div className="text-[10px] font-bold text-white/20 uppercase">
+                          Ngày chiếu
+                        </div>
+                        <div className="text-sm font-semibold text-white/80">
+                          {date}
+                        </div>
                       </Box>
                       <Box>
-                        <div className="text-[10px] font-bold text-white/20 uppercase">Suất chiếu</div>
-                        <div className="text-sm font-semibold text-white/80">{time}</div>
+                        <div className="text-[10px] font-bold text-white/20 uppercase">
+                          Suất chiếu
+                        </div>
+                        <div className="text-sm font-semibold text-white/80">
+                          {time}
+                        </div>
                       </Box>
                       <Box>
-                        <div className="text-[10px] font-bold text-white/20 uppercase">Ghế</div>
-                        <div className="text-sm font-semibold text-white/80">{seatArr.join(", ")}</div>
+                        <div className="text-[10px] font-bold text-white/20 uppercase">
+                          Ghế
+                        </div>
+                        <div className="text-sm font-semibold text-white/80">
+                          {seatArr.join(", ")}
+                        </div>
                       </Box>
                       <Box>
-                        <div className="text-[10px] font-bold text-white/20 uppercase">Combo</div>
-                        <div className="text-sm font-semibold text-white/80 truncate">Không</div>
+                        <div className="text-[10px] font-bold text-white/20 uppercase">
+                          Combo
+                        </div>
+                        <div className="text-sm font-semibold text-white/80 truncate">
+                          Không
+                        </div>
                       </Box>
                     </Box>
                   </Box>
 
                   <Box className="mt-8 flex items-end justify-between">
                     <Box className="flex flex-col gap-2">
-                      <Box className="bg-white p-1.5 rounded-lg w-fit" onClick={(e) => e.stopPropagation()}>
+                      <Box
+                        className="bg-white p-1.5 rounded-lg w-fit"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <QRCodeSVG value={ticket.bookingCode} size={80} />
                       </Box>
-                      <span className="font-mono text-[9px] tracking-widest text-white/20">{ticket.bookingCode}</span>
+                      <span className="font-mono text-[9px] tracking-widest text-white/20">
+                        {ticket.bookingCode}
+                      </span>
                     </Box>
 
                     <Box className="text-right">
@@ -198,7 +244,9 @@ export default function TicketHistory({ initialCode = "" }: { initialCode?: stri
                       </Typography>
                       <Typography
                         className={`text-2xl font-black mb-3 ${
-                          ticket.status === "CANCELLED" ? "text-white/20 line-through" : "text-red-500"
+                          ticket.status === "CANCELLED"
+                            ? "text-white/20 line-through"
+                            : "text-red-500"
                         }`}
                       >
                         {formatVnd(ticket.totalPrice)}
@@ -210,6 +258,12 @@ export default function TicketHistory({ initialCode = "" }: { initialCode?: stri
             );
           })}
         </Box>
+        <div className="bg-white rounded-4xl p-4  mt-2">
+          <CustomPagination
+            totalItems={metaTicket?.total}
+            itemsPerPage={perPage}
+          />
+        </div>
       </Box>
     </Box>
   );
