@@ -174,13 +174,13 @@ export default function MySchedule() {
                                 data-purpose="shift-card"
                             >
                                 <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-shift-green">{item.name}</h3>
+                                    <h3 className="font-bold text-green">{item.name}</h3>
                                     {item.status != ScheduleStatus.ASSIGNED ?
                                         <span className="text-[10px] px-2 py-0.5 rounded-full text-yellow-600 border border-shift-green/20 font-medium">
-                                            Đã chốt
+                                            Chưa chốt
                                         </span>
                                         : <span className="text-[10px] px-2 py-0.5 rounded-full text-green-600 border border-shift-green/20 font-medium">
-                                            Chưa chốt
+                                            Đã chốt
                                         </span>}
                                 </div>
                                 <p className="text-sm flex items-center gap-2 text-gray-300">

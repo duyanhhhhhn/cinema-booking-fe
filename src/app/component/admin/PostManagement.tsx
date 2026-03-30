@@ -1,6 +1,6 @@
 "use client"
 
-import { Post } from "@/types/data/post/post"
+import { Post, IPost } from "@/types/data/post/post"
 import { useQuery } from "@tanstack/react-query"
 import PostTable from "./post/PostTable";
 import { useMemo, useState } from "react";
@@ -12,7 +12,9 @@ export default function PostManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [openAddPostModal, setOpenAddPostModal] = useState(false);
     const { data, refetch: refetchPost } = useQuery(Post.getPosts());
-    const posts = data?.data || [];
+    const posts: IPost[] = data?.data || [];
+    console.log("Posts" + posts)
+    console.log(data)
     const [sortKey, setSortKey] = useState<'newest' | 'oldest'>('newest');
     const searchPosts = useMemo(() => {
         if (!posts.length) return [];
