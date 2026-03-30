@@ -4,6 +4,8 @@ import {
   ICombo,
   useDeleteComboMutation,
   useDeleteProductMutation,
+  useUpdateComboActiveMutation,
+  useUpdateProductActiveMutation,
 } from "@/types/data/concession/combo";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -31,7 +33,7 @@ import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 interface IConcessionTableProps {
   combo: ICombo[];
-  refetchCombo: () => void;
+  refetchCombo: () => Promise<unknown> | void;
 }
 
 export default function ConcessionTable({
@@ -44,28 +46,70 @@ export default function ConcessionTable({
   const [openEditComboModal, setEditComboModal] = useState(false);
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<ICombo | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const { mutate: deleteCombo } = useDeleteComboMutation();
   const { mutate: deleteProduct } = useDeleteProductMutation();
+  const updateComboActiveMutation = useUpdateComboActiveMutation();
+  const updateProductActiveMutation = useUpdateProductActiveMutation();
 
-  const handleClickIconDelete = (combo: ICombo) => {
-    setSelectedCombo(combo);
+  const handleOpenEditModal = (item: ICombo) => {
+    setSelectedCombo(item);
+    setEditComboModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditComboModal(false);
+    setSelectedCombo(null);
+  };
+
+  const handleClickIconDelete = (item: ICombo) => {
+    setSelectedCombo(item);
     setOpenDeletePopup(true);
   };
 
+  const handleCloseDeletePopup = () => {
+    setOpenDeletePopup(false);
+    setSelectedCombo(null);
+  };
+
   const showDeleteSuccessToast = (type: "COMBO" | "SINGLE") => {
-    toast.success(type === "COMBO" ? "Xóa combo thành công" : "Xóa sản phẩm thành công", {
-      description:
-        type === "COMBO"
-          ? "Combo đã được gỡ khỏi danh sách F&B."
-          : "Sản phẩm đã được gỡ khỏi danh sách F&B.",
-      duration: 3200,
-    });
+    toast.success(
+      type === "COMBO" ? "Xóa combo thành công" : "Xóa sản phẩm thành công",
+      {
+        description:
+          type === "COMBO"
+            ? "Combo đã được gỡ khỏi danh sách F&B."
+            : "Sản phẩm đã được gỡ khỏi danh sách F&B.",
+        duration: 3200,
+      }
+    );
   };
 
   const showDeleteErrorToast = (message?: string) => {
     toast.error("Xóa thất bại", {
-      description: message || "Đã xảy ra lỗi trong quá trình xóa. Vui lòng thử lại.",
+      description:
+        message || "Đã xảy ra lỗi trong quá trình xóa. Vui lòng thử lại.",
+      duration: 4200,
+    });
+  };
+
+  const showToggleSuccessToast = (item: ICombo) => {
+    const isCombo = item.type === "COMBO";
+    const nextAction = item.isActive ? "Ẩn" : "Bật lại";
+
+    toast.success(`${nextAction} ${isCombo ? "combo" : "sản phẩm"} thành công`, {
+      description: item.isActive
+        ? `${item.name} đã được ẩn khỏi phía client.`
+        : `${item.name} đã được bật lại cho phía client.`,
+      duration: 3200,
+    });
+  };
+
+  const showToggleErrorToast = (message?: string) => {
+    toast.error("Cập nhật trạng thái thất bại", {
+      description:
+        message || "Không thể thay đổi trạng thái bán. Vui lòng thử lại.",
       duration: 4200,
     });
   };
@@ -73,10 +117,9 @@ export default function ConcessionTable({
   const handleConfirmDelete = () => {
     if (selectedCombo && selectedCombo.type === "COMBO") {
       deleteCombo(selectedCombo.id, {
-        onSuccess: () => {
-          setOpenDeletePopup(false);
-          setSelectedCombo(null);
-          refetchCombo();
+        onSuccess: async () => {
+          handleCloseDeletePopup();
+          await Promise.resolve(refetchCombo());
           showDeleteSuccessToast("COMBO");
         },
         onError: (error) => {
@@ -85,10 +128,9 @@ export default function ConcessionTable({
       });
     } else if (selectedCombo && selectedCombo.type === "SINGLE") {
       deleteProduct(selectedCombo.id, {
-        onSuccess: () => {
-          setOpenDeletePopup(false);
-          setSelectedCombo(null);
-          refetchCombo();
+        onSuccess: async () => {
+          handleCloseDeletePopup();
+          await Promise.resolve(refetchCombo());
           showDeleteSuccessToast("SINGLE");
         },
         onError: (error) => {
@@ -96,6 +138,31 @@ export default function ConcessionTable({
         },
       });
     }
+  };
+
+  const handleToggleStatus = (item: ICombo) => {
+    const currentItem = item;
+    const isActive = currentItem.isActive === true;
+    const nextIsActive = !isActive;
+    setTogglingId(currentItem.id);
+
+    const mutation =
+      currentItem.type === "COMBO"
+        ? updateComboActiveMutation
+        : updateProductActiveMutation;
+
+    mutation.mutate({ id: currentItem.id, nextIsActive }, {
+      onSuccess: async () => {
+        await Promise.resolve(refetchCombo());
+        showToggleSuccessToast(currentItem);
+      },
+      onError: (error) => {
+        showToggleErrorToast(error.message);
+      },
+      onSettled: () => {
+        setTogglingId(null);
+      },
+    });
   };
 
   const tableData = useMemo(() => combo || [], [combo]);
@@ -173,9 +240,15 @@ export default function ConcessionTable({
                 </TableRow>
               ) : (
                 tableData.map((item) => {
-                  const imageUrl = item.imageUrl ? `${urlImage}${item.imageUrl}` : "";
+                  const imageUrl = item.imageUrl
+                    ? `${urlImage}${item.imageUrl}`
+                    : "";
                   const isCombo = item.type === "COMBO";
                   const isActive = item.isActive === true;
+                  const isToggling = togglingId === item.id;
+                  const toggleLabel = `${isActive ? "Ẩn" : "Bật lại"} ${
+                    isCombo ? "combo" : "sản phẩm"
+                  }`;
 
                   return (
                     <TableRow
@@ -196,7 +269,9 @@ export default function ConcessionTable({
                             sx={{
                               width: 58,
                               height: 58,
-                              backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
+                              backgroundImage: imageUrl
+                                ? `url(${imageUrl})`
+                                : "none",
                               backgroundSize: "cover",
                               backgroundPosition: "center",
                               borderRadius: "16px",
@@ -218,7 +293,9 @@ export default function ConcessionTable({
 
                       <TableCell className="px-4 py-4 align-middle">
                         <div className="max-w-[240px]">
-                          {isCombo && item.itemList != null && item.itemList.length > 0 ? (
+                          {isCombo &&
+                          item.itemList != null &&
+                          item.itemList.length > 0 ? (
                             <div className="rounded-2xl border border-[#f2e4e4] bg-[#fffafa] p-3">
                               <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#e06465]">
                                 Combo gồm
@@ -262,20 +339,32 @@ export default function ConcessionTable({
 
                       <TableCell className="px-4 py-4 align-middle">
                         <p className="text-[15px] font-extrabold text-gray-900">
-                          {item.price.toLocaleString("vi-VN")} đ
+                          {Number(item.price || 0).toLocaleString("vi-VN")} đ
                         </p>
                       </TableCell>
 
                       <TableCell className="px-4 py-4 align-middle">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ${
-                            isActive
-                              ? "bg-[#ecfdf3] text-[#16a34a]"
-                              : "bg-[#fff4f4] text-[#ef4444]"
-                          }`}
-                        >
-                          {isActive ? "Đang bán" : "Ngừng bán"}
-                        </span>
+                        <div className="flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(item)}
+                            disabled={isToggling}
+                            aria-label={toggleLabel}
+                            aria-pressed={isActive}
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+                              isActive
+                                ? "border-[#22c55e] bg-[#22c55e]"
+                                : "border-[#d1d5db] bg-[#e5e7eb]"
+                            }`}
+                          >
+                            <span className="sr-only">{toggleLabel}</span>
+                            <span
+                              className={`inline-block h-5 w-5 rounded-full bg-white shadow-[0_3px_10px_rgba(15,23,42,0.18)] transition duration-200 ${
+                                isActive ? "translate-x-6" : "translate-x-1"
+                              } ${isToggling ? "scale-90" : ""}`}
+                            />
+                          </button>
+                        </div>
                       </TableCell>
 
                       <TableCell className="px-4 py-4 align-middle">
@@ -283,10 +372,7 @@ export default function ConcessionTable({
                           <button
                             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#ffd9d9] bg-[#fff5f5] text-[#ff2d2f] transition hover:bg-[#ffe9e9]"
                             title="Chỉnh sửa"
-                            onClick={() => {
-                              setSelectedCombo(item);
-                              setEditComboModal(true);
-                            }}
+                            onClick={() => handleOpenEditModal(item)}
                           >
                             <EditIcon fontSize="small" />
                           </button>
@@ -402,7 +488,7 @@ export default function ConcessionTable({
 
         <EditComboModal
           open={openEditComboModal}
-          onClose={() => setEditComboModal(false)}
+          onClose={handleCloseEditModal}
           refetchCombo={refetchCombo}
           combo={selectedCombo}
           type={selectedCombo?.type === "SINGLE" ? "single" : "combo"}
@@ -411,7 +497,7 @@ export default function ConcessionTable({
 
         <DeletePopup
           open={openDeletePopup}
-          onClose={() => setOpenDeletePopup(false)}
+          onClose={handleCloseDeletePopup}
           onConfirm={handleConfirmDelete}
           description={
             "Bạn có chắc muốn " +
