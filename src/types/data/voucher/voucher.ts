@@ -15,6 +15,14 @@ export interface IVoucher {
     usageLimit: number;
     usedCount: number;
 }
+export interface ICheckVoucher{
+  discountAmount: number
+  discountType: string
+  discountValue: number
+  finalPrice: number
+  voucherCode: string
+  voucherId: number
+}
 export interface VoucherFormData {
     code: string;
     description: string;
@@ -77,6 +85,12 @@ export class Voucher extends Model {
             url: `/vouchers/${id}`
         })
     }
+    static checkVoucher(payload: { code: string, price: number }) {
+        return this.api.get<IResponse<ICheckVoucher>>({
+            url: "/vouchers/check",
+            params: payload,
+        })
+    }
 }
 Voucher.setup();
 export function useCreateVoucherMutation() {
@@ -99,4 +113,11 @@ export function useDeleteVoucherMutation() {
             return Voucher.deleteVoucher(id).then((r) => r.data);
         }
     })
+}
+export function useCheckVoucherMutation() {
+    return useMutation<IResponse<ICheckVoucher>, IHttpError, { code: string; price: number }>({
+        mutationFn: (payload: { code: string; price: number }) => {
+            return Voucher.checkVoucher(payload).then((r) => r.data);
+        },
+    });
 }

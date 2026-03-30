@@ -72,24 +72,6 @@ const menuItems = [
     roles: [UserRole.ADMIN, UserRole.MANAGER],
   },
   {
-    text: "Thống kê",
-    icon: <PieChartIcon />,
-    path: "/admin/statistics",
-    roles: [UserRole.ADMIN, UserRole.MANAGER],
-    children: [
-      {
-        text: "Doanh thu",
-        path: "/admin/stats/revenue",
-        roles: [UserRole.ADMIN, UserRole.MANAGER],
-      },
-      {
-        text: "Vé bán",
-        path: "/admin/stats/tickets",
-        oles: [UserRole.ADMIN, UserRole.MANAGER],
-      },
-    ],
-  },
-  {
     text: "Hệ thống rạp",
     icon: <DomainIcon />,
     path: "/admin/system",
