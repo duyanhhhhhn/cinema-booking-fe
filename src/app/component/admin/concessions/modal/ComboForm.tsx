@@ -14,6 +14,7 @@ import { createVoucherSchema } from "@/types/data/voucher/schema/voucher";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Box } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import type { ChangeEvent, MouseEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -39,9 +40,9 @@ export default function ComboForm({
   comboItem,
 }: {
   onClose: () => void;
-  refetchCombo: () => void;
+  refetchCombo: () => Promise<unknown> | void;
   type: "create" | "edit";
-  combo?: ICombo;
+  combo?: ICombo | null;
   comboItem?: IComboItem[];
 }) {
   const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL || "";
@@ -49,7 +50,7 @@ export default function ComboForm({
   const queryParams = useMemo(() => {
     return {
       page: 1,
-      size: 10,
+      size: 1000,
     };
   }, []);
 
@@ -62,49 +63,76 @@ export default function ComboForm({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    if (comboItem) {
-      setCart(comboItem?.map(convertComboItemToCartItem) ?? []);
-    }
-  }, [comboItem]);
-
   const { data } = useQuery({
-    ...Combo.objects.paginateQueryFactory(queryParams),
+    ...Combo.adminProductPaginateQueryFactory(queryParams),
   });
 
-  const product = data?.data;
-  const product1 = product?.filter((item) => item.type === "SINGLE") || [];
-
   const filteredProducts = useMemo(() => {
+    const product1 = data?.data || [];
+
     if (!searchTerm.trim()) return product1;
     return product1.filter((item) =>
       item.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [product1, searchTerm]);
+  }, [data?.data, searchTerm]);
 
   const { mutate: createCombo } = useCreateComboMutation();
   const { mutate: updateCombo } = useEditComboMutation();
 
-  const modCombo = type === "edit" ? convertIComboToISCombo(combo as ICombo) : null;
+  const modCombo = useMemo(
+    () => (type === "edit" && combo ? convertIComboToISCombo(combo as ICombo) : null),
+    [type, combo]
+  );
 
   const methods = useForm<any>({
     defaultValues: modCombo ?? initialComboData,
     mode: "onChange",
     resolver: yupResolver(createVoucherSchema()),
   });
+  const isPriceDirty = Boolean(methods.formState.dirtyFields?.price);
 
-  const increase = (id: number) => {
+  useEffect(() => {
+    if (type === "edit" && modCombo) {
+      methods.reset(modCombo);
+    } else if (type === "create") {
+      methods.reset(initialComboData);
+    }
+  }, [type, modCombo, methods]);
+
+  useEffect(() => {
+    if (comboItem) {
+      setCart(comboItem.map(convertComboItemToCartItem) ?? []);
+    } else {
+      setCart([]);
+    }
+  }, [comboItem]);
+
+  useEffect(() => {
+    if (type === "edit" && combo?.imageUrl) {
+      setPreviews({
+        banner: `${urlImage}${combo.imageUrl}`,
+      });
+    } else {
+      setPreviews({
+        banner: null,
+      });
+    }
+  }, [type, combo, urlImage]);
+
+  const increase = (productId: number) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+        item.productId === productId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
       )
     );
   };
 
-  const decrease = (id: number) => {
+  const decrease = (productId: number) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id
+        item.productId === productId
           ? { ...item, quantity: Math.max(1, item.quantity - 1) }
           : item
       )
@@ -133,83 +161,105 @@ export default function ComboForm({
     });
   };
 
-  const removeItem = (id: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeItem = (productId: number) => {
+    setCart((prev) => prev.filter((item) => item.productId !== productId));
   };
+
+  const total = useMemo(
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cart]
+  );
+
+  useEffect(() => {
+    if (type !== "create" || isPriceDirty) {
+      return;
+    }
+
+    methods.setValue("price", total, {
+      shouldValidate: true,
+      shouldDirty: false,
+    });
+  }, [total, methods, type, isPriceDirty]);
+
+  const price = methods.watch("price") ?? 0;
 
   const onSubmit = async (data: IComboData) => {
     const formData = new FormData();
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "bannerFile") {
-        if (value && value instanceof FileList && value.length > 0) {
-          formData.append("bannerFile", value[0]);
-        }
-        return;
-      }
-
-      if (value !== undefined && value !== null) {
-        if (typeof value === "object") {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
-        }
-      }
-    });
-
-    if (type === "edit") {
-      formData.delete("comboItem");
+    if (data.name) {
+      formData.append("name", String(data.name));
     }
 
+    if (data.price !== undefined && data.price !== null) {
+      formData.append("price", String(data.price));
+    }
+
+    if (data.bannerFile && data.bannerFile instanceof FileList && data.bannerFile.length > 0) {
+      formData.append("bannerFile", data.bannerFile[0]);
+    }
+
+    // backend của bạn đang nhận "item", không phải "comboItem"
     formData.append(
-      "comboItem",
+      "item",
       JSON.stringify(cart.map(convertCartItemToComboItemData))
     );
-    formData.delete("bannerUrl");
 
-    if (type === "create") {
-      createCombo(formData, {
-        onSuccess: () => {
-          onClose();
-          toast.success("Tạo combo thành công", {
-            description: "Combo mới đã được thêm vào danh sách F&B.",
+    try {
+      if (type === "create") {
+        await new Promise<void>((resolve, reject) => {
+          createCombo(formData, {
+            onSuccess: async () => {
+              toast.success("Tạo combo thành công", {
+                description: "Combo mới đã được thêm vào danh sách F&B.",
+              });
+              methods.reset(initialComboData);
+              setCart([]);
+              setPreviews({ banner: null });
+              await Promise.resolve(refetchCombo());
+              onClose();
+              resolve();
+            },
+            onError: (error) => {
+              toast.error("Tạo combo thất bại", {
+                description:
+                  error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.",
+              });
+              reject(error);
+            },
           });
-          methods.reset();
-          refetchCombo();
-        },
-        onError: (error) => {
-          toast.error("Tạo combo thất bại", {
-            description:
-              error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.",
-          });
-        },
-      });
-    } else {
-      updateCombo(
-        { id: Number(combo?.id), payload: formData },
-        {
-          onSuccess: () => {
-            onClose();
-            toast.success("Cập nhật combo thành công", {
-              description: "Thông tin combo đã được cập nhật.",
-            });
-            methods.reset();
-            refetchCombo();
-          },
-          onError: (error) => {
-            toast.error("Cập nhật combo thất bại", {
-              description:
-                error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.",
-            });
-          },
-        }
-      );
+        });
+      } else {
+        await new Promise<void>((resolve, reject) => {
+          updateCombo(
+            { id: Number(combo?.id), payload: formData },
+            {
+              onSuccess: async () => {
+                toast.success("Cập nhật combo thành công", {
+                  description: "Thông tin combo đã được cập nhật.",
+                });
+                await Promise.resolve(refetchCombo());
+                onClose();
+                resolve();
+              },
+              onError: (error) => {
+                toast.error("Cập nhật combo thất bại", {
+                  description:
+                    error.message || "Đã có lỗi xảy ra. Vui lòng thử lại.",
+                });
+                reject(error);
+              },
+            }
+          );
+        });
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    fieldName: "bannerFile"
+    e: ChangeEvent<HTMLInputElement>,
+    _fieldName: "bannerFile"
   ) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -222,7 +272,7 @@ export default function ComboForm({
   };
 
   const removeImage = (
-    e: React.MouseEvent,
+    e: MouseEvent,
     fieldName: "bannerFile"
   ) => {
     e.preventDefault();
@@ -235,9 +285,6 @@ export default function ComboForm({
 
     methods.setValue(fieldName, null as any);
   };
-
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const price = 0;
 
   return (
     <form
@@ -286,7 +333,6 @@ export default function ComboForm({
                     <input
                       min={0}
                       max={total}
-                      value={total}
                       className="h-12 w-full rounded-2xl border border-[#e5e7eb] bg-white pl-4 pr-16 text-[15px] font-bold text-[#111827] outline-none transition focus:border-[#ff2d2f]"
                       type="number"
                       id="combo_price"
@@ -486,7 +532,7 @@ export default function ComboForm({
                   ) : (
                     cart.map((item) => (
                       <div
-                        key={`cart-${type}-${item.id}-${item.productId}`}
+                        key={`cart-${type}-${item.productId}`}
                         className="flex items-center justify-between rounded-2xl border border-[#ececf2] bg-[#fcfcfd] p-3"
                       >
                         <div className="flex min-w-0 items-center gap-3">
@@ -495,7 +541,7 @@ export default function ComboForm({
                             sx={{
                               width: 52,
                               height: 52,
-                              backgroundImage: `url(${urlImage}/media/${item.imageUrl})`,
+                              backgroundImage: `url(${urlImage}${item.imageUrl})`,
                               backgroundSize: "cover",
                               backgroundPosition: "center",
                               borderRadius: "16px",
@@ -519,7 +565,7 @@ export default function ComboForm({
                           <div className="flex items-center overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
                             <button
                               onClick={() => {
-                                decrease(item.id);
+                                decrease(item.productId);
                               }}
                               type="button"
                               className="inline-flex h-9 w-9 items-center justify-center text-[#6b7280] transition hover:bg-[#fff1f1] hover:text-[#ff2d2f]"
@@ -536,7 +582,7 @@ export default function ComboForm({
 
                             <button
                               onClick={() => {
-                                increase(item.id);
+                                increase(item.productId);
                               }}
                               type="button"
                               className="inline-flex h-9 w-9 items-center justify-center text-[#6b7280] transition hover:bg-[#fff1f1] hover:text-[#ff2d2f]"
@@ -547,7 +593,7 @@ export default function ComboForm({
 
                           <button
                             onClick={() => {
-                              removeItem(item.id);
+                              removeItem(item.productId);
                             }}
                             type="button"
                             className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff2d2f] text-white shadow-[0_8px_18px_rgba(255,45,47,0.18)] transition hover:bg-[#ef1f21]"
@@ -573,10 +619,10 @@ export default function ComboForm({
 
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[13px] font-bold text-[#6b7280]">
-                    Ưu đãi combo
+                    Giá bán combo
                   </span>
                   <span className="text-[15px] font-extrabold text-[#ff2d2f]">
-                    - {price.toLocaleString("vi-VN")} đ
+                    {Number(price || 0).toLocaleString("vi-VN")} đ
                   </span>
                 </div>
               </div>

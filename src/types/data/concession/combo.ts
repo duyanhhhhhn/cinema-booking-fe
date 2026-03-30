@@ -58,9 +58,135 @@ const modelConfig = {
 export class Combo extends Model {
     static queryKeys = {
         paginate: 'COMBOS_PAGINATE_QUERY',
+        adminPaginate: 'COMBOS_ADMIN_PAGINATE_QUERY',
         findOne: 'COMBOS_FIND_ONE_QUERY',
+        updateComboActive: 'COMBO_UPDATE_ACTIVE_MUTATION',
+        updateProductActive: 'PRODUCT_UPDATE_ACTIVE_MUTATION',
     }
     static objects = ObjectsFactory.factory<ICombo>(modelConfig, this.queryKeys)
+    static normalizeIsActive(value: boolean | number | null | undefined) {
+        if (typeof value === "number") return value === 1;
+        return value === true;
+    }
+    static normalizeType(value: string | null | undefined, itemList?: IComboItem[] | null) {
+        const normalizedValue = value?.trim().toUpperCase();
+
+        if (normalizedValue === "COMBO") return "COMBO";
+        if (
+            normalizedValue === "SINGLE" ||
+            normalizedValue === "PRODUCT" ||
+            normalizedValue === "PRODUCT_SINGLE"
+        ) {
+            return "SINGLE";
+        }
+
+        if (Array.isArray(itemList)) {
+            return "COMBO";
+        }
+
+        return "SINGLE";
+    }
+    static normalizePaginateResponse(
+        payload: IPaginateResponse<ICombo> | IResponse<ICombo[]> | undefined,
+        params?: { page?: number; size?: number }
+    ): IPaginateResponse<ICombo> {
+        const rawData = Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray((payload as any)?.data?.data)
+                ? (payload as any).data.data
+                : Array.isArray((payload as any)?.data?.content)
+                    ? (payload as any).data.content
+                    : Array.isArray((payload as any)?.content)
+                        ? (payload as any).content
+                        : [];
+
+        const data = Array.isArray(rawData)
+            ? rawData.map((item) => ({
+                ...item,
+                type: this.normalizeType(item.type, item.itemList),
+                isActive: this.normalizeIsActive(item.isActive as boolean | number),
+            }))
+            : [];
+
+        const nestedMeta = (payload as any)?.data?.meta;
+        const topLevelMeta = (payload as any)?.meta;
+
+        const meta = nestedMeta || topLevelMeta
+            ? (nestedMeta || topLevelMeta)
+            : {
+                page: params?.page ?? 1,
+                total: data.length,
+                perPage: params?.size ?? data.length,
+            };
+
+        return {
+            message: payload?.message || "",
+            data,
+            meta,
+        };
+    }
+    static fetchAdminConcessions(params?: { page?: number; size?: number }) {
+        const urls = ["/combos", "/combo"];
+
+        return (async () => {
+            let lastError: unknown = null;
+
+            for (const url of urls) {
+                try {
+                    const response =
+                        await this.api.get<IPaginateResponse<ICombo> | IResponse<ICombo[]>>({
+                            url,
+                            params,
+                        });
+
+                    return this.normalizePaginateResponse(
+                        response.data,
+                        params
+                    );
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+
+            if (lastError) throw lastError;
+
+            return this.normalizePaginateResponse(undefined, params);
+        })();
+    }
+    static adminSingleTypePaginateQueryFactory(
+        type: "COMBO" | "SINGLE",
+        params?: { page?: number; size?: number }
+    ) {
+        return {
+            queryKey: [this.queryKeys.adminPaginate, type, params],
+            queryFn: async () => {
+                const response = await this.fetchAdminConcessions(params);
+                const filteredData = response.data.filter((item) => item.type === type);
+
+                return {
+                    ...response,
+                    data: filteredData,
+                    meta: {
+                        ...response.meta,
+                        total: filteredData.length,
+                        perPage: filteredData.length,
+                    },
+                } satisfies IPaginateResponse<ICombo>;
+            },
+        };
+    }
+    static adminComboPaginateQueryFactory(params?: { page?: number; size?: number }) {
+        return this.adminSingleTypePaginateQueryFactory("COMBO", params);
+    }
+    static adminProductPaginateQueryFactory(params?: { page?: number; size?: number }) {
+        return this.adminSingleTypePaginateQueryFactory("SINGLE", params);
+    }
+    static adminPaginateQueryFactory(params?: { page?: number; size?: number }) {
+        return {
+            queryKey: [this.queryKeys.adminPaginate, params],
+            queryFn: () => this.fetchAdminConcessions(params),
+        }
+    }
     static createCombo(payload: FormData) {
         return this.api.post<IResponse<ICombo>>({
             url: '/public/combo/add',
@@ -94,6 +220,59 @@ export class Combo extends Model {
         return this.api.delete<IResponse<ICombo>>({
             url: `/public/product/${id}`,
         })
+    }
+    static activateComboAdmin(id: number) {
+        return this.api.put<IResponse<unknown>>({
+            url: `/combos/${id}/activate`,
+        })
+    }
+    static deactivateComboAdmin(id: number) {
+        return this.api.put<IResponse<unknown>>({
+            url: `/combos/${id}/deactivate`,
+        })
+    }
+    static activateProductAdmin(id: number) {
+        return this.api.put<IResponse<unknown>>({
+            url: `/products/${id}/activate`,
+        })
+    }
+    static deactivateProductAdmin(id: number) {
+        return this.api.put<IResponse<unknown>>({
+            url: `/products/${id}/deactivate`,
+        })
+    }
+    static toggleProductPublic(id: number) {
+        return this.api.patch<IResponse<unknown>>({
+            url: `/public/product/${id}/toggle-active`,
+        })
+    }
+    static async toggleProductAdmin(id: number) {
+        const urls = [
+            `/product/${id}/toggle-active`,
+            `/products/${id}/toggle-active`,
+        ];
+
+        let lastError: unknown = null;
+
+        for (const url of urls) {
+            try {
+                return await this.api.patch<IResponse<unknown>>({
+                    url,
+                });
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw lastError;
+    }
+    static updateComboActiveAdmin(id: number, nextIsActive: boolean) {
+        return nextIsActive
+            ? this.activateComboAdmin(id)
+            : this.deactivateComboAdmin(id);
+    }
+    static updateProductActiveAdmin(id: number, _nextIsActive: boolean) {
+        return this.toggleProductAdmin(id);
     }
 }
 Combo.setup();
@@ -140,6 +319,20 @@ export function useDeleteProductMutation() {
         }
     })
 }
+export function useUpdateComboActiveMutation() {
+    return useMutation<IResponse<unknown>, IHttpError, { id: number; nextIsActive: boolean }>({
+        mutationFn: ({ id, nextIsActive }: { id: number; nextIsActive: boolean }) => {
+            return Combo.updateComboActiveAdmin(id, nextIsActive).then((r) => r.data)
+        }
+    })
+}
+export function useUpdateProductActiveMutation() {
+    return useMutation<IResponse<unknown>, IHttpError, { id: number; nextIsActive: boolean }>({
+        mutationFn: ({ id, nextIsActive }: { id: number; nextIsActive: boolean }) => {
+            return Combo.updateProductActiveAdmin(id, nextIsActive).then((r) => r.data)
+        }
+    })
+}
 export const convertIComboToISCombo = (
     item: ICombo
 ): ISCombo => {
@@ -149,4 +342,3 @@ export const convertIComboToISCombo = (
         comboItem: item.itemList as IComboItem[],
     }
 };
-
