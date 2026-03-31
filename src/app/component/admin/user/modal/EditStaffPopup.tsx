@@ -113,7 +113,13 @@ export default function EditStaffPopup({
       password: "",
     });
 
-    setAvatarPreview(staff.avatarUrl || null);
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "";
+
+    const avatarUrl = staff.avatarUrl
+      ? `${BASE_URL}/${staff.avatarUrl.replace(/^\/+/, "")}`
+      : null;
+
+    setAvatarPreview(avatarUrl);
     setValue("roleType", targetRoleType);
 
     if (isAdmin) {
@@ -176,7 +182,10 @@ export default function EditStaffPopup({
       phone: data.phone,
       password: data.password || undefined,
       roleId: targetRoleType === "MANAGER" ? 2 : 3,
-      position: targetRoleType === "MANAGER" ? "MANAGER" : data.position,
+      position:
+        targetRoleType === "MANAGER"
+          ? "MANAGER"
+          : data.position || staff.position,
       cinemaId: isAdmin ? data.cinemaId : (user as any)?.cinemaId,
     };
 
@@ -190,8 +199,10 @@ export default function EditStaffPopup({
 
     if (data.avatar) {
       formData.append("avatar", data.avatar);
+    } else if (staff.avatarUrl) {
+      formData.append("avatarUrl", staff.avatarUrl);
     }
-
+    console.log("FINAL PAYLOAD:", payload);
     mutate(
       { id: Number(staff.id), payload: formData },
       {
@@ -570,11 +581,12 @@ export default function EditStaffPopup({
             />
 
             <TextField
-              {...register("email", { required: "Email là bắt buộc" })}
+              {...register("email")}
               label="Email"
-              error={!!errors.email}
-              helperText={errors.email?.message}
               fullWidth
+              InputProps={{
+                readOnly: true,
+              }}
             />
 
             <TextField
@@ -618,19 +630,20 @@ export default function EditStaffPopup({
             )}
 
             {targetRoleType === "STAFF" && (
-              <TextField
-                select
-                label="Chức vụ"
-                {...register("position")}
-                fullWidth
-              >
-                <MenuItem value="">-- Chọn chức vụ --</MenuItem>
-                {STAFF_POSITIONS.map((position) => (
-                  <MenuItem key={position} value={position}>
-                    {position}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Controller
+                name="position"
+                control={control}
+                render={({ field }) => (
+                  <TextField select label="Chức vụ" {...field} fullWidth>
+                    <MenuItem value="">-- Chọn chức vụ --</MenuItem>
+                    {STAFF_POSITIONS.map((position) => (
+                      <MenuItem key={position} value={position}>
+                        {position}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
             )}
 
             <Box
