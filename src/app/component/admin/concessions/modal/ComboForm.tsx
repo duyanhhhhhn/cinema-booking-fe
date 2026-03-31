@@ -75,6 +75,9 @@ export default function ComboForm({
       item.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [data?.data, searchTerm]);
+  const selectedQuantityMap = useMemo(() => {
+    return new Map(cart.map((item) => [item.productId, Number(item.quantity || 0)]));
+  }, [cart]);
 
   const { mutate: createCombo } = useCreateComboMutation();
   const { mutate: updateCombo } = useEditComboMutation();
@@ -119,11 +122,37 @@ export default function ComboForm({
     }
   }, [type, combo, urlImage]);
 
+  const showStockWarningToast = (productName: string, stock: number) => {
+    toast.warning("Không đủ tồn kho", {
+      description:
+        stock > 0
+          ? `${productName} chỉ còn ${stock} sản phẩm trong kho.`
+          : `${productName} hiện đã hết hàng.`,
+      duration: 3200,
+    });
+  };
+
   const increase = (productId: number) => {
+    const targetItem = cart.find((item) => item.productId === productId);
+
+    if (!targetItem) {
+      return;
+    }
+
+    const itemStock = Number(targetItem.stock || 0);
+
+    if (Number(targetItem.quantity || 0) >= itemStock) {
+      showStockWarningToast(targetItem.name, itemStock);
+      return;
+    }
+
     setCart((prev) =>
       prev.map((item) =>
         item.productId === productId
-          ? { ...item, quantity: item.quantity + 1 }
+          ? {
+              ...item,
+              quantity: Math.min(Number(item.stock || 0), Number(item.quantity || 0) + 1),
+            }
           : item
       )
     );
@@ -140,12 +169,31 @@ export default function ComboForm({
   };
 
   const HandleAdd = (product: ICombo) => {
+    const productStock = Number(product.stock || 0);
+
+    if (productStock <= 0) {
+      showStockWarningToast(product.name, productStock);
+      return;
+    }
+
+    const selectedItem = cart.find((item) => item.productId === product.id);
+
+    if (selectedItem && selectedItem.quantity >= productStock) {
+      showStockWarningToast(product.name, productStock);
+      return;
+    }
+
     setCart((prev) => {
       const index = prev.findIndex((p) => p.productId === product.id);
 
       if (index !== -1) {
         return prev.map((item, i) =>
-          i === index ? { ...item, quantity: item.quantity + 1 } : item
+          i === index
+            ? {
+                ...item,
+                quantity: Math.min(productStock, Number(item.quantity || 0) + 1),
+              }
+            : item
         );
       }
 
@@ -453,10 +501,21 @@ export default function ComboForm({
                       </p>
                     </div>
                   ) : (
-                    filteredProducts.map((item) => (
+                    filteredProducts.map((item) => {
+                      const itemStock = Number(item.stock || 0);
+                      const selectedQuantity = Number(selectedQuantityMap.get(item.id) || 0);
+                      const isOutOfStock = itemStock <= 0;
+                      const hasReachedStock = selectedQuantity >= itemStock && itemStock > 0;
+                      const isAddDisabled = isOutOfStock || hasReachedStock;
+
+                      return (
                       <div
                         key={`pro1-${item.id}`}
-                        className="flex items-center justify-between rounded-2xl border border-[#ececf2] bg-[#fcfcfd] p-3 transition hover:border-[#ffd2d3] hover:bg-[#fffafa]"
+                        className={`flex items-center justify-between rounded-2xl border p-3 transition ${
+                          isAddDisabled
+                            ? "border-[#ececf2] bg-[#fafafa]"
+                            : "border-[#ececf2] bg-[#fcfcfd] hover:border-[#ffd2d3] hover:bg-[#fffafa]"
+                        }`}
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <Box
@@ -485,18 +544,44 @@ export default function ComboForm({
                               })}{" "}
                               • {item.description}
                             </p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                  isOutOfStock
+                                    ? "bg-[#fff1f1] text-[#ff2d2f]"
+                                    : "bg-[#f4f5f7] text-[#374151]"
+                                }`}
+                              >
+                                Tồn kho: {itemStock}
+                              </span>
+                              <span className="inline-flex rounded-full bg-[#fff8e7] px-2.5 py-1 text-[11px] font-bold text-[#b45309]">
+                                Đã chọn: {selectedQuantity}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
                         <button
                           onClick={() => HandleAdd(item)}
                           type="button"
-                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ff2d2f] text-white shadow-[0_8px_18px_rgba(255,45,47,0.18)] transition hover:bg-[#ef1f21]"
+                          disabled={isAddDisabled}
+                          title={
+                            isOutOfStock
+                              ? "Sản phẩm đã hết hàng"
+                              : hasReachedStock
+                                ? "Đã đạt tối đa theo tồn kho"
+                                : "Thêm vào combo"
+                          }
+                          className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
+                            isAddDisabled
+                              ? "cursor-not-allowed bg-[#e5e7eb] text-[#9ca3af]"
+                              : "bg-[#ff2d2f] text-white shadow-[0_8px_18px_rgba(255,45,47,0.18)] hover:bg-[#ef1f21]"
+                          }`}
                         >
                           <AddRoundedIcon fontSize="small" />
                         </button>
                       </div>
-                    ))
+                    )})
                   )}
                 </div>
               </div>
@@ -558,6 +643,9 @@ export default function ComboForm({
                             <p className="mt-1 truncate text-xs font-medium text-[#6b7280]">
                               {item.description}
                             </p>
+                            <p className="mt-2 text-[11px] font-bold text-[#6b7280]">
+                              Số lượng đã chọn: {item.quantity}/{Number(item.stock || 0)}
+                            </p>
                           </div>
                         </div>
 
@@ -585,7 +673,12 @@ export default function ComboForm({
                                 increase(item.productId);
                               }}
                               type="button"
-                              className="inline-flex h-9 w-9 items-center justify-center text-[#6b7280] transition hover:bg-[#fff1f1] hover:text-[#ff2d2f]"
+                              disabled={Number(item.quantity || 0) >= Number(item.stock || 0)}
+                              className={`inline-flex h-9 w-9 items-center justify-center transition ${
+                                Number(item.quantity || 0) >= Number(item.stock || 0)
+                                  ? "cursor-not-allowed text-[#c4c7cf]"
+                                  : "text-[#6b7280] hover:bg-[#fff1f1] hover:text-[#ff2d2f]"
+                              }`}
                             >
                               <AddRoundedIcon fontSize="small" />
                             </button>

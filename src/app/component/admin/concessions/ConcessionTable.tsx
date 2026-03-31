@@ -28,7 +28,7 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import EditComboModal from "./modal/EditConcessionModal";
-import DeletePopup from "../user/DeletePopup";
+import ConcessionDeleteDialog from "./ConcessionDeleteDialog";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
 
 interface IConcessionTableProps {
@@ -94,14 +94,41 @@ export default function ConcessionTable({
     });
   };
 
+  const isDeleteBlockedByCombo = (item: ICombo | null, message?: string) => {
+    if (!item || item.type !== "SINGLE" || !message) {
+      return false;
+    }
+
+    const normalizedMessage = message.toLowerCase();
+
+    return (
+      normalizedMessage.includes("combo") ||
+      normalizedMessage.includes("đang được sử dụng") ||
+      normalizedMessage.includes("dang duoc su dung") ||
+      normalizedMessage.includes("cannot delete") ||
+      normalizedMessage.includes("in use") ||
+      normalizedMessage.includes("used by")
+    );
+  };
+
+  const showDeleteBlockedToast = (item: ICombo, message?: string) => {
+    toast.warning("Sản phẩm đang nằm trong combo", {
+      description:
+        `${item.name} hiện đang được dùng trong một hoặc nhiều combo. ` +
+        `Hãy gỡ sản phẩm này khỏi combo trước khi xóa.` +
+        (message ? ` ${message}` : ""),
+      duration: 5200,
+    });
+  };
+
   const showToggleSuccessToast = (item: ICombo) => {
     const isCombo = item.type === "COMBO";
     const nextAction = item.isActive ? "Ẩn" : "Bật lại";
 
     toast.success(`${nextAction} ${isCombo ? "combo" : "sản phẩm"} thành công`, {
       description: item.isActive
-        ? `${item.name} đã được ẩn khỏi phía client.`
-        : `${item.name} đã được bật lại cho phía client.`,
+        ? `${item.name} đã được ẩn khỏi phía người dùng.`
+        : `${item.name} đã được bật lại cho phía người dùng.`,
       duration: 3200,
     });
   };
@@ -110,6 +137,58 @@ export default function ConcessionTable({
     toast.error("Cập nhật trạng thái thất bại", {
       description:
         message || "Không thể thay đổi trạng thái bán. Vui lòng thử lại.",
+      duration: 4200,
+    });
+  };
+
+  const getToggleBlockedMessage = (item: ICombo) => {
+    if (item.isActive === true) {
+      return null;
+    }
+
+    if (item.type === "SINGLE") {
+      if (Number(item.stock || 0) <= 0) {
+        return `${item.name} đã hết hàng, chưa thể mở bán.`;
+      }
+
+      return null;
+    }
+
+    if (!item.itemList || item.itemList.length === 0) {
+      return "Combo chưa có sản phẩm thành phần nên chưa thể mở bán.";
+    }
+
+    const unavailableItems = item.itemList.flatMap((comboItem) => {
+      if (comboItem.is_active === false) {
+        return [`${comboItem.productName} đang ngừng bán.`];
+      }
+
+      if (Number(comboItem.stock || 0) < Number(comboItem.quantity || 0)) {
+        return [
+          `${comboItem.productName} chỉ còn ${comboItem.stock}, cần ${comboItem.quantity}.`,
+        ];
+      }
+
+      return [];
+    });
+
+    if (unavailableItems.length === 0) {
+      return null;
+    }
+
+    if (unavailableItems.length === 1) {
+      return unavailableItems[0];
+    }
+
+    return `${unavailableItems[0]} Và ${unavailableItems.length - 1} sản phẩm khác cũng không đủ số lượng.`;
+  };
+
+  const showToggleWarningToast = (item: ICombo, message: string) => {
+    toast.warning("Chưa thể mở bán", {
+      description:
+        item.type === "COMBO"
+          ? `Combo ${item.name} chưa đủ điều kiện mở bán. ${message}`
+          : message,
       duration: 4200,
     });
   };
@@ -134,6 +213,12 @@ export default function ConcessionTable({
           showDeleteSuccessToast("SINGLE");
         },
         onError: (error) => {
+          if (isDeleteBlockedByCombo(selectedCombo, error.message)) {
+            handleCloseDeletePopup();
+            showDeleteBlockedToast(selectedCombo, error.message);
+            return;
+          }
+
           showDeleteErrorToast(error.message);
         },
       });
@@ -142,6 +227,13 @@ export default function ConcessionTable({
 
   const handleToggleStatus = (item: ICombo) => {
     const currentItem = item;
+    const blockedMessage = getToggleBlockedMessage(currentItem);
+
+    if (blockedMessage) {
+      showToggleWarningToast(currentItem, blockedMessage);
+      return;
+    }
+
     const isActive = currentItem.isActive === true;
     const nextIsActive = !isActive;
     setTogglingId(currentItem.id);
@@ -246,6 +338,8 @@ export default function ConcessionTable({
                   const isCombo = item.type === "COMBO";
                   const isActive = item.isActive === true;
                   const isToggling = togglingId === item.id;
+                  const blockedMessage = getToggleBlockedMessage(item);
+                  const isToggleBlocked = Boolean(blockedMessage);
                   const toggleLabel = `${isActive ? "Ẩn" : "Bật lại"} ${
                     isCombo ? "combo" : "sản phẩm"
                   }`;
@@ -345,16 +439,31 @@ export default function ConcessionTable({
 
                       <TableCell className="px-4 py-4 align-middle">
                         <div className="flex items-center">
+                          <div className="group relative inline-flex">
+                            {isToggleBlocked ? (
+                              <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-3 w-max max-w-[240px] -translate-x-1/2 translate-y-1 rounded-2xl bg-[#111827] px-3 py-2 text-[11px] font-semibold leading-5 text-white opacity-0 shadow-[0_12px_28px_rgba(15,23,42,0.22)] transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                                {blockedMessage}
+                                <span className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 rotate-45 bg-[#111827]" />
+                              </div>
+                            ) : null}
+
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(item)}
                             disabled={isToggling}
                             aria-label={toggleLabel}
                             aria-pressed={isActive}
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+                            aria-disabled={isToggleBlocked || isToggling}
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition duration-200 ${
                               isActive
                                 ? "border-[#22c55e] bg-[#22c55e]"
                                 : "border-[#d1d5db] bg-[#e5e7eb]"
+                            } ${
+                              isToggleBlocked
+                                ? "cursor-not-allowed opacity-40 saturate-50"
+                                : ""
+                            } ${
+                              isToggling ? "cursor-not-allowed opacity-70" : ""
                             }`}
                           >
                             <span className="sr-only">{toggleLabel}</span>
@@ -364,6 +473,7 @@ export default function ConcessionTable({
                               } ${isToggling ? "scale-90" : ""}`}
                             />
                           </button>
+                          </div>
                         </div>
                       </TableCell>
 
@@ -495,15 +605,12 @@ export default function ConcessionTable({
           comboItem={selectedCombo?.itemList || []}
         />
 
-        <DeletePopup
+        <ConcessionDeleteDialog
           open={openDeletePopup}
           onClose={handleCloseDeletePopup}
           onConfirm={handleConfirmDelete}
-          description={
-            "Bạn có chắc muốn " +
-            (selectedCombo?.type === "SINGLE" ? "xoá sản phẩm" : "xoá combo") +
-            " này không?"
-          }
+          item={selectedCombo}
+          imageBaseUrl={urlImage}
         />
       </div>
     </>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, startTransition } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 type SeatType = "STANDARD" | "VIP" | "COUPLE";
@@ -19,7 +19,7 @@ interface SeatPrices {
 }
 
 interface SeatLayoutBuilderProps {
-  onChange: (layout: string, total: number) => void;
+  onChange: (_layout: string, _total: number) => void;
   seatPrices?: SeatPrices;
   initialRows?: string[];
   initialCols?: number;
@@ -27,9 +27,45 @@ interface SeatLayoutBuilderProps {
 }
 
 const seatColors = {
-  STANDARD: "#777",
-  VIP: "#ff3d3d",
-  COUPLE: "#ff69b4",
+  STANDARD: "linear-gradient(135deg,#fff7f7,#ffd9dd)",
+  VIP: "linear-gradient(135deg,#ff8a8a,#ef4444)",
+  COUPLE: "linear-gradient(135deg,#ffb4c1,#fb7185)",
+};
+
+const seatTypeMeta = {
+  STANDARD: {
+    label: "Standard",
+    accent: "#ef4444",
+    background: "rgba(239,68,68,0.08)",
+    border: "rgba(239,68,68,0.16)",
+  },
+  VIP: {
+    label: "VIP",
+    accent: "#dc2626",
+    background: "rgba(239,68,68,0.1)",
+    border: "rgba(239,68,68,0.18)",
+  },
+  COUPLE: {
+    label: "Couple",
+    accent: "#be123c",
+    background: "rgba(225,29,72,0.1)",
+    border: "rgba(225,29,72,0.18)",
+  },
+};
+
+const modeMeta = {
+  SELECT: {
+    label: "Chọn",
+    description: "Chọn nhiều ghế",
+  },
+  PAINT: {
+    label: "Vẽ ghế",
+    description: "Tạo hoặc đổi ghế",
+  },
+  ERASE: {
+    label: "Xóa ghế",
+    description: "Gỡ ghế khỏi sơ đồ",
+  },
 };
 
 export default function SeatLayoutBuilder({
@@ -85,7 +121,9 @@ export default function SeatLayoutBuilder({
       });
     });
 
-    setSeatMap(map);
+    startTransition(() => {
+      setSeatMap(map);
+    });
   }, [initialLayout]);
 
   // =========================
@@ -173,121 +211,532 @@ export default function SeatLayoutBuilder({
   };
 
   return (
-    <Box display="flex" height={500} onMouseUp={handleMouseUp}>
-      {/* LEFT PANEL */}
-      <Box width={200} p={2} borderRight="1px solid #333">
-        <Typography variant="h6">Cursor Mode</Typography>
-        <Button fullWidth onClick={() => setMode("SELECT")}>
-          Select
-        </Button>
-        <Button fullWidth onClick={() => setMode("PAINT")}>
-          Paint
-        </Button>
-        <Button fullWidth onClick={() => setMode("ERASE")}>
-          Erase
-        </Button>
-
-        <Typography mt={3}>Seat Types</Typography>
-        {(["STANDARD", "VIP", "COUPLE"] as SeatType[]).map((type) => (
-          <Button
-            key={type}
-            fullWidth
-            sx={{ mt: type === "STANDARD" ? 2 : 1 }}
-            variant={seatType === type ? "contained" : "outlined"}
-            onClick={() => setSeatType(type)}
-          >
-            {type} ({seatPrices[type].toLocaleString()}đ)
-          </Button>
-        ))}
-
-        <Box mt={3}>
-          <Typography>Số hàng</Typography>
-          <input
-            type="number"
-            value={rows.length}
-            min={1}
-            onChange={(e) => {
-              const newRowCount = Number(e.target.value);
-              const newRows = Array.from({ length: newRowCount }, (_, i) =>
-                String.fromCharCode(65 + i),
-              );
-              setRows(newRows);
+    <Box
+      onMouseUp={handleMouseUp}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        minHeight: 560,
+        fontFamily: '"Roboto","sans-serif"',
+      }}
+    >
+      <Box
+        sx={{
+          display: "grid",
+          gap: 1.5,
+        }}
+      >
+        <Box
+          sx={{
+            borderRadius: "24px",
+            border: "1px solid #ececf2",
+            background: "#fff",
+            px: 2,
+            py: 1.8,
+            boxShadow: "0 14px 32px rgba(15,23,42,0.05)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                xl: "1.25fr 1.1fr 0.82fr 0.78fr",
+              },
+              gap: 1.4,
+              alignItems: "start",
             }}
-            className="border px-2 rounded w-20"
-          />
-          <Typography mt={2}>Ghế mỗi hàng</Typography>
-          <input
-            type="number"
-            value={cols}
-            min={1}
-            onChange={(e) => setCols(Number(e.target.value))}
-            className="border px-2 rounded w-20"
-          />
+          >
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "#9ca3af",
+                }}
+              >
+                Công cụ thao tác
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.7,
+                  fontSize: 17,
+                  fontWeight: 900,
+                  color: "#18181b",
+                }}
+              >
+                Chế độ con trỏ
+              </Typography>
+              <Box
+                sx={{
+                  mt: 1.2,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
+                {(Object.keys(modeMeta) as Mode[]).map((item) => {
+                  const active = mode === item;
+                  return (
+                    <Button
+                      key={item}
+                      onClick={() => setMode(item)}
+                      sx={{
+                        minWidth: 0,
+                        flex: "1 1 0",
+                        justifyContent: "center",
+                        borderRadius: "16px",
+                        px: 1.25,
+                        py: 1.1,
+                        textTransform: "none",
+                        border: active
+                          ? "1px solid rgba(239,68,68,0.24)"
+                          : "1px solid #ececf2",
+                        background: active
+                          ? "linear-gradient(135deg,rgba(239,68,68,0.09),rgba(255,255,255,1))"
+                          : "#fafafa",
+                        boxShadow: active
+                          ? "0 12px 22px rgba(239,68,68,0.1)"
+                          : "none",
+                        "&:hover": {
+                          background: active
+                            ? "linear-gradient(135deg,rgba(239,68,68,0.12),rgba(255,255,255,1))"
+                            : "#f4f4f5",
+                        },
+                      }}
+                    >
+                      <Box textAlign="center">
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: 900,
+                            color: active ? "#dc2626" : "#18181b",
+                          }}
+                        >
+                          {modeMeta[item].label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            mt: 0.2,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#71717a",
+                          }}
+                        >
+                          {modeMeta[item].description}
+                        </Typography>
+                      </Box>
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "#9ca3af",
+                }}
+              >
+                Loại ghế
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.7,
+                  fontSize: 17,
+                  fontWeight: 900,
+                  color: "#18181b",
+                }}
+              >
+                Vẽ nhanh theo loại ghế
+              </Typography>
+              <Box
+                sx={{
+                  mt: 1.2,
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+                  gap: 1,
+                }}
+              >
+                {(["STANDARD", "VIP", "COUPLE"] as SeatType[]).map((type) => {
+                  const active = seatType === type;
+                  const meta = seatTypeMeta[type];
+                  return (
+                    <Button
+                      key={type}
+                      onClick={() => setSeatType(type)}
+                      sx={{
+                        alignItems: "stretch",
+                        justifyContent: "flex-start",
+                        borderRadius: "16px",
+                        border: active
+                          ? `1px solid ${meta.border}`
+                          : "1px solid #ececf2",
+                        background: active ? meta.background : "#fafafa",
+                        px: 1.15,
+                        py: 1.1,
+                        textTransform: "none",
+                        minWidth: 0,
+                        "&:hover": {
+                          background: active ? meta.background : "#f4f4f5",
+                        },
+                      }}
+                    >
+                      <Box textAlign="left" width="100%">
+                        <Box
+                          sx={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: "999px",
+                            background: meta.accent,
+                            mb: 0.9,
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: 900,
+                            color: active ? meta.accent : "#18181b",
+                          }}
+                        >
+                          {meta.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            mt: 0.35,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#71717a",
+                          }}
+                        >
+                          {seatPrices[type].toLocaleString()}đ
+                        </Typography>
+                      </Box>
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "#9ca3af",
+                }}
+              >
+                Kích thước phòng
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.7,
+                  fontSize: 17,
+                  fontWeight: 900,
+                  color: "#18181b",
+                }}
+              >
+                Số hàng và số ghế
+              </Typography>
+              <Box sx={{ mt: 1.2, display: "grid", gap: 1 }}>
+                <Box
+                  sx={{
+                    borderRadius: "18px",
+                    border: "1px solid #ececf2",
+                    background: "#fafafa",
+                    px: 1.2,
+                    py: 1,
+                  }}
+                >
+                    <Typography
+                      sx={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: "#71717a",
+                      }}
+                    >
+                      Số hàng
+                    </Typography>
+                    <input
+                      type="number"
+                      value={rows.length}
+                      min={1}
+                      onChange={(e) => {
+                        const newRowCount = Number(e.target.value);
+                        const newRows = Array.from(
+                          { length: newRowCount },
+                          (_, i) => String.fromCharCode(65 + i),
+                        );
+                        setRows(newRows);
+                      }}
+                      className="mt-1.5 h-10 w-full rounded-2xl border border-zinc-200 bg-white px-3 text-base font-black text-zinc-900 outline-none"
+                      style={{ fontFamily: "Roboto, sans-serif" }}
+                    />
+                </Box>
+
+                <Box
+                  sx={{
+                    borderRadius: "18px",
+                    border: "1px solid #ececf2",
+                    background: "#fafafa",
+                    px: 1.2,
+                    py: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: "#71717a",
+                    }}
+                  >
+                    Ghế mỗi hàng
+                  </Typography>
+                  <input
+                    type="number"
+                    value={cols}
+                    min={1}
+                    onChange={(e) => setCols(Number(e.target.value))}
+                    className="mt-1.5 h-10 w-full rounded-2xl border border-zinc-200 bg-white px-3 text-base font-black text-zinc-900 outline-none"
+                    style={{ fontFamily: "Roboto, sans-serif" }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "#9ca3af",
+                }}
+              >
+                Thống kê ghế
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.7,
+                  fontSize: 17,
+                  fontWeight: 900,
+                  color: "#18181b",
+                }}
+              >
+                Nhìn nhanh sơ đồ
+              </Typography>
+              <Box sx={{ mt: 1.2, display: "grid", gap: 0.85 }}>
+                {(["STANDARD", "VIP", "COUPLE"] as SeatType[]).map((type) => {
+                  const meta = seatTypeMeta[type];
+                  return (
+                    <Box
+                      key={type}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        borderRadius: "15px",
+                        border: "1px solid #ececf2",
+                        px: 1.25,
+                        py: 1,
+                        background: "#fafafa",
+                      }}
+                    >
+                      <Box display="flex" alignItems="center" gap={0.9}>
+                        <Box
+                          sx={{
+                            width: 9,
+                            height: 9,
+                            borderRadius: "999px",
+                            background: meta.accent,
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: 12,
+                            fontWeight: 800,
+                            color: "#3f3f46",
+                          }}
+                        >
+                          {meta.label}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          fontWeight: 900,
+                          color: "#18181b",
+                        }}
+                      >
+                        {legend[type]}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+
+              <Box
+                sx={{
+                  mt: 1,
+                  borderRadius: "18px",
+                  border: "1px solid rgba(239,68,68,0.14)",
+                  background:
+                    "linear-gradient(135deg,rgba(239,68,68,0.08),rgba(255,255,255,1))",
+                  px: 1.35,
+                  py: 1.25,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 900,
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "#ef4444",
+                  }}
+                >
+                  Tổng ghế
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 0.35,
+                    fontSize: 24,
+                    fontWeight: 900,
+                    color: "#18181b",
+                  }}
+                >
+                  {seatMap.length}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
-      {/* CENTER GRID */}
-      <Box flex={1} textAlign="center" overflow="auto">
-        <Typography
+      <Box
+        sx={{
+          flex: 1,
+          borderRadius: "28px",
+          border: "1px solid #ececf2",
+          background:
+            "linear-gradient(180deg,rgba(255,255,255,1),rgba(250,250,250,0.96))",
+          px: { xs: 1.4, md: 2.4 },
+          py: { xs: 1.8, md: 2.4 },
+          boxShadow: "0 18px 36px rgba(15,23,42,0.05)",
+          overflow: "auto",
+        }}
+      >
+        <Box
           sx={{
-            background: "#222",
-            color: "#ff4444",
-            p: 1,
-            mb: 2,
-            width: 400,
-            margin: "auto",
+            width: "min(520px, 100%)",
+            mx: "auto",
+            mb: 2.2,
+            borderRadius: "999px",
+            background:
+              "linear-gradient(180deg,#fff5f5 0%,#ffe4e6 100%)",
+            border: "1px solid rgba(239,68,68,0.18)",
+            py: 1.1,
+            boxShadow: "0 16px 28px rgba(239,68,68,0.12)",
           }}
         >
-          SCREEN
-        </Typography>
-        {rows.map((row) => (
-          <Box key={row} display="flex" justifyContent="center" mb={1}>
-            <Box width={20}>{row}</Box>
-            {Array.from({ length: cols }).map((_, i) => {
-              const col = i + 1;
-              const seat = getSeat(row, col);
-              const isSelected = selectedSeats.some(
-                (s) => s.row === row && s.col === col,
-              );
-              return (
-                <Box
-                  key={col}
-                  onMouseDown={handleMouseDown}
-                  onMouseEnter={() => handleMouseEnter(row, col)}
-                  onClick={() => handleSeatClick(row, col)}
-                  sx={{
-                    width: 34,
-                    height: 34,
-                    m: 0.5,
-                    borderRadius: 1,
-                    background: isSelected
-                      ? "#00bfff"
-                      : seat
-                        ? seatColors[seat.type]
-                        : "#444",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 12,
-                    userSelect: "none",
-                  }}
-                >
-                  {col}
-                </Box>
-              );
-            })}
-          </Box>
-        ))}
-      </Box>
+          <Typography
+            sx={{
+              textAlign: "center",
+              fontSize: 15,
+              fontWeight: 900,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "#f87171",
+            }}
+          >
+            Screen
+          </Typography>
+        </Box>
 
-      {/* RIGHT PANEL */}
-      <Box width={220} p={2} borderLeft="1px solid #333">
-        <Typography variant="h6">Legend</Typography>
-        <Typography>Standard: {legend.STANDARD}</Typography>
-        <Typography>VIP: {legend.VIP}</Typography>
-        <Typography>Couple: {legend.COUPLE}</Typography>
-        <Typography mt={2}>Total Seats: {seatMap.length}</Typography>
+        <Box sx={{ minWidth: "fit-content" }}>
+          {rows.map((row) => (
+            <Box
+              key={row}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 0.8,
+                mb: 1.2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 28,
+                  textAlign: "center",
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: "#3f3f46",
+                }}
+              >
+                {row}
+              </Box>
+              {Array.from({ length: cols }).map((_, i) => {
+                const col = i + 1;
+                const seat = getSeat(row, col);
+                const isSelected = selectedSeats.some(
+                  (s) => s.row === row && s.col === col,
+                );
+                return (
+                  <Box
+                    key={col}
+                    onMouseDown={handleMouseDown}
+                    onMouseEnter={() => handleMouseEnter(row, col)}
+                    onClick={() => handleSeatClick(row, col)}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "11px",
+                      background: seat
+                        ? seatColors[seat.type]
+                        : "linear-gradient(180deg,#f4f4f5,#e4e4e7)",
+                      border: isSelected
+                        ? "2px solid rgba(239,68,68,0.92)"
+                        : seat
+                          ? "1px solid rgba(239,68,68,0.14)"
+                          : "1px dashed #d4d4d8",
+                      boxShadow: isSelected
+                        ? "0 0 0 4px rgba(239,68,68,0.12)"
+                        : seat
+                          ? "0 10px 20px rgba(239,68,68,0.09)"
+                          : "none",
+                      color: seat?.type === "STANDARD" ? "#dc2626" : seat ? "#fff" : "#71717a",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      userSelect: "none",
+                      transition:
+                        "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+                      "&:hover": {
+                        transform: "translateY(-1px)",
+                      },
+                    }}
+                  >
+                    {col}
+                  </Box>
+                );
+              })}
+            </Box>
+          ))}
+        </Box>
       </Box>
     </Box>
   );

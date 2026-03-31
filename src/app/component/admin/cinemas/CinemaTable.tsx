@@ -10,7 +10,7 @@ import {
   IconButton,
   Chip,
   Box,
-  Link,
+  Typography,
 } from "@mui/material";
 import { Edit, Delete, Restore } from "@mui/icons-material";
 import {
@@ -19,13 +19,13 @@ import {
   useActivateCinemaMutation,
 } from "@/types/data/cinema";
 import DeletePopup from "../../popup/DeletePopup";
-import { useNotification } from "@/hooks/useNotification";
 import dayjs from "dayjs";
+import { toast } from "sonner";
 
 interface CinemaTableProps {
   cinemas: ICinema[];
   refetchCinemas: () => void;
-  onEditCinema: (cinema: ICinema) => void; // thêm callback
+  onEditCinema: (_cinema: ICinema) => void;
 }
 
 export default function CinemaTable({
@@ -33,7 +33,6 @@ export default function CinemaTable({
   refetchCinemas,
   onEditCinema,
 }: CinemaTableProps) {
-  const n = useNotification();
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
   const [selectedCinema, setSelectedCinema] = useState<ICinema | null>(null);
 
@@ -46,7 +45,7 @@ export default function CinemaTable({
     if (!imageUrl) return "";
     if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"))
       return imageUrl;
-    return `${urlImage}/${imageUrl}?t=${Date.now()}`;
+    return `${urlImage}/${imageUrl}`;
   };
 
   // Khi click icon Delete / Restore
@@ -62,23 +61,33 @@ export default function CinemaTable({
       // Deactivate
       deactivateMutation.mutate(selectedCinema.id, {
         onSuccess: () => {
-          n.success(`Rạp "${selectedCinema.name}" đã ngưng hoạt động`);
+          toast.success("Cập nhật rạp thành công", {
+            description: `Rạp "${selectedCinema.name}" đã ngưng hoạt động.`,
+          });
           refetchCinemas();
           setOpenDeletePopup(false);
           setSelectedCinema(null);
         },
-        onError: (err: any) => n.error(err.message),
+        onError: (err: any) =>
+          toast.error("Cập nhật rạp thất bại", {
+            description: err?.message || "Không thể ngưng hoạt động rạp này.",
+          }),
       });
     } else {
       // Activate
       activateMutation.mutate(selectedCinema.id, {
         onSuccess: () => {
-          n.success(`Rạp "${selectedCinema.name}" đã hoạt động trở lại`);
+          toast.success("Cập nhật rạp thành công", {
+            description: `Rạp "${selectedCinema.name}" đã hoạt động trở lại.`,
+          });
           refetchCinemas();
           setOpenDeletePopup(false);
           setSelectedCinema(null);
         },
-        onError: (err: any) => n.error(err.message),
+        onError: (err: any) =>
+          toast.error("Cập nhật rạp thất bại", {
+            description: err?.message || "Không thể kích hoạt lại rạp này.",
+          }),
       });
     }
   };
@@ -86,10 +95,18 @@ export default function CinemaTable({
   const renderStatusChip = (isActive: boolean) => (
     <Chip
       label={isActive ? "Hoạt động" : "Ngưng hoạt động"}
-      color={isActive ? "success" : "default"}
       size="small"
       variant="filled"
-      sx={{ fontWeight: 500 }}
+      sx={{
+        fontWeight: 800,
+        borderRadius: "999px",
+        px: 0.75,
+        color: isActive ? "#dc2626" : "#991b1b",
+        background: isActive
+          ? "linear-gradient(135deg,#fff1f2,#ffe4e6)"
+          : "linear-gradient(135deg,#ffffff,#fff7f7)",
+        border: isActive ? "1px solid #fecaca" : "1px solid #f3d2d2",
+      }}
     />
   );
 
@@ -98,84 +115,148 @@ export default function CinemaTable({
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "1px solid #e4e4e7", borderRadius: 2 }}
+        sx={{
+          border: "1px solid #ececf2",
+          borderRadius: "24px",
+          overflow: "hidden",
+          boxShadow: "0 18px 46px rgba(15,23,42,0.04)",
+          fontFamily: "Roboto, sans-serif",
+        }}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="cinema table">
-          <TableHead sx={{ backgroundColor: "#f4f4f5" }}>
+        <Table sx={{ minWidth: 760 }} aria-label="cinema table">
+          <TableHead
+            sx={{
+              background:
+                "linear-gradient(180deg, rgba(250,250,250,1) 0%, rgba(244,244,245,1) 100%)",
+            }}
+          >
             <TableRow>
-              <TableCell sx={{ fontWeight: "bold", color: "#3f3f46" }}>
+              <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
                 Ảnh
               </TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: "#3f3f46" }}>
+              <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
                 Tên rạp
               </TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: "#3f3f46" }}>
+              <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
                 Địa chỉ
               </TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: "#3f3f46" }}>
+              <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
                 Số điện thoại
               </TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: "#3f3f46" }}>
+              <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
                 Ngày tạo
               </TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: "#3f3f46" }}>
+              <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
                 Trạng thái
               </TableCell>
               <TableCell
                 align="center"
-                sx={{ fontWeight: "bold", color: "#3f3f46" }}
+                sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}
               >
                 Hành động
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
+            {cinemas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} sx={{ borderBottom: 0 }}>
+                  <Box
+                    sx={{
+                      py: 8,
+                      textAlign: "center",
+                      color: "#71717a",
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 20, fontWeight: 900, color: "#18181b" }}>
+                      Chưa có rạp phù hợp
+                    </Typography>
+                    <Typography sx={{ mt: 1, fontSize: 14, fontWeight: 500 }}>
+                      Hãy thử tìm kiếm khác hoặc thay đổi bộ lọc trạng thái.
+                    </Typography>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ) : null}
+
             {cinemas.map((cinema) => (
               <TableRow
                 key={cinema.id}
                 sx={{
                   "&:last-child td, &:last-child th": { border: 0 },
-                  "&:hover": { backgroundColor: "#fafafa" },
+                  "&:hover": {
+                    backgroundColor: "#fffdfd",
+                  },
                 }}
               >
-                <TableCell>
+                <TableCell sx={{ py: 2 }}>
                   <Box
                     sx={{
-                      width: 48,
-                      height: 48,
+                      width: 58,
+                      height: 58,
                       backgroundImage: `url(${getFullImageUrl(cinema.imageUrl)})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
-                      borderRadius: 1,
+                      borderRadius: "18px",
                       backgroundColor: "#e4e4e7",
+                      border: "1px solid #e4e4e7",
                     }}
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 500 }}>{cinema.name}</TableCell>
-                <TableCell>{cinema.address}</TableCell>
-                <TableCell>{cinema.phone}</TableCell>
-                <TableCell>
+                <TableCell sx={{ py: 2 }}>
+                  <Typography sx={{ fontSize: 15, fontWeight: 900, color: "#18181b" }}>
+                    {cinema.name}
+                  </Typography>
+                  <Typography sx={{ mt: 0.5, fontSize: 12, fontWeight: 700, color: "#a1a1aa" }}>
+                    Mã rạp #{cinema.id}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ py: 2, fontWeight: 600, color: "#52525b", maxWidth: 260 }}>
+                  {cinema.address}
+                </TableCell>
+                <TableCell sx={{ py: 2, fontWeight: 700, color: "#3f3f46" }}>
+                  {cinema.phone}
+                </TableCell>
+                <TableCell sx={{ py: 2, fontWeight: 700, color: "#52525b" }}>
                   {dayjs(cinema.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell>{renderStatusChip(cinema.isActive)}</TableCell>
-                <TableCell align="center">
+                <TableCell sx={{ py: 2 }}>{renderStatusChip(cinema.isActive)}</TableCell>
+                <TableCell align="center" sx={{ py: 2 }}>
                   <Box display="flex" justifyContent="center" gap={1}>
-                    <Link
-                      href="#"
+                    <IconButton
                       onClick={(e) => {
                         e.preventDefault();
                         onEditCinema(cinema);
                       }}
+                      size="small"
+                      sx={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: "14px",
+                        backgroundColor: "#fff7f7",
+                        color: "#dc2626",
+                        border: "1px solid #fecaca",
+                        "&:hover": { backgroundColor: "#fff1f2" },
+                      }}
                     >
-                      <IconButton size="small" sx={{ color: "#52525b" }}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Link>
+                      <Edit fontSize="small" />
+                    </IconButton>
 
                     <IconButton
                       onClick={() => handleClickToggleStatus(cinema)}
                       size="small"
-                      sx={{ color: cinema.isActive ? "red" : "green" }}
+                      sx={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: "14px",
+                        border: "1px solid",
+                        borderColor: "#fecaca",
+                        backgroundColor: cinema.isActive ? "#fff1f2" : "#fff7f7",
+                        color: "#dc2626",
+                        "&:hover": {
+                          backgroundColor: "#ffe4e6",
+                        },
+                      }}
                     >
                       {cinema.isActive ? (
                         <Delete fontSize="small" />

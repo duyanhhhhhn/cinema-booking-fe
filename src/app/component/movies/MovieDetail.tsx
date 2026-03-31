@@ -9,7 +9,7 @@ import {
   Schedule,
   Language,
   Person,
-  LocalOffer,
+  Cake,
 } from "@mui/icons-material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -69,6 +69,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const routeMoviePath = useMemo(() => {
     return movieIdNum > 0 ? `/movies/${movieIdNum}` : "/movies";
   }, [movieIdNum]);
+
+  const quickBookingReady = selectedShowtimeId != null;
 
   const IMAGE_BASE = useMemo(
     () =>
@@ -559,7 +561,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                 {movie?.title}
               </h1>
               <p className="text-base font-semibold text-white/75">
-                Rated: {ageRatingLabel}
+                Độ tuổi: {ageRatingLabel}
               </p>
             </div>
 
@@ -655,8 +657,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         value: movie?.language,
                       },
                       {
-                        icon: <LocalOffer fontSize="small" className="text-white/70" />,
-                        label: "Phân loại",
+                        icon: <Cake fontSize="small" className="text-white/70" />,
+                        label: "Độ tuổi",
                         value: ageRatingLabel,
                       },
                     ].map((item) => (
@@ -1201,15 +1203,50 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
             <aside className="w-full space-y-5 lg:w-80 xl:w-96">
               <section className="relative overflow-hidden rounded-[30px]">
                 <div className="pointer-events-none absolute inset-0 -z-10">
-                  <div className="absolute -inset-12 rounded-[42px] bg-[radial-gradient(540px_280px_at_50%_30%,rgba(255,31,61,0.65),transparent_65%)] blur-3xl" />
-                  <div className="absolute -inset-12 rounded-[42px] bg-[radial-gradient(760px_360px_at_50%_120%,rgba(255,31,61,0.28),transparent_74%)] blur-3xl" />
+                  <div
+                    className={[
+                      "absolute -inset-12 rounded-[42px] blur-3xl transition-all duration-300",
+                      quickBookingReady
+                        ? "bg-[radial-gradient(560px_300px_at_50%_35%,rgba(255,31,61,0.88),transparent_68%)]"
+                        : "bg-[radial-gradient(540px_280px_at_50%_30%,rgba(255,31,61,0.65),transparent_65%)]",
+                    ].join(" ")}
+                  />
+                  <div
+                    className={[
+                      "absolute -inset-12 rounded-[42px] blur-3xl transition-all duration-300",
+                      quickBookingReady
+                        ? "bg-[radial-gradient(760px_360px_at_50%_120%,rgba(255,31,61,0.44),transparent_74%)]"
+                        : "bg-[radial-gradient(760px_360px_at_50%_120%,rgba(255,31,61,0.28),transparent_74%)]",
+                    ].join(" ")}
+                  />
                 </div>
 
-                <div className="rounded-[30px] bg-[linear-gradient(135deg,rgba(255,31,61,1),rgba(255,31,61,0.72),rgba(255,74,99,1))] p-[2px] shadow-[0_0_0_1px_rgba(255,31,61,0.45),0_0_85px_rgba(255,31,61,0.34)]">
-                  <div className="relative rounded-[28px] bg-[linear-gradient(180deg,rgba(120,9,28,0.95),rgba(62,5,15,0.96))] px-7 py-7 text-center shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+                <div
+                  className={[
+                    "rounded-[30px] p-[2px] transition-all duration-300",
+                    quickBookingReady
+                      ? "bg-[linear-gradient(135deg,rgba(255,31,61,1),rgba(255,72,92,0.94),rgba(255,107,129,1))] shadow-[0_0_0_1px_rgba(255,31,61,0.58),0_0_110px_rgba(255,31,61,0.48)]"
+                      : "bg-[linear-gradient(135deg,rgba(255,31,61,1),rgba(255,31,61,0.72),rgba(255,74,99,1))] shadow-[0_0_0_1px_rgba(255,31,61,0.45),0_0_85px_rgba(255,31,61,0.34)]",
+                  ].join(" ")}
+                >
+                  <div
+                    className={[
+                      "relative rounded-[28px] px-7 py-7 text-center transition-all duration-300",
+                      quickBookingReady
+                        ? "bg-[linear-gradient(180deg,rgba(168,8,34,0.98),rgba(105,7,24,0.96),rgba(73,6,18,0.98))] shadow-[0_36px_100px_rgba(255,31,61,0.26)]"
+                        : "bg-[linear-gradient(180deg,rgba(120,9,28,0.95),rgba(62,5,15,0.96))] shadow-[0_30px_90px_rgba(0,0,0,0.6)]",
+                    ].join(" ")}
+                  >
                     <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(520px_260px_at_50%_0%,rgba(255,255,255,0.08),transparent_62%)]" />
 
-                    <p className="relative text-[13px] font-black uppercase tracking-[0.38em] text-white [text-shadow:0_0_20px_rgba(255,31,61,0.58)]">
+                    <p
+                      className={[
+                        "relative text-[13px] font-black uppercase tracking-[0.38em] text-white transition-all duration-300",
+                        quickBookingReady
+                          ? "[text-shadow:0_0_26px_rgba(255,255,255,0.34),0_0_28px_rgba(255,31,61,0.84)]"
+                          : "[text-shadow:0_0_20px_rgba(255,31,61,0.58)]",
+                      ].join(" ")}
+                    >
                       ĐẶT VÉ NHANH
                     </p>
 
@@ -1225,7 +1262,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                         }
                       }}
                       disabled={selectedShowtimeId == null}
-                      className="relative mt-6 inline-flex w-full items-center justify-center rounded-full bg-[linear-gradient(180deg,#ffffff,#ffd9df)] px-5 py-4 text-[15px] font-black text-[#A4001C] shadow-[0_24px_65px_rgba(255,31,61,0.38),inset_0_2px_0_rgba(255,255,255,0.65)] transition hover:-translate-y-0.5 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
+                      className={[
+                        "relative mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-4 text-[15px] font-black transition hover:-translate-y-0.5 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100",
+                        quickBookingReady
+                          ? "bg-[linear-gradient(180deg,#fff7f8,#ffd2d9)] text-[#980019] shadow-[0_0_0_1px_rgba(255,255,255,0.28),0_28px_80px_rgba(255,31,61,0.52),inset_0_2px_0_rgba(255,255,255,0.8)] hover:brightness-110"
+                          : "bg-[linear-gradient(180deg,#ffffff,#ffd9df)] text-[#A4001C] shadow-[0_24px_65px_rgba(255,31,61,0.38),inset_0_2px_0_rgba(255,255,255,0.65)] hover:brightness-105",
+                      ].join(" ")}
                     >
                       <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),transparent_55%)]" />
                       <span className="relative inline-flex items-center gap-2">

@@ -290,6 +290,7 @@ export function useCreateProductMutation() {
         },
     });
 }
+
 export function useEditComboMutation() {
     return useMutation<IResponse<ICombo>, IHttpError, { payload: FormData, id: number }>({
         mutationFn: ({ id, payload }: { id: number, payload: FormData }) => {
@@ -297,6 +298,7 @@ export function useEditComboMutation() {
         }
     })
 }
+
 export function useEditProductMutation() {
     return useMutation<IResponse<ICombo>, IHttpError, { payload: FormData, id: number }>({
         mutationFn: ({ id, payload }: { id: number, payload: FormData }) => {
@@ -312,6 +314,7 @@ export function useDeleteComboMutation() {
         }
     })
 }
+
 export function useDeleteProductMutation() {
     return useMutation<IResponse<ICombo>, IHttpError, number>({
         mutationFn: (id: number) => {
@@ -319,6 +322,7 @@ export function useDeleteProductMutation() {
         }
     })
 }
+
 export function useUpdateComboActiveMutation() {
     return useMutation<IResponse<unknown>, IHttpError, { id: number; nextIsActive: boolean }>({
         mutationFn: ({ id, nextIsActive }: { id: number; nextIsActive: boolean }) => {
@@ -326,6 +330,7 @@ export function useUpdateComboActiveMutation() {
         }
     })
 }
+
 export function useUpdateProductActiveMutation() {
     return useMutation<IResponse<unknown>, IHttpError, { id: number; nextIsActive: boolean }>({
         mutationFn: ({ id, nextIsActive }: { id: number; nextIsActive: boolean }) => {
@@ -333,6 +338,7 @@ export function useUpdateProductActiveMutation() {
         }
     })
 }
+
 export const convertIComboToISCombo = (
     item: ICombo
 ): ISCombo => {

@@ -4,15 +4,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import LunchDiningRoundedIcon from "@mui/icons-material/LunchDiningRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import { Backdrop, Fade, Modal } from "@mui/material";
-import { Plus_Jakarta_Sans } from "next/font/google";
-import { useEffect, useState } from "react";
+import { Roboto } from "next/font/google";
+import { useState } from "react";
 import { Toaster } from "sonner";
 import SingleForm from "./SingleForm";
 import ComboForm from "./ComboForm";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "700", "900"],
 });
 
 export default function AddConcessionModal({
@@ -26,11 +26,10 @@ export default function AddConcessionModal({
 }) {
   const [type, setType] = useState<"single" | "combo">("combo");
 
-  useEffect(() => {
-    if (open) {
-      setType("combo");
-    }
-  }, [open]);
+  const handleClose = () => {
+    setType("combo");
+    onClose();
+  };
 
   return (
     <>
@@ -52,7 +51,7 @@ export default function AddConcessionModal({
 
       <Modal
         open={open}
-        onClose={onClose}
+        onClose={handleClose}
         closeAfterTransition
         slots={{ backdrop: Backdrop }}
         slotProps={{
@@ -61,7 +60,7 @@ export default function AddConcessionModal({
             className: "bg-black/40 backdrop-blur-[3px]",
           },
         }}
-        className={`${plusJakartaSans.className} flex items-center justify-center p-4`}
+        className={`${roboto.className} flex items-center justify-center p-4`}
       >
         <Fade in={open}>
           <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-[#ececf2] bg-[#fcfcfd] shadow-[0_28px_80px_rgba(15,23,42,0.16)] outline-none">
@@ -80,7 +79,7 @@ export default function AddConcessionModal({
                 </div>
 
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#ececf2] bg-white text-[#6b7280] transition hover:border-[#ffd8d8] hover:bg-[#fff5f5] hover:text-[#ff2d2f]"
                   aria-label="Đóng"
                   type="button"
@@ -176,14 +175,14 @@ export default function AddConcessionModal({
                 <div className="[&_.MuiInputBase-root]:rounded-2xl [&_.MuiInputBase-root]:font-medium [&_.MuiOutlinedInput-notchedOutline]:border-[#e5e7eb] [&_.MuiInputBase-root:hover_.MuiOutlinedInput-notchedOutline]:border-[#ffb3b4] [&_.Mui-focused_.MuiOutlinedInput-notchedOutline]:border-[#ff2d2f] [&_.MuiFormLabel-root]:font-semibold [&_.MuiFormLabel-root]:text-[#6b7280] [&_.MuiButton-contained]:rounded-2xl [&_.MuiButton-contained]:bg-[#ff2d2f] [&_.MuiButton-contained]:px-5 [&_.MuiButton-contained]:py-3 [&_.MuiButton-contained]:font-bold [&_.MuiButton-contained]:shadow-[0_10px_24px_rgba(255,45,47,0.18)] [&_.MuiButton-contained:hover]:bg-[#ef1f21] [&_.MuiButton-outlined]:rounded-2xl [&_.MuiButton-outlined]:border-[#e5e7eb] [&_.MuiButton-outlined]:px-5 [&_.MuiButton-outlined]:py-3 [&_.MuiButton-outlined]:font-bold [&_.MuiButton-outlined]:text-[#374151]">
                   {type === "single" ? (
                     <SingleForm
-                      onClose={onClose}
+                      onClose={handleClose}
                       refetchCombo={refetchCombo}
                       type="create"
                       combo={undefined}
                     />
                   ) : (
                     <ComboForm
-                      onClose={onClose}
+                      onClose={handleClose}
                       refetchCombo={refetchCombo}
                       type="create"
                       combo={undefined}

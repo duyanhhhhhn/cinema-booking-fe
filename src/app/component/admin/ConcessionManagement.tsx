@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Roboto } from "next/font/google";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -14,9 +14,9 @@ import ConcessionTable from "./concessions/ConcessionTable";
 import AddConcessionModal from "./concessions/modal/AddConcessionModal";
 import { Combo } from "@/types/data/concession/combo";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "700", "900"],
 });
 
 export default function ConcessionManagement() {
@@ -66,7 +66,7 @@ export default function ConcessionManagement() {
   const refetchCombo = refetchSummary;
 
   return (
-    <div className={`${plusJakartaSans.className} min-h-screen w-full bg-[#fcfcfd]`}>
+    <div className={`${roboto.className} min-h-screen w-full bg-[#fcfcfd]`}>
       <main className="mx-auto flex w-full max-w-7xl flex-col px-4 py-6 md:px-6 lg:px-8">
         <header className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-6 md:flex-row md:items-center md:justify-between">
           <div>

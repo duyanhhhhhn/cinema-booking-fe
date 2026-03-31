@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import {
@@ -9,6 +9,7 @@ import {
   Storefront,
   WarningAmber,
 } from "@mui/icons-material";
+import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 
 import MetricCard from "./ui/MetricCard";
@@ -31,6 +32,11 @@ import {
 } from "./helpers/SchedulerLogic";
 
 import { ShowtimeSchedulerAdmin } from "@/types/data/showtime-scheduler";
+
+const roboto = Roboto({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "700", "900"],
+});
 
 export default function ShowtimeSchedulerScreen() {
   const IMAGE_HOST = useMemo(
@@ -101,7 +107,6 @@ export default function ShowtimeSchedulerScreen() {
     role,
     isAdmin,
     cinemas,
-    selectedCinemaName,
     qScheduler,
     resources,
     events,
@@ -114,7 +119,6 @@ export default function ShowtimeSchedulerScreen() {
     roomById,
     qMovies,
     movies,
-    qDetailMovies,
     detailMovies,
   } = useSchedulerData(
     openCreate,
@@ -132,21 +136,6 @@ export default function ShowtimeSchedulerScreen() {
 
   const detail = (qDetail.data as any)?.data ?? null;
 
-  useEffect(() => {
-    if (!openDetail || !detail) return;
-    if (!pendingAutoEditRef.current) return;
-
-    pendingAutoEditRef.current = false;
-    initEditFromDetail(detail);
-    setDetailErr(null);
-    setDetailEdit(true);
-  }, [openDetail, detail]);
-
-  const schedulerKey = useMemo(
-    () => [ShowtimeSchedulerAdmin.queryKeys.scheduler, cinemaId, date] as const,
-    [cinemaId, date],
-  );
-
   function initEditFromDetail(d: any) {
     setEditForm({
       roomId: Number(d.roomId || 0),
@@ -155,6 +144,23 @@ export default function ShowtimeSchedulerScreen() {
       basePrice: Number(d.basePrice || 0),
     });
   }
+
+  useEffect(() => {
+    if (!openDetail || !detail) return;
+    if (!pendingAutoEditRef.current) return;
+
+    pendingAutoEditRef.current = false;
+    startTransition(() => {
+      initEditFromDetail(detail);
+      setDetailErr(null);
+      setDetailEdit(true);
+    });
+  }, [openDetail, detail]);
+
+  const schedulerKey = useMemo(
+    () => [ShowtimeSchedulerAdmin.queryKeys.scheduler, cinemaId, date] as const,
+    [cinemaId, date],
+  );
 
   const { mCreate, mEdit, mMove } = useSchedulerMutations({
     cinemaId,
@@ -254,6 +260,7 @@ export default function ShowtimeSchedulerScreen() {
       roomId: prev.roomId || firstRoomId,
       movieId: 0,
     }));
+    setOpenMoviePicker(false);
     setMovieKeyword("");
     setFormError(null);
     setOpenCreate(true);
@@ -263,10 +270,6 @@ export default function ShowtimeSchedulerScreen() {
     setForm((p) => ({ ...p, roomId: nextRoomId, movieId: 0 }));
     setFormError(null);
     setMovieKeyword("");
-    if (openMoviePicker) {
-      setOpenMoviePicker(false);
-      window.setTimeout(() => setOpenMoviePicker(true), 0);
-    }
   }
 
   function submitCreate() {
@@ -432,110 +435,136 @@ export default function ShowtimeSchedulerScreen() {
   const totalConflicts = meta.totalConflicts ?? 0;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.05),transparent_22%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-slate-900" style={{ fontFamily: "Manrope, Inter, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" }}>
-      <Toaster position="top-center" richColors expand visibleToasts={1} toastOptions={{ unstyled: true }} />
+    <div className={`${roboto.className} min-h-screen bg-[linear-gradient(180deg,#fffdfd_0%,#fcfcfd_38%,#f8fafc_100%)] text-slate-900 font-semibold`}>
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        expand={false}
+        visibleToasts={4}
+        toastOptions={{
+          duration: 3200,
+          className:
+            `${roboto.className} !rounded-[20px] !border !border-[#ffd9d9] !bg-white !text-[#111827] !font-semibold !shadow-[0_20px_60px_rgba(255,45,47,0.14)]`,
+          style: {
+            padding: "16px",
+          },
+        }}
+      />
 
-      <div className="sticky top-0 z-30 border-b border-white/70 bg-[rgba(248,250,252,0.92)] px-4 pb-4 pt-5 backdrop-blur-xl sm:px-6 sm:pb-5 sm:pt-6 xl:px-8 xl:pt-8">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <h1 className="text-[28px] sm:text-[34px] lg:text-4xl font-extrabold tracking-[-0.025em] text-slate-900 leading-tight">Lịch Suất Chiếu</h1>
-            <p className="mt-1 text-[13px] sm:text-sm leading-6 text-slate-500">
-              Quản lý và sắp xếp lịch chiếu phim tại các phòng
-            </p>
-          </div>
+      <div className="sticky top-0 z-30 bg-transparent px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6 xl:px-8 xl:pt-8">
+        <div className="rounded-[24px] border border-[#e8ebf0] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.05)] sm:p-6">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-red-600">
+                Quản lý rạp chiếu
+              </div>
+              <h1 className="mt-3 text-[30px] font-black leading-tight tracking-[-0.035em] text-slate-900 sm:text-[38px]">
+                Lịch Suất Chiếu
+              </h1>
+              <p className="mt-2 max-w-2xl text-[14px] leading-7 text-slate-500 sm:text-[15px]">
+                Theo dõi lịch chiếu, kiểm tra xung đột và điều phối phòng chiếu trong cùng một không gian làm việc.
+              </p>
+            </div>
 
-          <div className="flex items-center gap-2 self-start lg:self-auto">
-            <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm">
-              {role || "—"}
+            <div className="flex items-center gap-2 self-start">
+              <div className="rounded-[22px] border border-[#ececf2] bg-white px-4 py-3 text-sm font-black uppercase text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                {role || "—"}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            title="Tổng suất chiếu"
-            value={`${events.length}`}
-            sub="+—"
-            icon={<CalendarMonth fontSize="small" />}
-          />
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              title="Tổng suất chiếu"
+              value={`${events.length}`}
+              icon={<CalendarMonth fontSize="small" />}
+            />
 
-          <MetricCard
-            title="Xung đột"
-            value={`${totalConflicts}`}
-            sub={totalConflicts > 0 ? "Cần xử lý" : "Ổn định"}
-            icon={<WarningAmber fontSize="small" />}
-            tone={totalConflicts > 0 ? "danger" : "success"}
-          />
+            <MetricCard
+              title="Xung đột"
+              value={`${totalConflicts}`}
+              sub={totalConflicts > 0 ? "Cần xử lý" : "Ổn định"}
+              icon={<WarningAmber fontSize="small" />}
+              tone={totalConflicts > 0 ? "danger" : "success"}
+            />
 
-          <div className="md:col-span-2 xl:col-span-2">
-            <div className="h-full rounded-[24px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-slate-600">Lịch</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-slate-900">
-                    <CalendarMonth fontSize="small" />
-                    <span>{date}</span>
-                  </div>
-                  <div className="mt-1 text-[13px] sm:text-sm leading-6 text-slate-500">
-                    Điều hướng theo ngày để xem lịch suất chiếu
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3 xl:items-end">
-                  {isAdmin ? (
-                    <div className="w-full xl:w-[280px]">
-                      <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Cinema</div>
-                      <div className="relative">
-                        <Storefront
-                          fontSize="small"
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                        />
-                        <select
-                          value={cinemaId || 0}
-                          onChange={(e) => setCinemaId(Number(e.target.value))}
-                          className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm font-semibold text-slate-800 outline-none shadow-sm"
-                        >
-                          <option value={0}>-- Chọn rạp --</option>
-                          {cinemas.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+            <div className="md:col-span-2 xl:col-span-2">
+              <div className="h-full rounded-[30px] border border-[#ececf2] bg-white p-4 shadow-[0_20px_52px_rgba(15,23,42,0.06)] sm:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                      Điều hướng lịch
                     </div>
-                  ) : (
-                    <div className="w-full rounded-2xl border border-white/70 bg-white/90 px-4 py-3 xl:w-[280px] shadow-sm">
-                      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                        Cinema
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[24px] font-black tracking-[-0.03em] text-slate-900 sm:text-[28px]">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-500">
+                        <CalendarMonth fontSize="small" />
                       </div>
-                      <div className="mt-1 truncate text-sm font-black tracking-[-0.02em] text-slate-900">
-                        {qScheduler.data?.data?.cinemaName}
-                      </div>
+                      <span>{date}</span>
                     </div>
-                  )}
+                    <div className="mt-2 text-[13px] leading-6 text-slate-500 sm:text-sm">
+                      Chọn ngày làm việc và rạp chiếu trước khi thêm hoặc điều chỉnh suất chiếu.
+                    </div>
+                  </div>
 
-                  <div className="grid w-full grid-cols-3 gap-2 xl:w-[280px]">
-                    <button
-                      className="flex h-11 items-center justify-center gap-1 rounded-2xl border border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50"
-                      onClick={() => setDate((d) => addDays(d, -1))}
-                    >
-                      Trước
-                    </button>
+                  <div className="flex flex-col gap-3 xl:items-end">
+                    {isAdmin ? (
+                      <div className="w-full xl:w-[320px]">
+                        <div className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
+                          Cinema
+                        </div>
+                        <div className="relative">
+                          <Storefront
+                            fontSize="small"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                          />
+                          <select
+                            value={cinemaId || 0}
+                            onChange={(e) => setCinemaId(Number(e.target.value))}
+                            className="w-full rounded-[22px] border border-[#ececf2] bg-white py-3.5 pl-10 pr-4 text-sm font-black text-slate-800 outline-none shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+                          >
+                            <option value={0}>-- Chọn rạp --</option>
+                            {cinemas.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full rounded-[22px] border border-[#ececf2] bg-white px-4 py-3.5 xl:w-[320px] shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                        <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                          Cinema
+                        </div>
+                        <div className="mt-1 truncate text-sm font-black tracking-[-0.02em] text-slate-900">
+                          {qScheduler.data?.data?.cinemaName}
+                        </div>
+                      </div>
+                    )}
 
-                    <button
-                      className="flex h-11 items-center justify-center gap-1 rounded-2xl border border-red-500 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] font-bold text-white shadow-[0_18px_40px_rgba(239,68,68,0.28)] transition hover:-translate-y-[1px]"
-                      onClick={() => setDate(todayYMD())}
-                    >
-                      Hôm nay
-                    </button>
+                    <div className="grid w-full grid-cols-3 gap-2 xl:w-[320px]">
+                      <button
+                        className="flex h-12 items-center justify-center gap-1 rounded-[20px] border border-[#ececf2] bg-white font-black text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:bg-red-50"
+                        onClick={() => setDate((d) => addDays(d, -1))}
+                      >
+                        Trước
+                      </button>
 
-                    <button
-                      className="flex h-11 items-center justify-center gap-1 rounded-2xl border border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50"
-                      onClick={() => setDate((d) => addDays(d, 1))}
-                    >
-                      Sau
-                    </button>
+                      <button
+                        className="flex h-12 items-center justify-center gap-1 rounded-[20px] border border-red-500 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] font-black text-white shadow-[0_16px_32px_rgba(239,68,68,0.22)] transition hover:-translate-y-[1px]"
+                        onClick={() => setDate(todayYMD())}
+                      >
+                        Hôm nay
+                      </button>
+
+                      <button
+                        className="flex h-12 items-center justify-center gap-1 rounded-[20px] border border-[#ececf2] bg-white font-black text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:bg-red-50"
+                        onClick={() => setDate((d) => addDays(d, 1))}
+                      >
+                        Sau
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -544,7 +573,7 @@ export default function ShowtimeSchedulerScreen() {
         </div>
       </div>
 
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-6 xl:px-8">
         <SchedulerBoard
           resources={resources}
           events={events}
@@ -564,11 +593,13 @@ export default function ShowtimeSchedulerScreen() {
         />
 
         {qScheduler.isLoading ? (
-          <div className="p-6 text-sm text-gray-500">Đang tải lịch...</div>
+          <div className="rounded-[24px] border border-[#ececf2] bg-white px-6 py-5 text-sm font-bold text-gray-500 shadow-sm">
+            Đang tải lịch...
+          </div>
         ) : null}
 
         {qScheduler.isError ? (
-          <div className="p-6 text-sm text-red-600">
+          <div className="rounded-[24px] border border-red-200 bg-red-50 px-6 py-5 text-sm font-bold text-red-600 shadow-sm">
             Lỗi tải lịch. Kiểm tra API / quyền truy cập.
           </div>
         ) : null}
@@ -576,7 +607,7 @@ export default function ShowtimeSchedulerScreen() {
         <button
           onClick={openCreateModal}
           disabled={cinemaId <= 0}
-          className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-[24px] border border-red-400 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] text-white shadow-[0_24px_60px_rgba(239,68,68,0.35)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+          className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-[24px] border border-red-400 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] text-white shadow-[0_22px_52px_rgba(239,68,68,0.28)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
           <Add />
         </button>
@@ -597,6 +628,7 @@ export default function ShowtimeSchedulerScreen() {
         formError={formError}
         mCreate={mCreate}
         setForm={setForm}
+        setDate={setDate}
         setOpenCreate={setOpenCreate}
         setOpenMoviePicker={setOpenMoviePicker}
         setMovieKeyword={setMovieKeyword}
