@@ -86,6 +86,62 @@ export class Combo extends Model {
 
         return "SINGLE";
     }
+    static normalizeComboItems(
+        itemList: IComboItem[] | null | undefined,
+        productLookup: Map<number, ICombo>
+    ): IComboItem[] {
+        if (!Array.isArray(itemList)) {
+            return [];
+        }
+
+        return itemList.map((comboItem) => {
+            const productId = Number((comboItem as any)?.productId ?? 0);
+            const product = productLookup.get(productId);
+
+            return {
+                ...comboItem,
+                id: Number((comboItem as any)?.id ?? 0),
+                comboId: Number((comboItem as any)?.comboId ?? 0),
+                productId,
+                quantity: Number((comboItem as any)?.quantity ?? 0),
+                productName:
+                    String(
+                        (comboItem as any)?.productName ??
+                        (comboItem as any)?.name ??
+                        product?.name ??
+                        `Sản phẩm #${productId || "?"}`
+                    ),
+                description: String(
+                    (comboItem as any)?.description ??
+                    product?.description ??
+                    ""
+                ),
+                image_url: String(
+                    (comboItem as any)?.image_url ??
+                    (comboItem as any)?.imageUrl ??
+                    product?.imageUrl ??
+                    ""
+                ),
+                stock: Number(
+                    (comboItem as any)?.stock ??
+                    product?.stock ??
+                    0
+                ),
+                is_active:
+                    typeof (comboItem as any)?.is_active === "boolean"
+                        ? (comboItem as any).is_active
+                        : this.normalizeIsActive(
+                            (comboItem as any)?.isActive ??
+                            product?.isActive
+                        ),
+                price: Number(
+                    (comboItem as any)?.price ??
+                    product?.price ??
+                    0
+                ),
+            } satisfies IComboItem;
+        });
+    }
     static normalizePaginateResponse(
         payload: IPaginateResponse<ICombo> | IResponse<ICombo[]> | undefined,
         params?: { page?: number; size?: number }
@@ -100,13 +156,26 @@ export class Combo extends Model {
                         ? (payload as any).content
                         : [];
 
-        const data = Array.isArray(rawData)
+        const normalizedData = Array.isArray(rawData)
             ? rawData.map((item) => ({
                 ...item,
                 type: this.normalizeType(item.type, item.itemList),
                 isActive: this.normalizeIsActive(item.isActive as boolean | number),
             }))
             : [];
+
+        const productLookup = new Map<number, ICombo>(
+            normalizedData
+                .filter((item) => item.type === "SINGLE")
+                .map((item) => [Number(item.id), item as ICombo])
+        );
+
+        const data = normalizedData.map((item) => ({
+            ...item,
+            stock: Number(item.stock ?? 0),
+            price: Number(item.price ?? 0),
+            itemList: this.normalizeComboItems(item.itemList, productLookup),
+        }));
 
         const nestedMeta = (payload as any)?.data?.meta;
         const topLevelMeta = (payload as any)?.meta;
