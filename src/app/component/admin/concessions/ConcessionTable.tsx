@@ -82,7 +82,7 @@ export default function ConcessionTable({
             ? "Combo đã được gỡ khỏi danh sách F&B."
             : "Sản phẩm đã được gỡ khỏi danh sách F&B.",
         duration: 3200,
-      }
+      },
     );
   };
 
@@ -125,12 +125,15 @@ export default function ConcessionTable({
     const isCombo = item.type === "COMBO";
     const nextAction = item.isActive ? "Ẩn" : "Bật lại";
 
-    toast.success(`${nextAction} ${isCombo ? "combo" : "sản phẩm"} thành công`, {
-      description: item.isActive
-        ? `${item.name} đã được ẩn khỏi phía người dùng.`
-        : `${item.name} đã được bật lại cho phía người dùng.`,
-      duration: 3200,
-    });
+    toast.success(
+      `${nextAction} ${isCombo ? "combo" : "sản phẩm"} thành công`,
+      {
+        description: item.isActive
+          ? `${item.name} đã được ẩn khỏi phía người dùng.`
+          : `${item.name} đã được bật lại cho phía người dùng.`,
+        duration: 3200,
+      },
+    );
   };
 
   const showToggleErrorToast = (message?: string) => {
@@ -243,18 +246,21 @@ export default function ConcessionTable({
         ? updateComboActiveMutation
         : updateProductActiveMutation;
 
-    mutation.mutate({ id: currentItem.id, nextIsActive }, {
-      onSuccess: async () => {
-        await Promise.resolve(refetchCombo());
-        showToggleSuccessToast(currentItem);
+    mutation.mutate(
+      { id: currentItem.id, nextIsActive },
+      {
+        onSuccess: async () => {
+          await Promise.resolve(refetchCombo());
+          showToggleSuccessToast(currentItem);
+        },
+        onError: (error) => {
+          showToggleErrorToast(error.message);
+        },
+        onSettled: () => {
+          setTogglingId(null);
+        },
       },
-      onError: (error) => {
-        showToggleErrorToast(error.message);
-      },
-      onSettled: () => {
-        setTogglingId(null);
-      },
-    });
+    );
   };
 
   const tableData = useMemo(() => combo || [], [combo]);
@@ -297,6 +303,9 @@ export default function ConcessionTable({
                 <TableCell className="border-b border-[#f7dede] px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.16em] text-[#de5c5d]">
                   Loại
                 </TableCell>
+                <TableCell className="border-b border-[#f7dede] px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.16em] text-[#de5c5d]">
+                  Tồn Kho
+                </TableCell>
 
                 <TableCell className="border-b border-[#f7dede] px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.16em] text-[#de5c5d]">
                   Giá bán
@@ -324,8 +333,8 @@ export default function ConcessionTable({
                         Chưa có sản phẩm nào
                       </h3>
                       <p className="mt-2 text-sm font-medium leading-6 text-gray-500">
-                        Hiện chưa có dữ liệu để hiển thị. Hãy thêm sản phẩm mới để
-                        bắt đầu quản lý F&amp;B.
+                        Hiện chưa có dữ liệu để hiển thị. Hãy thêm sản phẩm mới
+                        để bắt đầu quản lý F&amp;B.
                       </p>
                     </div>
                   </TableCell>
@@ -413,7 +422,8 @@ export default function ConcessionTable({
                             </div>
                           ) : (
                             <p className="line-clamp-2 text-sm font-medium leading-6 text-gray-500">
-                              Sản phẩm bán lẻ, không có danh sách thành phần đi kèm.
+                              Sản phẩm bán lẻ, không có danh sách thành phần đi
+                              kèm.
                             </p>
                           )}
                         </div>
@@ -433,6 +443,12 @@ export default function ConcessionTable({
 
                       <TableCell className="px-4 py-4 align-middle">
                         <p className="text-[15px] font-extrabold text-gray-900">
+                          {Number(item.stock || 0)}
+                        </p>
+                      </TableCell>
+
+                      <TableCell className="px-4 py-4 align-middle">
+                        <p className="text-[15px] font-extrabold text-gray-900">
                           {Number(item.price || 0).toLocaleString("vi-VN")} đ
                         </p>
                       </TableCell>
@@ -447,32 +463,34 @@ export default function ConcessionTable({
                               </div>
                             ) : null}
 
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(item)}
-                            disabled={isToggling}
-                            aria-label={toggleLabel}
-                            aria-pressed={isActive}
-                            aria-disabled={isToggleBlocked || isToggling}
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition duration-200 ${
-                              isActive
-                                ? "border-[#22c55e] bg-[#22c55e]"
-                                : "border-[#d1d5db] bg-[#e5e7eb]"
-                            } ${
-                              isToggleBlocked
-                                ? "cursor-not-allowed opacity-40 saturate-50"
-                                : ""
-                            } ${
-                              isToggling ? "cursor-not-allowed opacity-70" : ""
-                            }`}
-                          >
-                            <span className="sr-only">{toggleLabel}</span>
-                            <span
-                              className={`inline-block h-5 w-5 rounded-full bg-white shadow-[0_3px_10px_rgba(15,23,42,0.18)] transition duration-200 ${
-                                isActive ? "translate-x-6" : "translate-x-1"
-                              } ${isToggling ? "scale-90" : ""}`}
-                            />
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(item)}
+                              disabled={isToggling}
+                              aria-label={toggleLabel}
+                              aria-pressed={isActive}
+                              aria-disabled={isToggleBlocked || isToggling}
+                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition duration-200 ${
+                                isActive
+                                  ? "border-[#22c55e] bg-[#22c55e]"
+                                  : "border-[#d1d5db] bg-[#e5e7eb]"
+                              } ${
+                                isToggleBlocked
+                                  ? "cursor-not-allowed opacity-40 saturate-50"
+                                  : ""
+                              } ${
+                                isToggling
+                                  ? "cursor-not-allowed opacity-70"
+                                  : ""
+                              }`}
+                            >
+                              <span className="sr-only">{toggleLabel}</span>
+                              <span
+                                className={`inline-block h-5 w-5 rounded-full bg-white shadow-[0_3px_10px_rgba(15,23,42,0.18)] transition duration-200 ${
+                                  isActive ? "translate-x-6" : "translate-x-1"
+                                } ${isToggling ? "scale-90" : ""}`}
+                              />
+                            </button>
                           </div>
                         </div>
                       </TableCell>
