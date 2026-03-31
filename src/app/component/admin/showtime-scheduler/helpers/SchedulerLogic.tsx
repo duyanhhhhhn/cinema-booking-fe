@@ -1,6 +1,3 @@
-import React from "react";
-import { CheckCircle, WarningAmber, InfoOutlined, Close } from "@mui/icons-material";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 export type SchedulerMeta = {
@@ -177,84 +174,32 @@ export function canRoomPlayMovie(roomType?: string | null, movieFormat?: string 
   return false;
 }
 
-const TOAST_ID = "singleton-toast";
-
 export function notify(opts: {
   type: "success" | "error" | "warning" | "info";
   title: string;
   desc?: string;
 }) {
-  const icon =
-    opts.type === "success" ? (
-      <CheckCircle fontSize="small" />
-    ) : opts.type === "warning" ? (
-      <WarningAmber fontSize="small" />
-    ) : opts.type === "error" ? (
-      <WarningAmber fontSize="small" />
-    ) : (
-      <InfoOutlined fontSize="small" />
-    );
+  const payload = {
+    description: opts.desc,
+    duration: opts.type === "error" ? 4200 : 3200,
+  };
 
-  const tone =
-    opts.type === "success"
-      ? "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 text-emerald-900"
-      : opts.type === "warning"
-        ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-amber-50 text-amber-900"
-        : opts.type === "error"
-          ? "border-red-200 bg-gradient-to-br from-red-50 via-white to-red-50 text-red-900"
-          : "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-50 text-blue-900";
+  if (opts.type === "success") {
+    toast.success(opts.title, payload);
+    return;
+  }
 
-  const bar =
-    opts.type === "success"
-      ? "bg-emerald-500"
-      : opts.type === "warning"
-        ? "bg-amber-500"
-        : opts.type === "error"
-          ? "bg-red-500"
-          : "bg-blue-500";
+  if (opts.type === "warning") {
+    toast.warning(opts.title, payload);
+    return;
+  }
 
-  toast.custom(
-    (t) => (
-      <div className="pointer-events-none fixed inset-0 z-[120] flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 18, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.985 }}
-          transition={{ duration: 0.18 }}
-          className={`pointer-events-auto w-[460px] max-w-[94vw] overflow-hidden rounded-[28px] border ${tone} shadow-[0_30px_90px_rgba(2,6,23,0.24)]`}
-        >
-          <div className="p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
-            <div className="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/5 bg-white/90">
-              {icon}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-base font-black tracking-[-0.02em]">{opts.title}</div>
-              {opts.desc ? (
-                <div className="mt-1 text-sm leading-6 opacity-90">{opts.desc}</div>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              onClick={() => toast.dismiss(t)}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/90 hover:bg-white"
-              aria-label="Close toast"
-            >
-              <Close fontSize="small" />
-            </button>
-          </div>
-          <div className="h-[4px] bg-black/10">
-            <motion.div
-              initial={{ scaleX: 1 }}
-              animate={{ scaleX: 0 }}
-              transition={{ duration: 2.5, ease: "linear" }}
-              className={`h-full ${bar} origin-left`}
-            />
-          </div>
-        </motion.div>
-      </div>
-    ),
-    { id: TOAST_ID, duration: 2600 },
-  );
+  if (opts.type === "error") {
+    toast.error(opts.title, payload);
+    return;
+  }
+
+  toast.info(opts.title, payload);
 }
 
 export function computeDropMove(input: {

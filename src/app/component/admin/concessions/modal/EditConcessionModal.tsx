@@ -2,11 +2,17 @@
 
 import { Backdrop, Fade, Modal } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 import SingleForm from "./SingleForm";
 import ComboForm from "./ComboForm";
 import { ICombo } from "@/types/data/concession/combo";
 import { IComboItem } from "@/types/data/concession/comboitem";
+
+const roboto = Roboto({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "700"],
+});
 
 export default function EditComboModal({
   open,
@@ -55,7 +61,7 @@ export default function EditComboModal({
             className: "bg-black/60 backdrop-blur-sm",
           },
         }}
-        className="flex items-center justify-center overflow-y-auto p-4"
+        className={`${roboto.className} flex items-center justify-center overflow-y-auto p-4`}
       >
         <Fade in={open}>
           <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-[#ececf2] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.16)]">

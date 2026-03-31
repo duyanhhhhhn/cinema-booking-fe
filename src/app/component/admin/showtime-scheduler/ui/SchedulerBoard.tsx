@@ -20,7 +20,7 @@ import {
 function StatusPill({ status, conflict }: { status: string; conflict: boolean }) {
   if (conflict) {
     return (
-      <div className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 shadow-sm px-2 py-1 text-xs text-red-700">
+      <div className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-700 shadow-sm">
         <WarningAmber fontSize="inherit" />
         Xung đột
       </div>
@@ -30,13 +30,13 @@ function StatusPill({ status, conflict }: { status: string; conflict: boolean })
   const s = String(status ?? "").trim().toUpperCase();
   const cls =
     s === "COMPLETED"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      ? "border-red-100 bg-red-50 text-red-600"
       : s === "CANCELLED"
         ? "border-gray-200 bg-gray-100 text-gray-600"
-        : "border-blue-200 bg-blue-50 text-blue-700";
+        : "border-[#ececf2] bg-white text-slate-600";
 
   return (
-    <div className={`inline-flex items-center rounded-full border px-2 py-1 text-xs ${cls}`}>
+    <div className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black shadow-sm ${cls}`}>
       {statusVi(s)}
     </div>
   );
@@ -53,7 +53,9 @@ function DayDropZone({ id }: { id: "day-prev" | "day-next" }) {
     <div
       ref={setNodeRef}
       className={`${base} ${
-        isOver ? "pointer-events-auto bg-blue-100/70" : "pointer-events-none bg-transparent"
+        isOver
+          ? "pointer-events-auto bg-[linear-gradient(180deg,rgba(239,68,68,0.08),rgba(254,202,202,0.24))]"
+          : "pointer-events-none bg-transparent"
       }`}
     />
   );
@@ -73,7 +75,9 @@ function DroppableRoomColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`relative border-l border-slate-200/80 bg-white/80 backdrop-blur ${isOver ? "bg-red-50/50" : ""}`}
+      className={`relative border-l border-[#eef0f3] bg-white ${
+        isOver ? "bg-[linear-gradient(180deg,rgba(254,242,242,0.9),rgba(255,241,242,0.96))]" : ""
+      }`}
       style={{ height }}
     >
       {children}
@@ -88,8 +92,8 @@ function StartMarker({ top, label }: { top: number; label: string }) {
       style={{ top }}
     >
       <div className="relative">
-        <div className="h-[2px] bg-red-500/95 shadow-[0_0_16px_rgba(239,68,68,0.55)]" />
-        <div className="absolute left-3 -top-3 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+        <div className="h-[2px] bg-[linear-gradient(90deg,#ef4444,#fda4af)] shadow-[0_0_16px_rgba(239,68,68,0.18)]" />
+        <div className="absolute left-3 -top-3 rounded-full border border-red-100 bg-white px-2.5 py-0.5 text-[10px] font-black tracking-[0.04em] text-red-600 shadow-[0_10px_22px_rgba(239,68,68,0.10)]">
           {label}
         </div>
       </div>
@@ -104,12 +108,12 @@ function ShowtimeCardBody({
   slotHeight,
 }: {
   e: any;
-  resolveUrl: (raw?: string | null) => string;
+  resolveUrl: (_raw?: string | null) => string;
   dense?: boolean;
   slotHeight?: number;
 }) {
   const src = resolveUrl(e.posterUrl ?? null);
-  const borderCls = e.conflict ? "border-red-300 ring-1 ring-red-200" : "border-gray-200";
+  const borderCls = e.conflict ? "border-red-300 ring-1 ring-red-100" : "border-[#ececf2]";
 
   const h = Number(slotHeight || 0);
   const compact = !dense && h > 0 && h < 120;
@@ -119,16 +123,16 @@ function ShowtimeCardBody({
     <motion.div
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ duration: 0.18 }}
-      className={`h-full overflow-hidden rounded-[24px] border ${borderCls} bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] select-none hover:shadow-[0_22px_54px_rgba(15,23,42,0.12)]`}
+      className={`h-full overflow-hidden rounded-[26px] border ${borderCls} bg-white shadow-[0_16px_36px_rgba(15,23,42,0.08)] select-none hover:shadow-[0_24px_48px_rgba(15,23,42,0.11)]`}
     >
       <div className={`h-full ${dense ? "p-4" : compact ? "p-2.5" : "p-4"}`}>
         {ultraCompact ? (
           <div className="flex h-full items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className={`truncate font-bold ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
+              <div className={`truncate font-black tracking-[-0.02em] ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
                 {e.text}
               </div>
-              <div className={`mt-0.5 text-[11px] ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
+              <div className={`mt-0.5 text-[11px] font-bold ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
                 {hhmmFromISO(e.start)} - {hhmmFromISO(e.end)}
               </div>
             </div>
@@ -146,10 +150,10 @@ function ShowtimeCardBody({
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className={`truncate font-bold ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
+                  <div className={`truncate font-black tracking-[-0.02em] ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
                     {e.text}
                   </div>
-                  <div className={`mt-0.5 text-xs ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
+                  <div className={`mt-0.5 text-xs font-bold ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
                     {hhmmFromISO(e.start)} - {hhmmFromISO(e.end)}
                   </div>
                 </div>
@@ -157,7 +161,7 @@ function ShowtimeCardBody({
               </div>
 
               <div className="mt-auto pt-2">
-                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-gray-600">
+                <div className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-600">
                   <LocalOffer fontSize="inherit" />
                   {Number.isFinite(Number(e.basePrice)) ? `${e.basePrice}` : "—"}
                 </div>
@@ -173,10 +177,10 @@ function ShowtimeCardBody({
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className={`truncate font-extrabold ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
+                  <div className={`truncate font-black tracking-[-0.03em] ${e.conflict ? "text-red-700" : "text-gray-900"}`}>
                     {e.text}
                   </div>
-                  <div className={`mt-0.5 text-sm ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
+                  <div className={`mt-1 text-sm font-bold ${e.conflict ? "text-red-600" : "text-gray-600"}`}>
                     {hhmmFromISO(e.start)} - {hhmmFromISO(e.end)}
                   </div>
                 </div>
@@ -184,7 +188,7 @@ function ShowtimeCardBody({
               </div>
 
               <div className="mt-auto flex items-center justify-between pt-3 text-sm text-gray-600">
-                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1">
+                <div className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 font-black text-red-600">
                   <LocalOffer fontSize="inherit" />
                   {Number.isFinite(Number(e.basePrice)) ? `${e.basePrice}` : "—"}
                 </div>
@@ -206,10 +210,10 @@ export default function SchedulerBoard(props: {
   pxPerMinute: number;
   activeId: number | null;
   activeEvent: any;
-  resolveUrl: (raw?: string | null) => string;
-  onDragStart: (ev: DragStartEvent) => void;
-  onDragEnd: (ev: DragEndEvent) => void;
-  openDetailModal: (id: number, autoEdit?: boolean) => void;
+  resolveUrl: (_raw?: string | null) => string;
+  onDragStart: (_ev: DragStartEvent) => void;
+  onDragEnd: (_ev: DragEndEvent) => void;
+  openDetailModal: (_id: number, _autoEdit?: boolean) => void;
   dragArmedRef: React.MutableRefObject<boolean>;
   armDrag: () => void;
   disarmDrag: () => void;
@@ -301,7 +305,7 @@ export default function SchedulerBoard(props: {
               ev.stopPropagation();
               openDetailModal(Number(e.id), true);
             }}
-            className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white/95 text-gray-700 shadow-sm hover:bg-white"
+            className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 bg-white text-red-500 shadow-[0_10px_24px_rgba(239,68,68,0.10)] transition hover:bg-red-50"
             aria-label="Edit"
           >
             <EditOutlined fontSize="small" />
@@ -314,10 +318,35 @@ export default function SchedulerBoard(props: {
   }
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-      <div className="relative" style={{ height: "calc(100vh - 220px)" }}>
+    <div className="overflow-hidden rounded-[24px] border border-[#e8ebf0] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="border-b border-[#ececf2] bg-white px-5 py-4 sm:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+              Lưới phòng chiếu
+            </div>
+            <div className="mt-1 text-[22px] font-black tracking-[-0.03em] text-slate-900">
+              Theo dõi suất chiếu theo từng phòng
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <div className="rounded-full border border-[#ececf2] bg-white px-3 py-1.5 text-[11px] font-black text-slate-600 shadow-sm">
+              {boardResources.length} phòng
+            </div>
+            <div className="rounded-full border border-[#ececf2] bg-white px-3 py-1.5 text-[11px] font-black text-slate-600 shadow-sm">
+              {events.length} suất chiếu
+            </div>
+            <div className="rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-[11px] font-black text-red-600 shadow-sm">
+              Kéo để đổi phòng hoặc giờ
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative bg-white" style={{ height: "calc(100vh - 250px)" }}>
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-          <div className="relative h-full overflow-auto bg-white">
+          <div className="relative h-full overflow-auto bg-transparent">
             <DayDropZone id="day-prev" />
             <DayDropZone id="day-next" />
 
@@ -329,25 +358,25 @@ export default function SchedulerBoard(props: {
                 gridTemplateRows: `${HEADER_HEIGHT}px ${timelineHeight}px`,
               }}
             >
-              <div className="sticky top-0 z-30 border-b border-r border-gray-200 bg-white" />
+              <div className="sticky top-0 z-30 border-b border-r border-[#e8ebf0] bg-[#fcfcfd]" />
 
               {boardResources.map((r: any) => (
                 <div
                   key={r.id}
-                  className="sticky top-0 z-30 border-b border-gray-200 bg-white px-4 py-3"
+                  className="sticky top-0 z-30 border-b border-r border-[#e8ebf0] bg-[#fcfcfd] px-4 py-3"
                   style={{ height: HEADER_HEIGHT }}
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex h-full items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate text-base font-extrabold text-gray-900">
+                      <div className="truncate text-base font-black tracking-[-0.02em] text-gray-900">
                         {r.name}
                       </div>
-                      <div className="mt-0.5 text-xs text-gray-500">
+                      <div className="mt-0.5 text-xs font-bold text-gray-500">
                         {r.type ?? "—"} • {r.totalSeats ?? 0} ghế
                       </div>
                     </div>
 
-                    <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-gray-700">
+                    <div className="shrink-0 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-600">
                       {(r.type ?? "2D").toString()}
                     </div>
                   </div>
@@ -355,7 +384,7 @@ export default function SchedulerBoard(props: {
               ))}
 
               <div
-                className="relative border-r border-gray-200 bg-white"
+                className="relative border-r border-[#e8ebf0] bg-[#fcfcfd]"
                 style={{ height: timelineHeight }}
               >
                 {hours.map((hour) => {
@@ -364,11 +393,11 @@ export default function SchedulerBoard(props: {
                   return (
                     <React.Fragment key={hour}>
                       <div
-                        className="absolute left-0 right-0 bg-gray-200"
+                        className="absolute left-0 right-0 bg-[#eef0f3]"
                         style={{ top, height: 1 }}
                       />
                       <div
-                        className="absolute left-0 right-0 px-4 text-base font-bold text-gray-500"
+                        className="absolute left-0 right-0 px-4 text-base font-black tracking-[-0.02em] text-slate-500"
                         style={{ top: top + HOUR_LABEL_OFFSET }}
                       >
                         {pad2(hour)}:00
@@ -378,7 +407,7 @@ export default function SchedulerBoard(props: {
                 })}
 
                 <div
-                  className="absolute left-0 right-0 bg-gray-200"
+                  className="absolute left-0 right-0 bg-[#eef0f3]"
                   style={{ top: timelineHeight - 1, height: 1 }}
                 />
               </div>
@@ -395,14 +424,14 @@ export default function SchedulerBoard(props: {
                     return (
                       <div
                         key={hour}
-                        className="absolute left-0 right-0 bg-gray-100"
+                        className="absolute left-0 right-0 bg-[#f8fafc]"
                         style={{ top, height: 1 }}
                       />
                     );
                   })}
 
                   <div
-                    className="absolute left-0 right-0 bg-gray-100"
+                    className="absolute left-0 right-0 bg-[#f8fafc]"
                     style={{ top: timelineHeight - 1, height: 1 }}
                   />
 
