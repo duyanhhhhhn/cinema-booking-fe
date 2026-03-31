@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 
 export default function MySchedule() {
     const my = useQuery<ISchedule[]>(Schedule.getMySchedule(7, 0))
+    console.log(my?.data)
     const data = my?.data?.[0].shift ?? [] as IWorkShift[]
     const getDays = (date) => {
         const today = new Date(date);

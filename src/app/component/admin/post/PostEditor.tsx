@@ -99,32 +99,29 @@ export default function PostEditor({ setValue }: { setValue: any }) {
     return (
         <>
             <div className="max-w-4xl mx-auto bg-white rounded-lg h-[50vh] p-5">
-                <ThemeProvider theme={exampleTheme}>
-
-                    <LexicalComposer initialConfig={initialConfig}>
-                        <Toolbars></Toolbars>
-                        <RichTextPlugin
-                            contentEditable={
-                                <ContentEditable
-                                    aria-placeholder={'Enter some text...'}
-                                    className="focus:outline-none"
-                                    placeholder={<div>Enter some text...</div>}
-                                />
-                            }
-                            ErrorBoundary={LexicalErrorBoundary}
-                        />
-                        <HistoryPlugin />
-                        <AutoFocusPlugin />
-                        <OnChangePlugin
-                            onChange={(editorState, editor) => {
-                                editorState.read(() => {
-                                    const html = $generateHtmlFromNodes(editor);
-                                    setValue("content", html);
-                                });
-                            }}
-                        />
-                    </LexicalComposer>
-                </ThemeProvider>
+                <LexicalComposer initialConfig={initialConfig}>
+                    <Toolbars></Toolbars>
+                    <RichTextPlugin
+                        contentEditable={
+                            <ContentEditable
+                                aria-placeholder={'Enter some text...'}
+                                className="focus:outline-none"
+                                placeholder={<div className="text-center">Enter some text...</div>}
+                            />
+                        }
+                        ErrorBoundary={LexicalErrorBoundary}
+                    />
+                    <HistoryPlugin />
+                    <AutoFocusPlugin />
+                    <OnChangePlugin
+                        onChange={(editorState, editor) => {
+                            editorState.read(() => {
+                                const html = $generateHtmlFromNodes(editor);
+                                setValue("content", html);
+                            });
+                        }}
+                    />
+                </LexicalComposer>
             </div>
         </>
     );
