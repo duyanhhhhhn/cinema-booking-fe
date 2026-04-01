@@ -162,13 +162,21 @@ export default function ConcessionTable({
     }
 
     const unavailableItems = item.itemList.flatMap((comboItem) => {
+      const resolvedName =
+        String(comboItem.productName || "").trim() ||
+        `sản phẩm #${Number(comboItem.productId || 0)}`;
+
       if (comboItem.is_active === false) {
-        return [`${comboItem.productName} đang ngừng bán.`];
+        return [`${resolvedName} đang ngừng bán.`];
+      }
+
+      if (comboItem.stock == null || Number.isNaN(Number(comboItem.stock))) {
+        return [`Không xác định được tồn kho của ${resolvedName}.`];
       }
 
       if (Number(comboItem.stock || 0) < Number(comboItem.quantity || 0)) {
         return [
-          `${comboItem.productName} chỉ còn ${comboItem.stock}, cần ${comboItem.quantity}.`,
+          `${resolvedName} chỉ còn ${comboItem.stock}, cần ${comboItem.quantity}.`,
         ];
       }
 
