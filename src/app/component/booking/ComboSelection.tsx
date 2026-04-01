@@ -3,10 +3,20 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setStep, setCombos, resetBooking } from "@/store/bookingSlice";
-import { selectBooking, selectHoldExpiresAt } from "@/store/selectors";
+import {
+  setStep,
+  setCombos,
+  resetBooking,
+  setVoucherInfo,
+  clearVoucherInfo,
+} from "@/store/bookingSlice";
+import {
+  selectBooking,
+  selectHoldExpiresAt,
+  selectSeatPrice,
+} from "@/store/selectors";
 import { useNotification } from "@/hooks/useNotification";
-import {  useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Seat } from "@/types/data/seat/seat";
 import {
   ICalculateBookingFeeForm,
@@ -20,10 +30,13 @@ import {
   ArrowBack,
   KeyboardArrowLeft,
   KeyboardArrowRight,
+  CheckCircle,
+  Cancel,
 } from "@mui/icons-material";
 import ConfirmBackStep from "../popup/ConfirmBackStep";
 import { Combo, IComboItem } from "@/types/data/combo/combo";
 import { useRouteQuery } from "@/hooks/useRouteQuery";
+import { useCheckVoucherMutation } from "@/types/data/voucher/voucher";
 
 const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_URL || "";
 
@@ -59,7 +72,7 @@ export default function ComboSelectionStep() {
     return serializeQuery({
       page: Number(searchQuery.get("page")) || 1,
       perPage: Number(searchQuery.get("perPage")) || 10,
-      filterType:  "Combo",
+      filterType: "Combo",
     });
   }, [searchQuery, serializeQuery]);
 
@@ -77,12 +90,28 @@ export default function ComboSelectionStep() {
 
   const n = useNotification();
   const bookingState = useAppSelector(selectBooking);
+  const seatPrice = useAppSelector(selectSeatPrice);
   const holdExpiresAt = useAppSelector(selectHoldExpiresAt);
   const [combos, setCombosLocal] = useState<ICombo[]>([]);
 
   const [openConfirmBackStep, setOpenConfirmBackStep] = useState(false);
   const { mutate: releaseSeat } = useReleaseSeatMutation();
   const [now, setNow] = useState(() => Date.now());
+
+  // === VOUCHER STATES ===
+  const [voucherInput, setVoucherInput] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    code: string;
+    discountAmount: number;
+  } | null>(() => {
+    if (bookingState.voucherCode && bookingState.voucherDiscountAmount > 0) {
+      return {
+        code: bookingState.voucherCode,
+        discountAmount: bookingState.voucherDiscountAmount,
+      };
+    }
+    return null;
+  });
 
   const remainingSeconds = useMemo(() => {
     if (!holdExpiresAt) return null;
@@ -102,8 +131,12 @@ export default function ComboSelectionStep() {
     const merged =
       bookingState.combos.length > 0
         ? apiComboList.map((apiCombo) => {
-            const fromStore = bookingState.combos.find((c) => c.id === apiCombo.id);
-            return fromStore ? { ...apiCombo, quantity: fromStore.quantity } : apiCombo;
+            const fromStore = bookingState.combos.find(
+              (c) => c.id === apiCombo.id,
+            );
+            return fromStore
+              ? { ...apiCombo, quantity: fromStore.quantity }
+              : apiCombo;
           })
         : apiComboList;
     queueMicrotask(() => {
@@ -149,6 +182,56 @@ export default function ComboSelectionStep() {
     });
   };
 
+  const comboPrice = useMemo(
+    () => combos.reduce((sum, combo) => sum + combo.price * combo.quantity, 0),
+    [combos],
+  );
+  const subtotalPrice = seatPrice + comboPrice + bookingState.bookingFee;
+  const { mutate: checkVoucher, isPending: isCheckingVoucher } =
+    useCheckVoucherMutation();
+
+  // === XỬ LÝ NÚT ÁP DỤNG VOUCHER ===
+  const handleApplyVoucher = () => {
+    const normalizedCode = voucherInput.trim().toUpperCase();
+    if (!normalizedCode) {
+      n.error("Vui lòng nhập mã voucher!");
+      return;
+    }
+
+    checkVoucher(
+      {
+        code: normalizedCode,
+        price: subtotalPrice,
+      },
+      {
+        onSuccess: (res) => {
+          const voucherData = res.data;
+          setAppliedVoucher({
+            code: voucherData.voucherCode,
+            discountAmount: voucherData.discountAmount,
+          });
+          dispatch(
+            setVoucherInfo({
+              voucherCode: voucherData.voucherCode,
+              discountAmount: voucherData.discountAmount,
+            }),
+          );
+          n.success(res.message || "Áp dụng mã giảm giá thành công!");
+        },
+        onError: (error) => {
+          n.error(error.message);
+        },
+      },
+    );
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherInput("");
+    dispatch(clearVoucherInfo());
+    n.success("Đã gỡ mã giảm giá.");
+  };
+
   const handleProceed = () => {
     const seatIds = bookingState.heldSeatIds ?? [];
     if (seatIds.length === 0) {
@@ -163,12 +246,15 @@ export default function ComboSelectionStep() {
         productId: c.id,
         quantity: c.quantity,
       }));
+
     const payload: ICalculateBookingFeeForm = {
       showtimeId: Number(bookingState.showtimeId),
       seatIds,
       combos: combosPayload,
-      voucherCode: "",
+      // Đẩy mã voucher xuống API tính toán nếu có
+      voucherCode: bookingState.voucherCode || "",
     };
+
     dispatch(setCombos(combos));
     caculateBookingFee(payload, {
       onSuccess: () => {
@@ -201,6 +287,7 @@ export default function ComboSelectionStep() {
       },
     );
   };
+
   const { mutate: caculateBookingFee } = useCalculateBookingFeeMutation();
 
   return (
@@ -284,6 +371,51 @@ export default function ComboSelectionStep() {
           </div>
 
           <div className="lg:col-span-1">
+            {/* KHỐI VOUCHER MỚI THÊM */}
+            <div className="bg-[#1a1a2e] rounded-xl p-5 mb-6 border border-white/5">
+              <h3 className="text-white font-bold mb-4">Voucher & Ưu đãi</h3>
+
+              {!appliedVoucher ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={voucherInput}
+                    onChange={(e) => setVoucherInput(e.target.value)}
+                    placeholder="Nhập mã voucher"
+                    className="flex-1 bg-[#0f0f1e] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 uppercase placeholder:normal-case transition-all"
+                  />
+                  <button
+                    onClick={handleApplyVoucher}
+                    disabled={isCheckingVoucher}
+                    className="bg-[#f01436] hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors whitespace-nowrap"
+                  >
+                    {isCheckingVoucher ? "Đang kiểm tra..." : "Áp dụng"}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="text-green-500" fontSize="small" />
+                    <div>
+                      <span className="text-white font-bold block leading-none">
+                        {appliedVoucher.code}
+                      </span>
+                      <span className="text-green-400 text-xs">
+                        -{" "}
+                        {appliedVoucher.discountAmount.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleRemoveVoucher}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <Cancel fontSize="small" />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <BookingSidebar
               step={2}
               actionButton={{

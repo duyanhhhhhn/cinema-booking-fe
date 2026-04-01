@@ -1,27 +1,26 @@
-// RoomDetailModal.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Dialog,
   Box,
-  Typography,
   Button,
-  TextField,
-  MenuItem,
+  Dialog,
   IconButton,
+  MenuItem,
+  TextField,
+  Typography,
 } from "@mui/material";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import {
+  CloseRounded,
+  SaveRounded,
+  TheatersRounded,
+} from "@mui/icons-material";
 import { Roboto } from "next/font/google";
+import { toast } from "sonner";
+
 import SeatLayoutBuilder from "./SeatLayoutBuilder";
 import { useUpdateSeatLayoutMutation, useUpdateRoomMutation } from "../room";
 import { Room } from "../room";
-import { toast } from "sonner";
-
-const roboto = Roboto({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "700", "900"],
-});
 
 type SeatType = "STANDARD" | "VIP" | "COUPLE";
 
@@ -40,6 +39,23 @@ interface RoomDetailModalProps {
 
 const roomTypes = ["2D", "3D", "IMAX", "4DX"];
 
+const roboto = Roboto({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "700", "900"],
+});
+
+const seatTypeLabels: Record<SeatType, string> = {
+  STANDARD: "Standard",
+  VIP: "VIP",
+  COUPLE: "Couple",
+};
+
+const seatTypeColors: Record<SeatType, string> = {
+  STANDARD: "#6b7280",
+  VIP: "#ef4444",
+  COUPLE: "#db2777",
+};
+
 export default function RoomDetailModal({
   open,
   onClose,
@@ -48,8 +64,10 @@ export default function RoomDetailModal({
 }: RoomDetailModalProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState("2D");
+
   const [seatLayout, setSeatLayout] = useState<string>("[]");
   const [initialSeatLayout, setInitialSeatLayout] = useState<string>("[]");
+
   const [totalSeats, setTotalSeats] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -62,32 +80,100 @@ export default function RoomDetailModal({
   const updateSeatMutation = useUpdateSeatLayoutMutation();
   const updateRoomMutation = useUpdateRoomMutation();
 
-  // ================= GET ROOM DETAIL =================
+  const isSavingLayout = updateSeatMutation.status === "pending";
+  const isSavingRoom = updateRoomMutation.status === "pending";
+
+  const inputSx = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "12px",
+      backgroundColor: "#ffffff",
+      fontWeight: 700,
+      minHeight: 36,
+    },
+    "& .MuiInputLabel-root": {
+      fontWeight: 700,
+    },
+  };
+
+  const panelCardSx = {
+    borderRadius: "14px",
+    border: "1px solid #e8edf3",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 8px 22px rgba(15,23,42,0.03)",
+  };
+
+  const convertToUISeatLayout = (seatMap: any[]): any[] => {
+    return seatMap.map((row) => {
+      const seats = row.seats.map((seat: any) => ({
+        col: seat.number,
+        type: seat.type || "STANDARD",
+      }));
+
+      return {
+        row: row.rowLabel,
+        type: row.seats?.[0]?.type || "STANDARD",
+        seats,
+      };
+    });
+  };
+
+  const convertToBackendSeatLayout = (layout: any[], prices: SeatPrices) => {
+    return layout.map((row) => {
+      const rowLabel = row.row;
+
+      const seats = row.seats.map((seat: any) => {
+        const number = seat.col;
+        const seatType = seat.type || "STANDARD";
+
+        return {
+          id: null,
+          number,
+          code: `${rowLabel}${number}`,
+          type: seatType,
+          status: "AVAILABLE",
+          price: prices[seatType],
+        };
+      });
+
+      return {
+        rowLabel,
+        seats,
+      };
+    });
+  };
+
   useEffect(() => {
     const fetchRoomDetail = async () => {
       try {
-        const response = await Room.api.get<{
-          data: {
-            id: number;
-            cinemaId: number;
-            name: string;
-            type: string;
-            seatLayout: string;
-            totalSeats: number;
-          };
-        }>({
+        const response = await Room.api.get<any>({
           url: `/rooms/${roomId}`,
         });
 
-        const room = response.data.data;
-        setName(room.name);
-        setType(room.type);
-        setSeatLayout(room.seatLayout || "[]");
-        setInitialSeatLayout(room.seatLayout || "[]");
+        const room = (response as any)?.data?.data || (response as any)?.data;
+
+        if (!room) return;
+
+        setName(room.name || "");
+        setType(room.type || "2D");
         setTotalSeats(room.totalSeats || 0);
+
+        const rawLayout = room.seatLayout || "[]";
+
+        let parsed: any[] = [];
+        try {
+          parsed = JSON.parse(rawLayout);
+        } catch {
+          parsed = [];
+        }
+
+        const uiLayout = convertToUISeatLayout(parsed);
+        const uiString = JSON.stringify(uiLayout);
+
+        setSeatLayout(uiString);
+        setInitialSeatLayout(uiString);
         setHasChanges(false);
       } catch (err) {
-        console.error("Failed to fetch room detail:", err);
+        console.error("Fetch room error:", err);
       }
     };
 
@@ -101,28 +187,53 @@ export default function RoomDetailModal({
   };
 
   const handleSaveLayout = () => {
-    // Nếu không chỉnh sửa gì, giữ layout cũ
-    const layoutToSave = hasChanges ? seatLayout : initialSeatLayout;
+    const layoutToUse = hasChanges ? seatLayout : initialSeatLayout;
+
+    let parsedLayout: any[] = [];
+
+    try {
+      parsedLayout = JSON.parse(layoutToUse);
+    } catch {
+      parsedLayout = [];
+    }
+
+    const seatMap = convertToBackendSeatLayout(parsedLayout, seatPrices);
 
     updateSeatMutation.mutate(
-      { roomId, layout: layoutToSave, seatPrices, totalSeats },
+      {
+        roomId,
+        layout: JSON.stringify(seatMap),
+        seatPrices,
+        totalSeats,
+      },
       {
         onSuccess: () => {
           toast.success("Lưu sơ đồ ghế thành công", {
-            description: "Sơ đồ ghế mới đã được cập nhật cho phòng chiếu.",
+            description: `Sơ đồ ghế của phòng "${name || roomId}" đã được cập nhật.`,
           });
-          setInitialSeatLayout(layoutToSave);
+          setInitialSeatLayout(layoutToUse);
           setHasChanges(false);
         },
-        onError: (error: any) =>
+        onError: (error: any) => {
           toast.error("Lưu sơ đồ ghế thất bại", {
             description: error?.message || "Không thể lưu sơ đồ ghế lúc này.",
-          }),
+          });
+        },
       },
     );
   };
 
   const handleSaveRoomInfo = () => {
+    let parsedLayout: any[] = [];
+
+    try {
+      parsedLayout = JSON.parse(seatLayout);
+    } catch {
+      parsedLayout = [];
+    }
+
+    const seatMap = convertToBackendSeatLayout(parsedLayout, seatPrices);
+
     updateRoomMutation.mutate(
       {
         id: roomId,
@@ -131,286 +242,624 @@ export default function RoomDetailModal({
           name,
           type,
           totalSeats,
-          seatLayout: seatLayout || initialSeatLayout || "[]",
+          seatLayout: JSON.stringify(seatMap),
         },
       },
       {
-        onSuccess: () =>
-          toast.success("Cập nhật phòng thành công", {
-            description: "Thông tin phòng chiếu đã được lưu lại.",
-          }),
-        onError: (error: any) =>
-          toast.error("Cập nhật phòng thất bại", {
-            description:
-              error?.message || "Không thể cập nhật thông tin phòng chiếu.",
-          }),
+        onSuccess: () => {
+          toast.success("Cập nhật phòng chiếu thành công", {
+            description: `Thông tin phòng "${name || roomId}" đã được lưu.`,
+          });
+        },
+        onError: (error: any) => {
+          toast.error("Cập nhật phòng chiếu thất bại", {
+            description: error?.message || "Không thể lưu thông tin phòng chiếu.",
+          });
+        },
       },
     );
+  };
+
+  const parsedLayout = useMemo(() => {
+    try {
+      return seatLayout && seatLayout !== "[]" ? JSON.parse(seatLayout) : [];
+    } catch {
+      return [];
+    }
+  }, [seatLayout]);
+
+  const seatBreakdown = useMemo(() => {
+    const counts: Record<SeatType, number> = {
+      STANDARD: 0,
+      VIP: 0,
+      COUPLE: 0,
+    };
+
+    for (const row of parsedLayout) {
+      for (const seat of row?.seats ?? []) {
+        const seatType = (seat?.type || row?.type || "STANDARD") as SeatType;
+        if (counts[seatType] !== undefined) {
+          counts[seatType] += 1;
+        }
+      }
+    }
+
+    return counts;
+  }, [parsedLayout]);
+
+  const statusText = hasChanges ? "Chưa lưu" : "Đồng bộ";
+  const maxSeatPrice = Math.max(
+    seatPrices.STANDARD,
+    seatPrices.VIP,
+    seatPrices.COUPLE,
+  );
+  const compactSectionSx = {
+    borderRadius: "12px",
+    border: "1px solid #edf1f5",
+    backgroundColor: "#fbfcfe",
+    p: { xs: 1, lg: 1.15 },
   };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="xl"
+      maxWidth={false}
       fullWidth
       PaperProps={{
         className: roboto.className,
         sx: {
-          borderRadius: "32px",
-          border: "1px solid #ececf2",
-          background:
-            "linear-gradient(180deg,#ffffff 0%,#fcfcfd 40%,#f8fafc 100%)",
-          boxShadow: "0 34px 100px rgba(15,23,42,0.14)",
+          width: "min(1760px, calc(100vw - 8px))",
+          maxWidth: "unset",
+          borderRadius: "14px",
+          border: "1px solid #e5eaf1",
+          backgroundColor: "#ffffff",
+          boxShadow: "0 24px 72px rgba(15,23,42,0.12)",
+          height: "calc(100vh - 8px)",
+          maxHeight: "calc(100vh - 8px)",
           overflow: "hidden",
-          fontFamily: '"Roboto","sans-serif"',
         },
       }}
     >
-      <Box
-        display="flex"
-        height="80vh"
-        bgcolor="transparent"
-        sx={{ position: "relative", fontFamily: '"Roboto","sans-serif"' }}
-      >
-        <IconButton
-          onClick={onClose}
-          aria-label="Đóng form thiết lập phòng chiếu"
-          sx={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            zIndex: 5,
-            width: 42,
-            height: 42,
-            border: "1px solid #fecaca",
-            background:
-              "linear-gradient(135deg,rgba(255,255,255,0.98),rgba(254,242,242,0.98))",
-            color: "#dc2626",
-            boxShadow: "0 12px 24px rgba(239,68,68,0.12)",
-            "&:hover": {
-              background:
-                "linear-gradient(135deg,rgba(255,255,255,1),rgba(254,226,226,1))",
-              borderColor: "#fca5a5",
-            },
-          }}
-        >
-          <CloseRoundedIcon sx={{ fontSize: 22 }} />
-        </IconButton>
-
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <Box
-          width={250}
-          p={3}
-          borderRight="1px solid #e5e7eb"
           sx={{
-            background:
-              "linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.92))",
+            display: "flex",
+            alignItems: { xs: "flex-start", lg: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+            borderBottom: "1px solid #eef1f4",
+            px: { xs: 2.5, lg: 3.5 },
+            py: { xs: 1.5, lg: 1.75 },
+            backgroundColor: "#ffffff",
           }}
         >
-          <Typography sx={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.18em", color: "#ef4444" }}>
-            Quản lý phòng
-          </Typography>
-          <Typography sx={{ mt: 1, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em", color: "#18181b" }}>
-            Thiết lập phòng chiếu
-          </Typography>
-          <Typography sx={{ mt: 1.5, fontSize: 14, fontWeight: 500, color: "#6b7280", lineHeight: 1.8 }}>
-            Chỉnh sửa thông tin phòng và lưu lại sơ đồ ghế ngay tại đây.
-          </Typography>
-
-          <Box mt={3} display="flex" flexDirection="column" gap={2}>
+          <Box sx={{ minWidth: 0 }}>
             <Box
               sx={{
-                borderRadius: "22px",
-                border: "1px solid #ececf2",
-                background: "#fff",
-                p: 2,
-                boxShadow: "0 12px 28px rgba(15,23,42,0.05)",
                 display: "flex",
-                flexDirection: "column",
-                gap: 1.6,
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 0.75,
               }}
             >
-              <TextField
-                label="Tên phòng"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                size="small"
-                fullWidth
-                InputLabelProps={{ sx: { fontWeight: 700 } }}
+              <Typography
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "16px",
-                    backgroundColor: "#fafafa",
-                    fontWeight: 800,
-                  },
-                }}
-              />
-
-              <TextField
-                select
-                label="Loại phòng"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                size="small"
-                fullWidth
-                InputLabelProps={{ sx: { fontWeight: 700 } }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "16px",
-                    backgroundColor: "#fafafa",
-                    fontWeight: 800,
-                  },
+                  fontSize: 11,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.22em",
+                  color: "#ef4444",
                 }}
               >
-                {roomTypes.map((t) => (
-                  <MenuItem key={t} value={t}>
-                    {t}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
-
-            <Button
-              variant="outlined"
-              onClick={handleSaveRoomInfo}
-              disabled={updateRoomMutation.isPending}
-              sx={{
-                borderRadius: "18px",
-                fontWeight: 900,
-                py: 1.35,
-                borderColor: "#fca5a5",
-                color: "#dc2626",
-                backgroundColor: "#fff",
-                "&:hover": {
-                  borderColor: "#ef4444",
-                  backgroundColor: "#fff5f5",
-                },
-              }}
-            >
-              {updateRoomMutation.isPending
-                ? "Đang lưu thông tin..."
-                : "Lưu thông tin phòng"}
-            </Button>
-          </Box>
-
-          <Box mt={5}>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={handleSaveLayout}
-              disabled={updateSeatMutation.isPending}
-              sx={{
-                borderRadius: "18px",
-                py: 1.4,
-                fontWeight: 900,
-                background: "linear-gradient(135deg,#ec131e,#ff6548)",
-                boxShadow: "0 18px 40px rgba(236,19,30,0.24)",
-                "&:hover": {
-                  opacity: 0.95,
-                  background: "linear-gradient(135deg,#ec131e,#ff6548)",
-                },
-              }}
-            >
-              {updateSeatMutation.isPending
-                ? "Đang lưu sơ đồ..."
-                : "Lưu sơ đồ ghế"}
-            </Button>
-          </Box>
-        </Box>
-
-        <Box
-          flex={1}
-          p={2.5}
-          sx={{
-            background:
-              "radial-gradient(circle_at_top,rgba(236,19,30,0.04),transparent 24%), linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)",
-          }}
-        >
-          <SeatLayoutBuilder
-            initialLayout={seatLayout ? JSON.parse(seatLayout) : []}
-            onChange={handleSeatChange}
-            seatPrices={seatPrices}
-            initialRows={Array.from({ length: 6 }, (_, i) =>
-              String.fromCharCode(65 + i),
-            )}
-            initialCols={12}
-          />
-        </Box>
-
-        <Box
-          width={270}
-          p={3}
-          borderLeft="1px solid #e5e7eb"
-          sx={{
-            background:
-              "linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.92))",
-          }}
-        >
-          <Typography sx={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.18em", color: "#ef4444" }}>
-            Bảng giá ghế
-          </Typography>
-          <Typography sx={{ mt: 1, fontSize: 24, fontWeight: 900, letterSpacing: "-0.03em", color: "#18181b" }}>
-            Giá theo loại ghế
-          </Typography>
-
-          {(["STANDARD", "VIP", "COUPLE"] as SeatType[]).map((type) => (
-            <Box
-              key={type}
-              mt={2}
-              border="1px solid #e5e7eb"
-              borderRadius="22px"
-              bgcolor="#fff"
-              px={2}
-              py={1.75}
-              boxShadow="0 10px 24px rgba(15,23,42,0.04)"
-            >
-              <Typography sx={{ fontWeight: 900, color: "#18181b" }}>
-                {type}
+                Quản lý phòng chiếu
               </Typography>
               <Typography
                 sx={{
-                  mt: 0.45,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#9ca3af",
+                  fontSize: { xs: 22, lg: 24 },
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                  letterSpacing: "-0.05em",
+                  color: "#18181b",
                 }}
               >
-                Giá áp dụng cho loại ghế này
+                Thiết lập phòng chiếu
               </Typography>
-              <input
-                type="number"
-                value={seatPrices[type]}
-                onChange={(e) =>
-                  setSeatPrices({
-                    ...seatPrices,
-                    [type]: Number(e.target.value),
-                  })
-                }
-                className="mt-3 h-12 w-full rounded-2xl border border-red-100 bg-red-50/60 px-4 py-2 text-right font-black text-zinc-900 outline-none"
-                style={{ fontFamily: "Roboto, sans-serif" }}
-              />
+              {[
+                { label: "Loại", value: type || "—" },
+                { label: "Ghế", value: `${totalSeats}` },
+                { label: "Trạng thái", value: statusText },
+              ].map((item) => (
+                <Box
+                  key={item.label}
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 1,
+                    borderRadius: "999px",
+                    border: "1px solid #e8edf3",
+                    backgroundColor: "#fbfcfe",
+                    px: 1,
+                    py: 0.55,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 10,
+                      fontWeight: 900,
+                      color: "#9ca3af",
+                    }}
+                  >
+                    {item.label}:
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 10,
+                      fontWeight: 900,
+                      color: "#111827",
+                    }}
+                  >
+                    {item.value}
+                  </Typography>
+                </Box>
+              ))}
             </Box>
-          ))}
+          </Box>
 
-          <Box
-            mt={4}
-            border="1px solid rgba(239,68,68,0.14)"
-            borderRadius="24px"
-            bgcolor="#fff"
-            px={2.5}
-            py={2.5}
-            boxShadow="0 12px 28px rgba(239,68,68,0.05)"
+          <IconButton
+            onClick={onClose}
             sx={{
-              background:
-                "linear-gradient(135deg,rgba(239,68,68,0.06),rgba(255,255,255,1))",
+              border: "1px solid #e8edf3",
+              backgroundColor: "#ffffff",
+              color: "#6b7280",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(15,23,42,0.04)",
+              "&:hover": {
+                backgroundColor: "#fff5f5",
+                color: "#ef4444",
+              },
             }}
           >
-            <Typography sx={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.18em", color: "#9ca3af" }}>
-              Tổng số ghế
-            </Typography>
-            <Typography sx={{ mt: 1, fontSize: 34, fontWeight: 900, letterSpacing: "-0.04em", color: "#18181b" }}>
-              {totalSeats}
-            </Typography>
+            <CloseRounded />
+          </IconButton>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            px: { xs: 2.5, lg: 3.5 },
+            py: { xs: 2, lg: 2.5 },
+          }}
+        >
+          <Box sx={{ ...panelCardSx, p: { xs: 1.5, lg: 2 } }}>
+            <Box
+              sx={{
+                display: "grid",
+                gap: 0.85,
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  xl: "minmax(0,1fr) minmax(0,1.25fr)",
+                },
+                alignItems: "start",
+              }}
+            >
+              <Box sx={compactSectionSx}>
+                <Typography
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.18em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Phòng
+                </Typography>
+                <Box
+                  sx={{
+                    mt: 0.8,
+                    display: "grid",
+                    gap: 0.85,
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      md: "minmax(0,1fr) 180px",
+                    },
+                  }}
+                >
+                  <TextField
+                    label="Tên"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    sx={inputSx}
+                  />
+
+                  <TextField
+                    select
+                    label="Loại"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    sx={inputSx}
+                  >
+                    {roomTypes.map((t) => (
+                      <MenuItem key={t} value={t}>
+                        {t}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
+
+                <Box
+                  sx={{
+                    mt: 0.85,
+                    display: "grid",
+                    gap: 0.85,
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      md: "repeat(2, minmax(0, 154px))",
+                    },
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    onClick={handleSaveRoomInfo}
+                    disabled={isSavingRoom}
+                    startIcon={<TheatersRounded />}
+                    sx={{
+                      minHeight: 34,
+                      borderRadius: "10px",
+                      borderColor: "#f1b7b7",
+                      color: "#dc2626",
+                      fontWeight: 900,
+                      fontSize: 11,
+                      px: 1,
+                      "&:hover": {
+                        borderColor: "#ef4444",
+                        backgroundColor: "#fff5f5",
+                      },
+                    }}
+                  >
+                    {isSavingRoom ? "Đang lưu..." : "Lưu phòng"}
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveLayout}
+                    disabled={isSavingLayout}
+                    startIcon={<SaveRounded />}
+                    sx={{
+                      minHeight: 34,
+                      borderRadius: "10px",
+                      backgroundColor: "#ec131e",
+                      boxShadow: "0 8px 18px rgba(236,19,30,0.16)",
+                      fontWeight: 900,
+                      fontSize: 11,
+                      px: 1,
+                      "&:hover": {
+                        backgroundColor: "#d6111b",
+                      },
+                    }}
+                  >
+                    {isSavingLayout ? "Đang lưu..." : "Lưu ghế"}
+                  </Button>
+                </Box>
+              </Box>
+
+              <Box
+                sx={{
+                  ...compactSectionSx,
+                  display: "grid",
+                  gap: 0.85,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.18em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Tuỳ chọn nhanh
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 0.7,
+                  }}
+                >
+                  {[
+                    { label: "ID", value: `#${roomId}`, color: "#9ca3af" },
+                    { label: "Lưu", value: statusText, color: "#ef4444" },
+                    { label: "Std", value: seatBreakdown.STANDARD, color: seatTypeColors.STANDARD },
+                    { label: "VIP", value: seatBreakdown.VIP, color: seatTypeColors.VIP },
+                    { label: "Đôi", value: seatBreakdown.COUPLE, color: seatTypeColors.COUPLE },
+                    { label: "Ghế", value: totalSeats, color: "#ef4444" },
+                  ].map((item) => (
+                    <Box
+                      key={item.label}
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 0.7,
+                        minHeight: 34,
+                        borderRadius: "999px",
+                        border: "1px solid #e8edf3",
+                        backgroundColor: "#ffffff",
+                        px: 1,
+                        py: 0.5,
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.55,
+                          fontSize: 9,
+                          fontWeight: 900,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.14em",
+                          color: "#9ca3af",
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-flex",
+                            height: 8,
+                            width: 8,
+                            borderRadius: "999px",
+                            backgroundColor: item.color,
+                          }}
+                        />
+                        {item.label}
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontSize: 11,
+                          fontWeight: 900,
+                          lineHeight: 1,
+                          color: "#111827",
+                        }}
+                      >
+                        {item.value}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 0.7,
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      md: "repeat(4, minmax(0,1fr))",
+                    },
+                  }}
+                >
+                  {(["STANDARD", "VIP", "COUPLE"] as SeatType[]).map((seatType) => (
+                    <Box
+                      key={seatType}
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "auto minmax(0,1fr)",
+                        alignItems: "center",
+                        gap: 0.65,
+                        borderRadius: "10px",
+                        border: "1px solid #e8edf3",
+                        backgroundColor: "#ffffff",
+                        px: 0.8,
+                        py: 0.65,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          minWidth: 44,
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-flex",
+                            height: 8,
+                            width: 8,
+                            borderRadius: "999px",
+                            backgroundColor: seatTypeColors[seatType],
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: 10,
+                            fontWeight: 900,
+                            color: "#111827",
+                          }}
+                        >
+                          {seatType === "STANDARD"
+                            ? "Std"
+                            : seatType === "COUPLE"
+                              ? "Đôi"
+                              : seatTypeLabels[seatType]}
+                        </Typography>
+                      </Box>
+
+                      <TextField
+                        type="number"
+                        value={seatPrices[seatType]}
+                        onChange={(e) =>
+                          setSeatPrices({
+                            ...seatPrices,
+                            [seatType]: Number(e.target.value),
+                          })
+                        }
+                        size="small"
+                        sx={{
+                          ...inputSx,
+                          "& .MuiOutlinedInput-root": {
+                            ...inputSx["& .MuiOutlinedInput-root"],
+                            minHeight: 32,
+                            fontWeight: 900,
+                            borderRadius: "9px",
+                          },
+                          "& .MuiOutlinedInput-input": {
+                            px: 1.1,
+                            py: 0.85,
+                            fontSize: 13,
+                          },
+                        }}
+                      />
+                    </Box>
+                  ))}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      borderRadius: "10px",
+                      border: "1px solid #f1d2d2",
+                      backgroundColor: "#fffafa",
+                      px: 1,
+                      py: 0.75,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 9,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.18em",
+                        color: "#ef4444",
+                      }}
+                    >
+                      Giá cao nhất
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        color: "#111827",
+                      }}
+                    >
+                      {maxSeatPrice.toLocaleString("vi-VN")} VNĐ
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                mt: 1.25,
+                borderTop: "1px solid #eef1f4",
+                pt: 1.25,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontSize: 18,
+                        lineHeight: 1.1,
+                        fontWeight: 900,
+                        letterSpacing: "-0.04em",
+                        color: "#111827",
+                      }}
+                    >
+                      Sơ đồ ghế
+                    </Typography>
+                    <Typography
+                      sx={{
+                        mt: 0.35,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#6b7280",
+                      }}
+                    >
+                      Vùng thao tác chính được giữ ở dưới để nhìn thấy ghế sớm hơn.
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 0.75,
+                    }}
+                  >
+                      {[
+                      { label: "Hàng", value: parsedLayout.length },
+                      { label: "Ghế", value: totalSeats },
+                    ].map((item) => (
+                      <Box
+                        key={item.label}
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.75,
+                          borderRadius: "999px",
+                          border: "1px solid #e8edf3",
+                          backgroundColor: "#fbfcfe",
+                          px: 0.95,
+                          py: 0.55,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: 9,
+                            fontWeight: 900,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.14em",
+                            color: "#9ca3af",
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: 10,
+                            fontWeight: 900,
+                            color: "#111827",
+                          }}
+                        >
+                          {item.value}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+
+              <Box sx={{ mt: 1.25 }}>
+                <SeatLayoutBuilder
+                  key={`${roomId}-${initialSeatLayout}`}
+                  initialLayout={parsedLayout}
+                  onChange={handleSeatChange}
+                />
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>

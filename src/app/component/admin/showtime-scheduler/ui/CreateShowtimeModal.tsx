@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Close,
   Search,
@@ -12,10 +12,8 @@ import {
   CalendarMonth,
   ArrowBackRounded,
   ArrowForwardRounded,
-  KeyboardArrowDownRounded,
-  KeyboardArrowUpRounded,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { IAdminMovieOption } from "@/types/data/showtime-scheduler";
 import { addDays, notify, todayYMD } from "../helpers/SchedulerLogic";
 
@@ -164,6 +162,27 @@ export default function CreateShowtimeModal({
   onRoomChange,
   submitCreate,
 }: Props) {
+  const movieListRef = useRef<HTMLDivElement | null>(null);
+  const movieSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const [movieSearchState, setMovieSearchState] = useState({
+    roomId: 0,
+    visible: false,
+  });
+  const showMovieSearch =
+    openMoviePicker &&
+    movieSearchState.roomId === form.roomId &&
+    movieSearchState.visible;
+
+  useEffect(() => {
+    if (!openMoviePicker) return;
+    movieListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [form.roomId, openMoviePicker]);
+
+  useEffect(() => {
+    if (!showMovieSearch) return;
+    movieSearchInputRef.current?.focus();
+  }, [showMovieSearch]);
+
   if (!open) return null;
 
   const changeDate = (next: string | ((_current: string) => string)) => {
@@ -174,8 +193,32 @@ export default function CreateShowtimeModal({
   const handleClose = () => {
     if (mCreate.isPending) return;
     setOpenMoviePicker(false);
+    setMovieSearchState({ roomId: 0, visible: false });
     setMovieKeyword("");
     setOpenCreate(false);
+  };
+
+  const handleMovieSearchToggle = () => {
+    if (!form.roomId) {
+      return notify({
+        type: "warning",
+        title: "Chọn phòng trước",
+        desc: "Vui lòng chọn phòng để lọc phim phù hợp.",
+      });
+    }
+
+    setOpenMoviePicker(true);
+    setMovieSearchState((prev) => {
+      const nextVisible =
+        !(prev.roomId === form.roomId && prev.visible);
+
+      if (!nextVisible) setMovieKeyword("");
+
+      return {
+        roomId: form.roomId,
+        visible: nextVisible,
+      };
+    });
   };
 
   return (
@@ -313,56 +356,51 @@ export default function CreateShowtimeModal({
                     Phim được chọn
                   </div>
                   <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-3.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!form.roomId) {
-                          return notify({
-                            type: "warning",
-                            title: "Chọn phòng trước",
-                            desc: "Vui lòng chọn phòng để lọc phim phù hợp.",
-                          });
-                        }
-                        setOpenMoviePicker((prev) => !prev);
-                      }}
-                      className="flex w-full items-center gap-3 text-left transition"
+                    <div
+                      className={`flex w-full items-center ${
+                        selectedMovie ? "gap-3" : "justify-end"
+                      }`}
                     >
-                      <div className="flex h-20 w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                        {selectedMovie?.posterUrl ? (
-                          <img
-                            src={resolveUrl(selectedMovie.posterUrl)}
-                            alt={selectedMovie.title}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
+                      {selectedMovie ? (
+                        <>
+                          <div className="flex h-20 w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                            {selectedMovie.posterUrl ? (
+                              <img
+                                src={resolveUrl(selectedMovie.posterUrl)}
+                                alt={selectedMovie.title}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Movie fontSize="small" className="text-slate-300" />
+                            )}
+                          </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[17px] font-black tracking-[-0.02em] text-slate-950">
-                          {selectedMovie ? selectedMovie.title : "Chọn phim"}
-                        </div>
-                        <div className="mt-1 text-sm leading-6 text-slate-500">
-                          {selectedMovie
-                            ? `${selectedMovie.durationMinutes} phút • ${selectedMovie.status} • ${selectedMovie.format ?? "—"}`
-                            : selectedRoom?.type
-                              ? `Danh sách đã lọc theo phòng ${selectedRoom.type}`
-                              : "Chọn phòng trước để lọc phim"}
-                        </div>
-                      </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[17px] font-black tracking-[-0.02em] text-slate-950">
+                              {selectedMovie.title}
+                            </div>
+                            <div className="mt-1 text-sm leading-6 text-slate-500">
+                              {`${selectedMovie.durationMinutes} phút • ${selectedMovie.status} • ${selectedMovie.format ?? "—"}`}
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
 
-                      <div className="flex items-center gap-2">
-                        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm">
-                          {selectedMovie ? `#${selectedMovie.id}` : "Chọn"}
-                        </div>
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
-                          {openMoviePicker ? (
-                            <KeyboardArrowUpRounded fontSize="small" />
-                          ) : (
-                            <KeyboardArrowDownRounded fontSize="small" />
-                          )}
-                        </div>
+                      <div className="flex items-center">
+                        <button
+                          type="button"
+                          onClick={handleMovieSearchToggle}
+                          className={`flex h-11 w-11 items-center justify-center rounded-2xl border bg-white shadow-sm transition ${
+                            showMovieSearch
+                              ? "border-red-200 text-red-500"
+                              : "border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-500"
+                          }`}
+                          aria-label="Tìm phim"
+                        >
+                          <Search fontSize="small" />
+                        </button>
                       </div>
-                    </button>
+                    </div>
 
                     {openMoviePicker ? (
                       <motion.div
@@ -372,39 +410,34 @@ export default function CreateShowtimeModal({
                         transition={{ duration: 0.18 }}
                         className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
                       >
-                        <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="min-w-0">
-                            <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                              Danh sách phim
-                            </div>
-                            <div className="mt-1 text-[15px] font-black tracking-[-0.02em] text-slate-950">
-                              {selectedRoom?.type
-                                ? `Phim phù hợp với phòng ${selectedRoom.type}`
-                                : "Chọn phòng để lọc phim"}
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                            onClick={() => setOpenMoviePicker(false)}
-                          >
-                            Thu gọn
-                          </button>
-                        </div>
-
                         <div className="p-4">
-                          <div className="flex items-center gap-3 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
-                            <Search fontSize="small" className="text-slate-400" />
-                            <input
-                              value={movieKeyword}
-                              onChange={(e) => setMovieKeyword(e.target.value)}
-                              className="w-full bg-transparent text-sm font-semibold text-slate-800 outline-none"
-                              placeholder="Tìm theo tên phim..."
-                            />
-                          </div>
+                          <AnimatePresence initial={false}>
+                            {showMovieSearch ? (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0, y: -6 }}
+                                animate={{ opacity: 1, height: "auto", y: 0 }}
+                                exit={{ opacity: 0, height: 0, y: -6 }}
+                                transition={{ duration: 0.18 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="flex items-center gap-3 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
+                                  <Search fontSize="small" className="text-slate-400" />
+                                  <input
+                                    ref={movieSearchInputRef}
+                                    value={movieKeyword}
+                                    onChange={(e) => setMovieKeyword(e.target.value)}
+                                    className="w-full bg-transparent text-sm font-semibold text-slate-800 outline-none"
+                                    placeholder="Tìm theo tên phim..."
+                                  />
+                                </div>
+                              </motion.div>
+                            ) : null}
+                          </AnimatePresence>
 
-                          <div className="mt-4 max-h-[360px] overflow-y-auto pr-1">
+                          <div
+                            ref={movieListRef}
+                            className={`${showMovieSearch ? "mt-4" : "mt-1"} max-h-[360px] overflow-y-scroll pr-1.5 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent`}
+                          >
                             {qMovies.isLoading ? (
                               <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
                                 Đang tải phim...

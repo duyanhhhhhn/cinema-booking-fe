@@ -53,11 +53,15 @@ export class Room extends Model {
   //========================== GET ROOM DETAIL FOR CLIENT=========================
   static getRoomDetailClient(roomId: number) {
     return {
-      queryKey: this.queryKeys.roomDetail(roomId),
+      queryKey: this.queryKeys.roomDetailClient(roomId),
       queryFn: async (): Promise<IRoom> => {
-        const res = await this.api.get<{ message: string; data: IRoom }>({
-          url: `/client/rooms/${roomId}`, // endpoint client
+        const res = await this.api.get<{
+          message: string;
+          data: IRoom;
+        }>({
+          url: `/client/rooms/${roomId}`,
         });
+
         return res.data.data;
       },
     };

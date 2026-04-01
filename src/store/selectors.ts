@@ -6,6 +6,8 @@ export const selectBookingStep = (state: RootState) => state.booking.step;
 export const selectBookingSeats = (state: RootState) => state.booking.seats;
 export const selectBookingCombos = (state: RootState) => state.booking.combos;
 export const selectBookingFee = (state: RootState) => state.booking.bookingFee;
+export const selectVoucherDiscountAmount = (state: RootState) =>
+  state.booking.voucherDiscountAmount;
 export const selectHoldExpiresAt = (state: RootState) =>
   state.booking.holdExpiresAt;
 
@@ -22,4 +24,10 @@ export const selectComboPrice = (state: RootState) =>
   );
 
 export const selectTotalPrice = (state: RootState) =>
-  selectSeatPrice(state) + selectComboPrice(state) + state.booking.bookingFee;
+  Math.max(
+    0,
+    selectSeatPrice(state) +
+      selectComboPrice(state) +
+      state.booking.bookingFee -
+      state.booking.voucherDiscountAmount,
+  );
