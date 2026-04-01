@@ -10,8 +10,7 @@ import { createPostSchema } from "@/types/data/post/schema/post";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import PostEditor from "../PostEditor";
 
 export default function EditPostModal({ open, onClose, refetchPost, post }:
     { open: boolean; onClose: () => void, refetchPost: () => void, post: IPost }
@@ -21,16 +20,7 @@ export default function EditPostModal({ open, onClose, refetchPost, post }:
             methods.reset(post);
         }
     }, [post]);
-    const editor = useEditor({
-        extensions: [StarterKit],
-        content: "",
-        immediatelyRender: false
-    });
-    useEffect(() => {
-        if (editor && post?.content) {
-            editor.commands.setContent(post.content);
-        }
-    }, [post, editor]);
+
     const data = post;
     console.log(data);
     const n = useNotification();
@@ -236,8 +226,10 @@ export default function EditPostModal({ open, onClose, refetchPost, post }:
                             </div>
                             <div className="col-span-1 md:col-span-2">
                                 <label className={labelClass}>Content</label>
+                                <div className="h-screen py-5">
+                                    <PostEditor setValue={methods.setValue}></PostEditor>
+                                </div>
                             </div>
-                            <EditorContent editor={editor} />
 
                         </form>
                     </div>

@@ -90,13 +90,16 @@ export class Schedule extends Model {
             }
         }
     }
-    static getThisWeekSchedules() {
+    static getThisWeekSchedules(week) {
         return {
-            queryKey: [this.queryKeys.getThisWeek],
+            queryKey: [this.queryKeys.getThisWeek, week],
             queryFn: () => {
                 return this.api
                     .get<ISchedule[]>({
                         url: '/staff/schedules/week',
+                        params: {
+                            week: week
+                        }
                     })
                     .then((res) => res.data);
             }
