@@ -181,6 +181,32 @@ const menuItems = [
       },
     ],
   },
+  {
+    text: "Phân ca nhân viên",
+    icon: <ArticleIcon />,
+    path: "/admin/staff-schedules",
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
+    children: [
+      {
+        text: "Lịch làm nhân viên",
+        path: "/admin/staff-schedules",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+    ],
+  },
+  {
+    text: "Lịch làm việc của tôi",
+    icon: <ArticleIcon />,
+    path: "/admin/staff-schedules",
+    roles: [UserRole.STAFF],
+    children: [
+      {
+        text: "Lịch làm việc ",
+        path: "/admin/staff-schedules/my",
+        roles: [UserRole.STAFF],
+      },
+    ],
+  },
 ];
 
 // --- Component Sidebar Item ---
