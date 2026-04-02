@@ -24,10 +24,8 @@ export default function EditBanner() {
     const n = useNotification();
     const { mutate: updateBanner } = useUpdateBannerMutation();
     const [previews, setPreviews] = useState<{
-        poster: string | null;
         banner: string | null;
     }>({
-        poster: null,
         banner: null,
     });
     const method = useForm<BannerFormData>({
@@ -42,6 +40,11 @@ export default function EditBanner() {
         mode: "onChange",
     });
     useEffect(() => {
+        if (bannerData?.data?.imageUrl) {
+            setPreviews({
+                banner: bannerData.data.imageUrl
+            });
+        }
         method.reset({
             title: bannerData?.data.title,
             imageUrl: bannerData?.data.imageUrl,
@@ -53,9 +56,7 @@ export default function EditBanner() {
     const onSubmit = (data: BannerFormData) => {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
-            if (key === "posterFile" && value instanceof FileList && value.length > 0) {
-                formData.append("posterFile", value[0]);
-            } else if (key === "bannerFile" && value instanceof FileList && value.length > 0) {
+            if (key === "bannerFile" && value instanceof FileList && value.length > 0) {
                 formData.append("bannerFile", value[0]);
             } else if (value !== undefined && value !== null) {
                 if (typeof value === "object") {
@@ -79,7 +80,7 @@ export default function EditBanner() {
             }
         );
     };
-    const urlPoster = process.env.NEXT_PUBLIC_IMAGE_URL
+    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
     const inputClass =
         "w-full mb-8 bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-600 transition-all duration-200 outline-none placeholder:text-gray-400";
 
@@ -112,6 +113,17 @@ export default function EditBanner() {
         }));
         (method.setValue as any)(fieldName, null);
     };
+    const getImageSrc = () => {
+        if (!previews.banner) return "";
+
+        // If it's already a full URL (blob or http)
+        if (previews.banner.startsWith("blob:") || previews.banner.startsWith("http")) {
+            return previews.banner;
+        }
+
+        return `${urlImage}/${previews.banner}`;
+    };
+
 
     // Cleanup preview URLs
     useEffect(() => {
@@ -119,7 +131,6 @@ export default function EditBanner() {
             if (previews.banner) URL.revokeObjectURL(previews.banner);
         };
     }, [previews]);
-
     return (
         <div className="min-h-screen  font-sans text-gray-900">
             {/* HEADER BREADCRUMB (Thay thế Header cũ) */}
@@ -159,13 +170,13 @@ export default function EditBanner() {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
+                            <a
                                 type="button"
-                                onClick={() => method.reset()}
+                                href="/admin/banners"
                                 className="cursor-pointer px-8 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all bg-white"
                             >
                                 Cancel
-                            </button>
+                            </a>
                             <button type="submit" className="cursor-pointer px-8 py-3 rounded-xl bg-red-600 text-white font-bold shadow-lg shadow-red-500/30 hover:bg-red-700 hover:scale-[1.02] transition-all">
                                 Save Change
                             </button>
@@ -239,7 +250,7 @@ export default function EditBanner() {
                                             <img
                                                 alt="Poster Preview"
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                src={previews.banner}
+                                                src={getImageSrc()}
                                             />
                                             <button
                                                 onClick={(e) => removeImage(e, "bannerFile")}
@@ -251,10 +262,7 @@ export default function EditBanner() {
                                         </div>
                                     ) : (
                                         <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
-                                            <img
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                src={urlPoster + bannerData?.data.imageUrl}
-                                            />
+                                            <span className="text-gray-400">No image</span>
                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
                                                 <span className="text-white mb-2">
                                                     <CloudUploadIcon fontSize="large" />

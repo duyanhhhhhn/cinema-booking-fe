@@ -10,8 +10,8 @@ import { createPostSchema } from "@/types/data/post/schema/post";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import { createEditor } from 'lexical';
+import PostEditor from "../PostEditor";
 
 export default function AddPostModal({ open, onClose, refetchPost }:
     { open: boolean; onClose: () => void, refetchPost: () => void }
@@ -27,14 +27,6 @@ export default function AddPostModal({ open, onClose, refetchPost }:
         mode: "onChange",
         resolver: yupResolver(createPostSchema())
     })
-    const editor = useEditor({
-        extensions: [StarterKit],
-        content: "",
-        immediatelyRender: false,
-        onUpdate: ({ editor }) => {
-            methods.setValue("content", editor.getHTML());
-        }
-    });
     const { mutate: createPost } = useCreatePostMutation()
     const onSubmit = async (data: PostFormData) => {
         const formData = new FormData();
@@ -84,7 +76,12 @@ export default function AddPostModal({ open, onClose, refetchPost }:
         }))
         methods.setValue(fieldName, null as any);
     }
+    const config = {
+        namespace: 'MyEditor',
+        theme: {},
+    };
 
+    const editor = createEditor(config);
     const inputClass =
         "w-full rounded-lg bg-white border border-zinc-300 px-4 py-2.5 text-zinc-900 focus:border-[#ec131e] focus:ring-1 focus:ring-[#ec131e] focus:outline-none placeholder-zinc-400 transition-colors";
     const labelClass = "block text-sm font-medium text-zinc-700 mb-1.5";
@@ -103,7 +100,7 @@ export default function AddPostModal({ open, onClose, refetchPost }:
             className="flex items-center justify-center p-4 overflow-y-auto"
         >
             <Fade in={open}>
-                <div className="relative w-full max-w-4xl rounded-xl bg-white border border-zinc-200 shadow-2xl flex flex-col max-h-[90vh] outline-none font-sans">
+                <div className="relative w-full max-w-4xl rounded-xl bg-slate-100  border border-zinc-200 shadow-2xl flex flex-col max-h-[90vh] outline-none font-sans">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-200 p-6 shrink-0">
                         <h3 className="text-xl font-bold text-zinc-900">Add New Banner</h3>
@@ -226,8 +223,10 @@ export default function AddPostModal({ open, onClose, refetchPost }:
                             </div>
                             <div className="col-span-1 md:col-span-2">
                                 <label className={labelClass}>Content</label>
+                                <div className="h-screen py-5">
+                                    <PostEditor setValue={methods.setValue}></PostEditor>
+                                </div>
                             </div>
-                            <EditorContent editor={editor} />
 
                         </form>
                     </div>
