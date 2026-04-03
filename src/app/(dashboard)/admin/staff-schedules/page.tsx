@@ -3,5 +3,5 @@
 import StaffScheduleManagement from "@/app/component/admin/StaffScheduleManagement"
 
 export default function StaffScheduleManagementPage() {
-    return <StaffScheduleManagement />
+    return <StaffScheduleManagement mode="overview" />
 }

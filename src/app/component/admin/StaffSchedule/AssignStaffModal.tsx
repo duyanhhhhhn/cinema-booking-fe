@@ -1,178 +1,421 @@
-"use client"
+"use client";
+/* eslint-disable @next/next/no-img-element */
 
-import { useNotification } from "@/hooks/useNotification";
-import { initialScheduleData, Schedule, ScheduleFormData, useCreateScheduleMutation } from "@/types/data/staff/schedule/schedule"
-import { Backdrop, Modal } from "@mui/material"
-import { useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import React from "react";
+import {
+  Close,
+  EventAvailable,
+  EventBusy,
+  PersonOutline,
+} from "@mui/icons-material";
+import { Backdrop, Modal } from "@mui/material";
 
-export default function AssignStaffModal({ open, onClose, refetchSchedule }: {
-    open: boolean, onClose: () => void,
-    refetchSchedule: () => void
-}) {
-    const n = useNotification();
-    const methods = useForm<any>({
-        defaultValues: initialScheduleData,
-        mode: "onChange",
-    });
-    const { mutate: createSchedule } = useCreateScheduleMutation();
-    const onSubmit = async (data: ScheduleFormData) => {
-        const formData = new FormData();
-        Object.entries(data).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-                if (typeof value === "object") {
-                    formData.append(key, JSON.stringify(value));
-                } else {
-                    formData.append(key, String(value));
-                }
-            }
-        });
-        createSchedule(formData, {
-            onSuccess: () => {
-                onClose();
-                n.success("Success");
-                methods.reset();
-                refetchSchedule();
-            },
-            onError: (error) => {
-                n.error(error.message);
-            },
-        });
-    };
+import type {
+  IStaffScheduleItem,
+  ScheduleFormData,
+} from "@/types/data/staff/schedule/schedule";
+import { ScheduleStatus } from "@/types/data/staff/schedule/schedule";
+import type { IStaffShiftTemplate } from "@/types/data/staff/workshift";
 
-    const staff = useQuery(Schedule.getAllStaff());
-    const data = staff?.data || [];
-    const shift = useQuery(Schedule.getAllShift());
-    const shiftData = shift?.data || []
-    return <Modal open={open}
-        onClose={onClose}
-        closeAfterTransition
-        slots={{ backdrop: Backdrop }}
-        slotProps={{
-            backdrop: {
-                timeout: 500,
-                className: "bg-black/60 backdrop-blur-sm",
-            },
-        }}>
-        <div>
-            <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-                data-purpose="edit-shift-modal"
-            >
-                <div className="bg-cinema-dark w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
-                    {/* Modal Header */}
-                    <div className="p-6 border-b border-slate-700 flex items-center justify-between bg-slate-800/50">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <i className="w-5 h-5 text-cinema-red" data-lucide="edit-3" />
-                            Chi tiết Phân ca
-                        </h3>
-                        <button className="text-slate-400 hover:text-white transition">
-                            <i className="w-6 h-6" data-lucide="x" />
-                        </button>
+import {
+  formatDateLong,
+  formatShiftRange,
+  getInitials,
+  getPositionLabel,
+  getStatusMeta,
+  isFutureOrToday,
+  resolveMediaUrl,
+} from "./staffScheduleUtils";
+import {
+  staffScheduleRoboto,
+  staffScheduleSurface,
+} from "./staffScheduleTheme";
+
+export interface StaffScheduleOption {
+  id: number;
+  avatarUrl?: string | null;
+  cinemaId?: number | string | null;
+  cinemaName?: string | null;
+  fullName: string;
+  position?: string | null;
+  roleName?: string | null;
+}
+
+interface AssignStaffModalProps {
+  open: boolean;
+  onClose: () => void;
+  form: ScheduleFormData;
+  onChange: (_patch: Partial<ScheduleFormData>) => void;
+  onSubmit: () => void;
+  shifts: IStaffShiftTemplate[];
+  staffOptions: StaffScheduleOption[];
+  selectedSchedule?: IStaffScheduleItem | null;
+  submitting?: boolean;
+}
+
+const fieldClass =
+  "h-11 w-full rounded-none border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-red-600 focus:ring-0";
+
+export default function AssignStaffModal({
+  open,
+  onClose,
+  form,
+  onChange,
+  onSubmit,
+  shifts,
+  staffOptions,
+  selectedSchedule,
+  submitting = false,
+}: AssignStaffModalProps) {
+  const selectedStaff =
+    staffOptions.find((item) => Number(item.id) === Number(form.staffId || 0)) ??
+    null;
+  const selectedShift =
+    shifts.find((item) => Number(item.id) === Number(form.shiftId || 0)) ?? null;
+
+  const actionStatus =
+    form.status === ScheduleStatus.CANCELLED
+      ? ScheduleStatus.CANCELLED
+      : ScheduleStatus.CONFIRMED;
+  const statusMeta = getStatusMeta(actionStatus);
+  const currentStatusMeta = getStatusMeta(selectedSchedule?.status);
+
+  const canCancel = Boolean(selectedSchedule);
+  const canSubmit =
+    Number(form.staffId || 0) > 0 &&
+    Number(form.shiftId || 0) > 0 &&
+    Boolean(form.workDate) &&
+    isFutureOrToday(form.workDate) &&
+    (actionStatus !== ScheduleStatus.CANCELLED || canCancel);
+
+  const submitText =
+    actionStatus === ScheduleStatus.CANCELLED
+      ? "Huỷ ca làm"
+      : selectedSchedule
+        ? "Cập nhật quyết định"
+        : "Chốt ca làm";
+
+  const selectedStaffAvatar = resolveMediaUrl(selectedStaff?.avatarUrl);
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      closeAfterTransition
+      slots={{ backdrop: Backdrop }}
+      slotProps={{
+        backdrop: {
+          timeout: 220,
+          className: "bg-slate-950/45 backdrop-blur-[2px]",
+        },
+      }}
+    >
+      <div
+        className={`${staffScheduleRoboto.className} flex min-h-full items-center justify-center p-4`}
+      >
+        <div className="w-full max-w-5xl">
+          <div
+            className={`${staffScheduleSurface} overflow-hidden rounded-none border border-slate-200 shadow-none`}
+          >
+            <div className="border-b border-slate-200 bg-white px-6 py-5">
+              <div className="flex items-start justify-between gap-5">
+                <div>
+                  <h3 className="text-[28px] font-black tracking-[-0.03em] text-slate-900">
+                    Quyết định phân ca
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-none border border-red-600 bg-red-600 text-white transition hover:bg-red-700"
+                >
+                  <Close fontSize="small" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-6 px-6 py-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <section className="space-y-5">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-none border border-slate-200 bg-white p-4">
+                    <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                      Nhân viên
+                    </label>
+                    <div className="relative">
+                      <PersonOutline className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <select
+                        value={Number(form.staffId || 0)}
+                        onChange={(event) =>
+                          onChange({ staffId: Number(event.target.value) || null })
+                        }
+                        className={`${fieldClass} pl-10`}
+                      >
+                        <option value={0}>Chọn nhân viên</option>
+                        {staffOptions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.fullName}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    {/* Modal Body */}
-                    <form className="p-6 space-y-4" onSubmit={methods.handleSubmit(onSubmit)}>
-                        <select className="text-white" required
-                            {...methods.register("staff_id")}>
-                            <option selected value="" className="bg-gray"
-                            >Select staff</option>
-                            {data.map((item) => (
-                                <option value={item.id} className="bg-gray-500">
-                                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700">
-                                        <img
-                                            alt="User"
-                                            className="w-8 h-8 rounded-full"
-                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNKJ7YqH6k2FQWqInvKis0tdxEPYyYhfAEHMEhDYwm2AUnKNeFRfRxagm-oRFWekPFFSsnDz0rX2bnDT2apKvdH0O1015AwM4c-cf9kFqEs6hWmKF2rYUS6HLFgKPC-AHcEwNipo2wGLo5Q6xeVtddnbg2qDSjffp3wLzEj_INwaykDX0zmwF4LFCmzvfcwhJPe65p01LcxLljBfxLJ-DfGBP3H5zgrKDyuH1S8DG7Mb_tmvh0HW8vt8XAfhf9qynf-POKr4B0WF4j"
-                                        />
-                                        <span className="text-sm font-medium text-white">
-                                            {item.fullName} ({item.roleName})
-                                        </span>
-                                    </div>
-                                </option>
-                            ))}
-                        </select>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    Ngày làm việc
-                                </label>
-                                <input
-                                    className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg"
-                                    type="date"
-                                    defaultValue="2026-03-15"
-                                    {...methods.register("work_date")}
-                                />
+
+                    {selectedStaff ? (
+                      <div className="mt-3 flex items-center gap-3 rounded-none border border-slate-200 bg-white p-3">
+                        {selectedStaffAvatar ? (
+                          <img
+                            alt={selectedStaff.fullName}
+                            src={selectedStaffAvatar}
+                            className="h-11 w-11 rounded-none border border-slate-200 object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-11 w-11 items-center justify-center rounded-none border border-slate-200 bg-slate-100 text-sm font-black text-slate-700">
+                            {getInitials(selectedStaff.fullName)}
+                          </div>
+                        )}
+
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-bold text-slate-900">
+                            {selectedStaff.fullName}
+                          </div>
+                          <div className="mt-1 truncate text-xs text-slate-500">
+                            {getPositionLabel(selectedStaff.position)}
+                            {selectedStaff.cinemaName
+                              ? ` • ${selectedStaff.cinemaName}`
+                              : ""}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="rounded-none border border-slate-200 bg-white p-4">
+                    <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                      Ngày làm việc
+                    </label>
+                    <input
+                      type="date"
+                      value={form.workDate || ""}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(event) => onChange({ workDate: event.target.value })}
+                      className={fieldClass}
+                    />
+                    <div className="mt-3 rounded-none border border-slate-200 bg-white px-3 py-3 text-sm text-slate-600">
+                      {form.workDate
+                        ? formatDateLong(form.workDate)
+                        : "Chưa chọn ngày làm"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-none border border-slate-200 bg-white p-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                      Ca làm mẫu
+                    </div>
+
+                    {selectedShift ? (
+                      <div className="rounded-none border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+                        {formatShiftRange(selectedShift)}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {shifts.map((shift) => {
+                      const active = Number(form.shiftId || 0) === Number(shift.id);
+
+                      return (
+                        <button
+                          key={shift.id}
+                          type="button"
+                          onClick={() => onChange({ shiftId: shift.id })}
+                          className={`rounded-none border px-4 py-4 text-left transition ${
+                            active
+                              ? "border-red-600 bg-red-600 text-white"
+                              : "border-slate-200 bg-white hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className={`text-sm font-black ${active ? "text-white" : "text-slate-900"}`}>
+                              {shift.name}
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    Ca làm việc
-                                </label>
-                                {
-                                    <select {...methods.register("shift_id")} required
-                                        className="w-full bg-slate-900 border-slate-700 text-white text-sm rounded-lg">
-                                        <option selected>Chọn ca làm</option>
-                                        {shiftData.map((item) => (
-                                            <option value={item.id}>{item.name} ({item.startTime} - {item.endTime})</option>
-                                        ))}
-                                    </select>
-                                }
-                            </div>
+                            <span
+                              className={`h-2.5 w-2.5 ${
+                                active ? "bg-white" : "bg-slate-300"
+                              }`}
+                            />
+                          </div>
+                          <div className={`mt-2 text-xs font-medium ${active ? "text-white" : "text-slate-500"}`}>
+                            {formatShiftRange(shift)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-none border border-slate-200 bg-white p-4">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                    Quyết định của quản lý
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => onChange({ status: ScheduleStatus.CONFIRMED })}
+                      className={`rounded-none border p-4 text-left transition ${
+                        actionStatus === ScheduleStatus.CONFIRMED
+                          ? "border-red-600 bg-red-600"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-none border ${actionStatus === ScheduleStatus.CONFIRMED ? "border-white bg-white text-red-600" : "border-red-600 bg-red-600 text-white"}`}>
+                          <EventAvailable fontSize="small" />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Trạng thái
-                            </label>
-                            <div className="flex gap-4">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input className="w-4 h-4 text-cinema-gold focus:ring-cinema-gold bg-slate-800 border-slate-600"
-                                        type="radio"
-                                        {...methods.register("status")}
-                                        value={"ASSIGNED"}
-                                    />
-                                    <span className="text-sm text-slate-300 group-hover:text-white transition">
-                                        Chờ xác nhận
-                                    </span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        className="w-4 h-4 text-cinema-success focus:ring-cinema-success bg-slate-800 border-slate-600"
-                                        type="radio"
-                                        {...methods.register("status")}
-                                        value={"CONFIRMED"}
-                                    />
-                                    <span className="text-sm text-slate-300 group-hover:text-white transition">
-                                        Đã chốt
-                                    </span>
-                                </label>
-                            </div>
+                          <div className={`text-sm font-black ${actionStatus === ScheduleStatus.CONFIRMED ? "text-white" : "text-slate-900"}`}>
+                            Chốt lịch chính thức
+                          </div>
                         </div>
-                        <div className="pt-4 flex flex-col gap-3">
-                            <div className="flex gap-3">
-                                <button
-                                    className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition"
-                                    type="submit"
-                                >
-                                    Lưu thay đổi
-                                </button>
-                                <button
-                                    onClick={onClose}
-                                    className="px-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-lg transition"
-                                    type="button"
-                                >
-                                    Hủy
-                                </button>
-                            </div>
-                            <button
-                                className="w-full text-slate-500 hover:text-red-400 text-xs font-bold flex items-center justify-center gap-1 transition mt-2"
-                                type="button"
-                            >
-                                <i className="w-3 h-3" data-lucide="trash-2" />
-                                XÓA CA LÀM NÀY
-                            </button>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        canCancel && onChange({ status: ScheduleStatus.CANCELLED })
+                      }
+                      disabled={!canCancel}
+                      className={`rounded-none border p-4 text-left transition ${
+                        actionStatus === ScheduleStatus.CANCELLED && canCancel
+                          ? "border-red-600 bg-red-600"
+                          : "border-slate-200 bg-white"
+                      } ${canCancel ? "hover:border-slate-300" : "cursor-not-allowed opacity-45"}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-none border ${actionStatus === ScheduleStatus.CANCELLED && canCancel ? "border-white bg-white text-red-600" : "border-red-600 bg-red-600 text-white"}`}>
+                          <EventBusy fontSize="small" />
                         </div>
-                    </form>
+                        <div>
+                          <div className={`text-sm font-black ${actionStatus === ScheduleStatus.CANCELLED && canCancel ? "text-white" : "text-slate-900"}`}>
+                            Huỷ ca hiện có
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
+              </section>
+
+              <aside className="space-y-4">
+                <div className="rounded-none border border-slate-200 bg-white p-4">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                    Tóm tắt hành động
+                  </div>
+
+                  <div className="mt-4">
+                    <span
+                      className={`inline-flex items-center rounded-none px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${statusMeta.lightBadgeClass}`}
+                    >
+                      {statusMeta.label}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-3 rounded-none border border-slate-200 bg-white p-4">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400">
+                        Nhân viên
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-slate-900">
+                        {selectedStaff?.fullName || "Chưa chọn nhân viên"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400">
+                        Ngày làm
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-slate-900">
+                        {form.workDate
+                          ? formatDateLong(form.workDate)
+                          : "Chưa chọn ngày"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400">
+                        Ca làm
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-slate-900">
+                        {selectedShift
+                          ? `${selectedShift.name} • ${formatShiftRange(selectedShift)}`
+                          : "Chưa chọn ca"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-none border border-slate-200 bg-white p-4">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                    Lịch đang được chọn
+                  </div>
+
+                  {selectedSchedule ? (
+                    <div className="mt-4 rounded-none border border-slate-200 bg-white p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-black text-slate-900">
+                            {selectedSchedule.shift.name}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {formatShiftRange(selectedSchedule.shift)}
+                          </div>
+                        </div>
+                        <span
+                          className={`inline-flex items-center rounded-none px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${currentStatusMeta.lightBadgeClass}`}
+                        >
+                          {currentStatusMeta.label}
+                        </span>
+                      </div>
+                      <div className="mt-3 text-sm text-slate-700">
+                        {formatDateLong(selectedSchedule.workDate)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-none border border-dashed border-slate-300 bg-white px-4 py-6 text-sm text-slate-500">
+                      Tạo mới
+                    </div>
+                  )}
+                </div>
+              </aside>
             </div>
+
+            <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-end">
+              {!isFutureOrToday(form.workDate) && form.workDate ? (
+                <div className="mr-auto text-sm text-amber-700">
+                  Không thể thao tác lịch cho ngày đã qua.
+                </div>
+              ) : <div className="mr-auto" />}
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-11 rounded-none border border-red-600 bg-red-600 px-5 text-sm font-bold text-white transition hover:bg-red-700"
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                disabled={!canSubmit || submitting}
+                onClick={onSubmit}
+                className="h-11 rounded-none border border-red-600 bg-red-600 px-5 text-sm font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+              >
+                {submitting ? "Đang xử lý..." : submitText}
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
     </Modal>
+  );
 }
