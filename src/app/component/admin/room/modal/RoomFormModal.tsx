@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Dialog,
   DialogTitle,
@@ -13,8 +12,8 @@ import {
 } from "@mui/material";
 import { Roboto } from "next/font/google";
 import { useState } from "react";
-import { useCreateRoomMutation } from "../room";
-import { IRoomRequest } from "../type";
+import { Room, useCreateRoomMutation } from "../room";
+import { IRoom, IRoomRequest } from "../type";
 import { toast } from "sonner";
 
 const roboto = Roboto({
@@ -31,7 +30,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   cinemas: Cinema[];
-  onCreated?: (_room: any) => void;
+  onCreated?: (_room: IRoom) => void;
 }
 
 const roomTypes = ["2D", "3D", "IMAX", "4DX"];
@@ -48,6 +47,28 @@ export default function RoomFormModal({
 
   const createMutation = useCreateRoomMutation();
 
+  const sleep = (ms: number) =>
+    new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+
+  const waitForRoomDetail = async (roomId: number) => {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      try {
+        const response = await Room.api.get<{ message: string; data: IRoom }>({
+          url: `/rooms/${roomId}`,
+        });
+
+        return response.data.data;
+      } catch (error) {
+        if (attempt === 5) throw error;
+        await sleep(500);
+      }
+    }
+
+    throw new Error("Room detail is not ready yet.");
+  };
+
   const handleSubmit = () => {
     if (!cinemaId) return;
 
@@ -57,15 +78,34 @@ export default function RoomFormModal({
       type,
       totalSeats: 0,
       seatLayout: "[]",
+      status: 1,
     };
 
     createMutation.mutate(payload, {
-      onSuccess: (res) => {
+      onSuccess: async (res) => {
         toast.success("Tạo phòng chiếu thành công", {
           description: `Phòng "${name}" đã được tạo và sẵn sàng thiết lập sơ đồ ghế.`,
         });
+        const createdRoomId = Number((res as Partial<IRoom>)?.id);
+        let roomForDetail = res;
+
+        if (Number.isFinite(createdRoomId) && createdRoomId > 0) {
+          try {
+            roomForDetail = await waitForRoomDetail(createdRoomId);
+          } catch (error: any) {
+            toast.warning(
+              "PhÃ²ng Ä‘Ã£ táº¡o, nhÆ°ng dá»¯ liá»‡u chi tiáº¿t chÆ°a sáºµn sÃ ng",
+              {
+                description:
+                  error?.message ||
+                  "Báº¡n cÃ³ thá»ƒ Ä‘Ã³ng modal vÃ  má»Ÿ láº¡i phÃ²ng sau vÃ i giÃ¢y.",
+              },
+            );
+          }
+        }
+
         if (onCreated) {
-          onCreated(res);
+          onCreated(roomForDetail);
         }
       },
       onError: (error: any) => {
@@ -96,10 +136,26 @@ export default function RoomFormModal({
       }}
     >
       <DialogTitle sx={{ px: 3, pt: 3, pb: 1.5 }}>
-        <Typography sx={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.18em", color: "#ef4444" }}>
+        <Typography
+          sx={{
+            fontSize: 11,
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: "0.18em",
+            color: "#ef4444",
+          }}
+        >
           Quản lý phòng chiếu
         </Typography>
-        <Typography sx={{ mt: 1, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em", color: "#18181b" }}>
+        <Typography
+          sx={{
+            mt: 1,
+            fontSize: 28,
+            fontWeight: 900,
+            letterSpacing: "-0.04em",
+            color: "#18181b",
+          }}
+        >
           Tạo phòng chiếu mới
         </Typography>
       </DialogTitle>
@@ -112,7 +168,11 @@ export default function RoomFormModal({
             mt: 1,
           }}
         >
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, lineHeight: 1.8 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontWeight: 500, lineHeight: 1.8 }}
+          >
             Tạo phòng chiếu trước, sau đó bạn sẽ thiết lập sơ đồ ghế.
           </Typography>
 

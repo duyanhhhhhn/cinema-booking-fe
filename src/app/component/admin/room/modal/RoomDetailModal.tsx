@@ -8,10 +8,13 @@ import {
   Button,
   TextField,
   MenuItem,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import SeatLayoutBuilder from "./SeatLayoutBuilder";
 import { useUpdateSeatLayoutMutation, useUpdateRoomMutation } from "../room";
 import { Room } from "../room";
+import { toast } from "sonner";
 
 type SeatType = "STANDARD" | "VIP" | "COUPLE";
 
@@ -36,8 +39,12 @@ export default function RoomDetailModal({
   roomId,
   cinemaId,
 }: RoomDetailModalProps) {
+  const [isInitializing, setIsInitializing] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("2D");
+
+  // ✅ NEW: status state (0 | 1)
+  const [status, setStatus] = useState<number>(1);
 
   const [seatLayout, setSeatLayout] = useState<string>("[]");
   const [initialSeatLayout, setInitialSeatLayout] = useState<string>("[]");
@@ -53,6 +60,11 @@ export default function RoomDetailModal({
 
   const updateSeatMutation = useUpdateSeatLayoutMutation();
   const updateRoomMutation = useUpdateRoomMutation();
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
 
   // ================= BE → UI =================
   const convertToUISeatLayout = (seatMap: any[]): any[] => {
@@ -99,18 +111,37 @@ export default function RoomDetailModal({
   // ================= FETCH ROOM =================
   useEffect(() => {
     const fetchRoomDetail = async () => {
-      try {
-        const response = await Room.api.get<any>({
-          url: `/rooms/${roomId}`,
-        });
+      if (!roomId) return;
 
-        // fix TS unknown
-        const room = (response as any)?.data?.data || (response as any)?.data;
+      setIsInitializing(true);
+
+      try {
+        let room: any = null;
+
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          try {
+            const response = await Room.api.get<any>({
+              url: `/rooms/${roomId}`,
+            });
+
+            room =
+              (response as any)?.data?.data || (response as any)?.data || null;
+
+            if (room) break;
+          } catch (error) {
+            if (attempt === 5) throw error;
+            await sleep(500);
+          }
+        }
 
         if (!room) return;
 
         setName(room.name || "");
         setType(room.type || "2D");
+
+        // ✅ NEW: set status từ BE
+        setStatus(room.status ?? 1);
+
         setTotalSeats(room.totalSeats || 0);
 
         const rawLayout = room.seatLayout || "[]";
@@ -122,7 +153,6 @@ export default function RoomDetailModal({
           parsed = [];
         }
 
-        // ✅ convert BE → UI
         const uiLayout = convertToUISeatLayout(parsed);
 
         const uiString = JSON.stringify(uiLayout);
@@ -132,6 +162,8 @@ export default function RoomDetailModal({
         setHasChanges(false);
       } catch (err) {
         console.error("Fetch room error:", err);
+      } finally {
+        setIsInitializing(false);
       }
     };
 
@@ -147,6 +179,8 @@ export default function RoomDetailModal({
 
   // ================= SAVE LAYOUT =================
   const handleSaveLayout = () => {
+    if (isInitializing) return;
+
     const layoutToUse = hasChanges ? seatLayout : initialSeatLayout;
 
     let parsedLayout: any[] = [];
@@ -168,17 +202,21 @@ export default function RoomDetailModal({
       },
       {
         onSuccess: () => {
-          alert("Saved layout!");
+          toast.success("Saved layout successfully");
           setInitialSeatLayout(layoutToUse);
           setHasChanges(false);
         },
-        onError: () => alert("Save failed"),
+        onError: () => {
+          toast.error("Save layout failed ❌");
+        },
       },
     );
   };
 
   // ================= SAVE ROOM =================
   const handleSaveRoomInfo = () => {
+    if (isInitializing) return;
+
     let parsedLayout: any[] = [];
 
     try {
@@ -189,16 +227,29 @@ export default function RoomDetailModal({
 
     const seatMap = convertToBackendSeatLayout(parsedLayout, seatPrices);
 
-    updateRoomMutation.mutate({
-      id: roomId,
-      payload: {
-        cinemaId,
-        name,
-        type,
-        totalSeats,
-        seatLayout: JSON.stringify(seatMap),
+    updateRoomMutation.mutate(
+      {
+        id: roomId,
+        payload: {
+          cinemaId,
+          name,
+          type,
+          totalSeats,
+          seatLayout: JSON.stringify(seatMap),
+          status,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          toast.success("Room updated successfully ✅");
+        },
+        onError: (error: any) => {
+          toast.error("Room update failed ❌", {
+            description: error?.message || "Unknown error",
+          });
+        },
+      },
+    );
   };
 
   // ================= PARSE FOR BUILDER =================
@@ -241,7 +292,23 @@ export default function RoomDetailModal({
                 </MenuItem>
               ))}
             </TextField>
-            <Button variant="outlined" onClick={handleSaveRoomInfo}>
+
+            {/* ✅ STATUS TOGGLE */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={status === 1}
+                  onChange={(e) => setStatus(e.target.checked ? 1 : 0)}
+                />
+              }
+              label={status === 1 ? "ACTIVE" : "INACTIVE"}
+            />
+
+            <Button
+              variant="outlined"
+              onClick={handleSaveRoomInfo}
+              disabled={isInitializing || updateRoomMutation.isPending}
+            >
               Save Room Info
             </Button>
           </Box>
@@ -251,12 +318,13 @@ export default function RoomDetailModal({
               variant="contained"
               fullWidth
               onClick={handleSaveLayout}
+              disabled={isInitializing || updateSeatMutation.isPending}
               sx={{
                 backgroundColor: "#ec131e",
                 "&:hover": { backgroundColor: "#c81018" },
               }}
             >
-              Save Layout
+              {isInitializing ? "Loading..." : "Save Layout"}
             </Button>
           </Box>
         </Box>
