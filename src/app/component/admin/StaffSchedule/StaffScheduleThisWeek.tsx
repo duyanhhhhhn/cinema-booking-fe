@@ -1,138 +1,375 @@
-"use client"
+"use client";
+/* eslint-disable @next/next/no-img-element */
 
-import ISchedule, { ScheduleStatus } from "@/types/data/staff/schedule/schedule";
-import { Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material"
+import React, { useEffect, useMemo, useState } from "react";
+import { AddCircleOutline, CalendarMonth } from "@mui/icons-material";
+
+import type { IStaffScheduleItem } from "@/types/data/staff/schedule/schedule";
+import type { ICinema } from "@/types/data/cinema/types";
+
+import type { StaffScheduleOption } from "./AssignStaffModal";
+import {
+  createCellKey,
+  formatShiftRange,
+  getCinemaNameById,
+  getInitials,
+  getPositionLabel,
+  getStatusMeta,
+  isShiftActiveAt,
+  isTodayIso,
+  normalizeNumber,
+  resolveMediaUrl,
+  type WeekDay,
+} from "./staffScheduleUtils";
+import { staffScheduleRoboto, staffScheduleSurface } from "./staffScheduleTheme";
 
 interface StaffScheduleTableProps {
-    schedule: ISchedule[],
-    refetchSchedule: () => void
+  weekDays: WeekDay[];
+  rows: StaffScheduleOption[];
+  schedules: IStaffScheduleItem[];
+  schedulesByCell: Map<string, IStaffScheduleItem[]>;
+  cinemas?: ICinema[];
+  emptyTitle?: string;
+  emptyDescription?: string;
+  interactionHint?: string;
+  interactive?: boolean;
+  highlightStaffId?: number | null;
+  hideCancelledCards?: boolean;
+  onOpenCell: (
+    _staff: StaffScheduleOption,
+    _workDate: string,
+    _schedule?: IStaffScheduleItem | null,
+  ) => void | undefined;
 }
 
-export default function StaffScheduleThisWeek({ schedule, refetchSchedule }: StaffScheduleTableProps) {
-    const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL + "/media";
-    const getWeekDays = () => {
-        const today = new Date();
-        const day = today.getDay();
+export default function StaffScheduleThisWeek({
+  weekDays,
+  rows,
+  schedules,
+  schedulesByCell,
+  cinemas = [],
+  emptyTitle = "Chưa có nhân viên phù hợp với bộ lọc",
+  emptyDescription = "",
+  interactionHint = "",
+  interactive = true,
+  highlightStaffId = null,
+  hideCancelledCards = false,
+  onOpenCell,
+}: StaffScheduleTableProps) {
+  const [now, setNow] = useState(() => new Date());
 
-        // tính Monday
-        const diff = day === 0 ? -6 : 1 - day;
-        const monday = new Date(today);
-        monday.setDate(today.getDate() + diff);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 60 * 1000);
 
-        const result = [];
+    return () => window.clearInterval(timer);
+  }, []);
 
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(monday);
-            d.setDate(monday.getDate() + i);
+  const dayStats = useMemo(() => {
+    const map = new Map<
+      string,
+      { assigned: number; confirmed: number; cancelled: number }
+    >();
 
-            result.push({
-                date: d,
-                dayName: d.toLocaleDateString("vi-VN", { weekday: "long" }), // T2, T3...
-                fullDate: d.toLocaleDateString("vi-VN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                }).replace("-", "/"),
-            });
-        }
+    weekDays.forEach((day) => {
+      map.set(day.iso, { assigned: 0, confirmed: 0, cancelled: 0 });
+    });
 
-        return result;
-    };
-    const weekDays = getWeekDays();
-    if (!schedule) {
-        return <div className="p-6 text-center text-slate-400">Không có lịch làm việc nào trong tuần này.</div>;
-    }
-    return <>
-        <TableContainer>
-            <Table>
-                <TableHead>
-                    <TableRow className="bg-gray-500">
-                        <TableCell className="p-5 font-bold bg-gray-500 text-xs tracking-widest border-r border-slate-700 flex items-center">
-                            <span className="text-white">Nhân viên</span>
-                        </TableCell>
-                        {weekDays.map((day, index) => (
-                            <TableCell key={"week" + index} className="p-4 text-center bg-gray-500 border-r border-slate-700">
-                                <span className="block text-white font-bold text-sm">{day.dayName}</span>
-                                <span className="text-xs text-slate-400">{day.fullDate}</span>
-                            </TableCell>
-                        ))}
+    schedules.forEach((item) => {
+      const current = map.get(item.workDate);
+      if (!current) return;
 
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {schedule && schedule.length > 0 ? (schedule.map((item) => (
-                        <TableRow key={item.id}>
-                            <TableCell className="p-5 border-r border-slate-700 flex items-center gap-3 bg-slate-800/20 group-hover:bg-slate-800/40 transition">
-                                <img
-                                    alt="Avatar"
-                                    className="w-11 h-11 rounded-full border-2 border-slate-600 shadow-sm"
-                                    src={`${urlImage}/${item.staff.avatarUrl}`}
-                                />
-                                <div>
-                                    <p className="text-sm font-bold text-white leading-tight">
-                                        {item.staff.fullName}
-                                    </p>
-                                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 mt-1 uppercase tracking-tight">
-                                        {item.staff.roleName}
+      if (item.status === "ASSIGNED") current.assigned += 1;
+      if (item.status === "CONFIRMED") current.confirmed += 1;
+      if (item.status === "CANCELLED") current.cancelled += 1;
+    });
+
+    return map;
+  }, [schedules, weekDays]);
+
+  if (!rows.length) {
+    return (
+      <div
+        className={`${staffScheduleRoboto.className} ${staffScheduleSurface} px-6 py-14 text-center`}
+      >
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-none border border-slate-200 bg-white text-slate-400">
+          <CalendarMonth />
+        </div>
+        <h3 className="mt-4 text-xl font-black text-slate-900">{emptyTitle}</h3>
+        {emptyDescription ? (
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">
+            {emptyDescription}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${staffScheduleRoboto.className} ${staffScheduleSurface} overflow-hidden`}>
+      <div className="overflow-x-auto">
+        <div className="min-w-[1540px]">
+          <div
+            className="grid border-b border-slate-200 bg-white"
+            style={{ gridTemplateColumns: "240px repeat(7, minmax(185px, 1fr))" }}
+          >
+            <div className="sticky left-0 z-20 border-r border-slate-200 bg-white px-5 py-4">
+              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Nhân viên
+              </div>
+              {interactionHint ? (
+                <div className="mt-1 text-sm font-medium text-slate-600">
+                  {interactionHint}
+                </div>
+              ) : null}
+            </div>
+
+            {weekDays.map((day) => {
+              const stat = dayStats.get(day.iso) ?? {
+                assigned: 0,
+                confirmed: 0,
+                cancelled: 0,
+              };
+              const isToday = isTodayIso(day.iso, now);
+
+              return (
+                <div
+                  key={day.iso}
+                  className={`border-r px-4 py-4 last:border-r-0 ${
+                    isToday
+                      ? "border-red-200 bg-red-50/70"
+                      : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div
+                        className={`text-[11px] font-black uppercase tracking-[0.14em] ${
+                          isToday ? "text-red-600" : "text-slate-400"
+                        }`}
+                      >
+                        {day.weekdayShort}
+                      </div>
+                      <div className="mt-1 text-lg font-black text-slate-900">
+                        {day.dayLabel}/{day.monthLabel}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        {day.weekdayLong}
+                      </div>
+                    </div>
+
+                    <div
+                      className={`rounded-none border px-2.5 py-1 text-right ${
+                        isToday ? "border-red-200 bg-white" : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <div
+                        className={`text-[11px] font-black ${
+                          isToday ? "text-red-600" : "text-emerald-700"
+                        }`}
+                      >
+                        {stat.confirmed}
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        {isToday ? "Hôm nay" : "Đã chốt"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold">
+                    <span className="rounded-none border border-slate-200 bg-white px-2 py-1 text-amber-700">
+                      Chờ duyệt {stat.assigned}
+                    </span>
+                    <span className="rounded-none border border-slate-200 bg-white px-2 py-1 text-rose-700">
+                      Hủy {stat.cancelled}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {rows.map((staff) => {
+            const avatarUrl = resolveMediaUrl(staff.avatarUrl);
+            const cinemaName =
+              staff.cinemaName ||
+              getCinemaNameById(cinemas, normalizeNumber(staff.cinemaId));
+            const isHighlighted =
+              Number(highlightStaffId || 0) > 0 &&
+              Number(highlightStaffId) === Number(staff.id);
+
+            return (
+              <div
+                key={staff.id}
+                className="grid border-b border-slate-200 last:border-b-0"
+                style={{
+                  gridTemplateColumns: "240px repeat(7, minmax(185px, 1fr))",
+                }}
+              >
+                <div
+                  className={`sticky left-0 z-10 border-r border-slate-200 px-5 py-4 ${
+                    isHighlighted ? "bg-red-50" : "bg-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {avatarUrl ? (
+                      <img
+                        alt={staff.fullName}
+                        src={avatarUrl}
+                        className="h-11 w-11 rounded-none border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-none border border-slate-200 bg-slate-100 text-sm font-black text-slate-700">
+                        {getInitials(staff.fullName)}
+                      </div>
+                    )}
+
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-bold text-slate-900">
+                        {staff.fullName}
+                      </div>
+                      <div className="mt-1 truncate text-xs text-slate-500">
+                        {getPositionLabel(staff.position)}
+                        {cinemaName ? ` • ${cinemaName}` : ""}
+                      </div>
+                      {isHighlighted ? (
+                        <div className="mt-2 inline-flex items-center border border-red-600 bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
+                          Tôi
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+
+                {weekDays.map((day) => {
+                  const cellKey = createCellKey(staff.id, day.iso);
+                  const items = schedulesByCell.get(cellKey) ?? [];
+                  const visibleItems = hideCancelledCards
+                    ? items.filter((item) => item.status !== "CANCELLED")
+                    : items;
+                  const isToday = isTodayIso(day.iso, now);
+
+                  return (
+                    <div
+                      key={`${staff.id}-${day.iso}`}
+                      className={`border-r border-slate-200 p-3 last:border-r-0 ${
+                        isToday
+                          ? "bg-red-50/40"
+                          : isHighlighted
+                          ? "bg-red-50/50"
+                          : "bg-white"
+                      }`}
+                    >
+                      <div
+                        className={`relative flex min-h-[142px] flex-col rounded-none border bg-white p-3 ${
+                          isToday ? "border-red-200" : "border-slate-200"
+                        }`}
+                      >
+                        {interactive ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenCell?.(staff, day.iso, null)}
+                            className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-none border border-red-600 bg-red-600 text-white transition hover:bg-red-700"
+                          >
+                            <AddCircleOutline fontSize="small" />
+                          </button>
+                        ) : null}
+
+                        {visibleItems.length ? (
+                          <div className={interactive ? "space-y-2.5 pr-9" : "space-y-2.5"}>
+                            {visibleItems.map((item) => {
+                              const statusMeta = getStatusMeta(item.status);
+                              const isLive = isShiftActiveAt(item.workDate, item.shift, now);
+                              const borderClass =
+                                item.status === "CONFIRMED"
+                                  ? "border-emerald-200 bg-white"
+                                  : item.status === "CANCELLED"
+                                    ? "border-rose-200 bg-white"
+                                    : "border-amber-200 bg-white";
+
+                              const content = (
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="text-sm font-bold text-slate-900">
+                                      {item.shift.name}
+                                    </div>
+                                    <div className="mt-1 text-xs text-slate-600">
+                                      {formatShiftRange(item.shift)}
+                                    </div>
+                                    {isLive ? (
+                                      <div className="mt-2 inline-flex items-center border border-red-600 bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
+                                        Đang trong ca
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                  <div className="flex flex-col items-end gap-2">
+                                    <span
+                                      className={`inline-flex items-center rounded-none px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${statusMeta.lightBadgeClass}`}
+                                    >
+                                      {statusMeta.label}
                                     </span>
+                                  </div>
                                 </div>
-                            </TableCell>
-                            {item.shift.map((shift) => (
-                                shift.id != 0 ? (
-                                    <TableCell className="p-2 border-r border-slate-700 min-h-[120px] relative empty-cell-hover cursor-pointer">
-                                        {shift.status === ScheduleStatus.ASSIGNED ? (
-                                            <div className="shift-card bg-yellow-500/25 border border-yellow-500 border-l-4 border-l-cinema-success p-2.5 rounded-lg mb-2 shadow-sm">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <p className="text-xs font-bold text-yellow-500 uppercase">
-                                                        {shift.name}
-                                                    </p>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-cinema-success shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
-                                                </div>
-                                                <p className="text-[10px] text-yellow-500 font-medium">
-                                                    {shift.startTime} - {shift.endTime}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <div className="shift-card bg-green-500/25 border border-green-500 border-l-4 border-l-cinema-success p-2.5 rounded-lg mb-2 shadow-sm">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <p className="text-xs font-bold text-green-500 uppercase">
-                                                        {shift.name}
-                                                    </p>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-cinema-success shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
-                                                </div>
-                                                <p className="text-[10px] text-green-500 font-medium">
-                                                    {shift.startTime} - {shift.endTime}
-                                                </p>
-                                            </div>
-                                        )}
-                                        <div className="plus-icon absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none">
-                                            <i
-                                                className="text-slate-500 w-5 h-5"
-                                                data-lucide="plus-circle"
-                                            />
-                                        </div>
-                                    </TableCell>
-                                ) : (
-                                    <TableCell className="p-2 border-r border-slate-700 relative empty-cell-hover cursor-pointer">
-                                        <div className="plus-icon absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none">
-                                            <i
-                                                className="text-slate-500 w-5 h-5"
-                                                data-lucide="plus-circle"
-                                            />
-                                        </div>
-                                    </TableCell>
-                                )
-                            ))}
-                        </TableRow>
-                    ))) :
-                        (<TableRow>
-                            <TableCell colSpan={8} >
-                                Không có lịch vào tuần này
-                            </TableCell>
-                        </TableRow>)}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                              );
 
-    </>
+                              if (!interactive) {
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`w-full rounded-none border p-3 ${
+                                      isLive
+                                        ? "border-red-300 bg-red-50 shadow-[0_0_0_1px_rgba(220,38,38,0.12)]"
+                                        : borderClass
+                                    }`}
+                                  >
+                                    {content}
+                                  </div>
+                                );
+                              }
 
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => onOpenCell?.(staff, day.iso, item)}
+                                  className={`w-full rounded-none border p-3 text-left transition hover:border-red-600 ${
+                                    isLive
+                                      ? "border-red-300 bg-red-50 shadow-[0_0_0_1px_rgba(220,38,38,0.12)]"
+                                      : borderClass
+                                  }`}
+                                >
+                                  {content}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="flex flex-1 flex-col items-start justify-center rounded-none border border-dashed border-slate-200 bg-white px-4 py-5 text-left">
+                            {interactive ? (
+                              <button
+                                type="button"
+                                onClick={() => onOpenCell?.(staff, day.iso, null)}
+                                className="text-sm font-semibold text-red-600"
+                              >
+                                Tạo ca
+                              </button>
+                            ) : (
+                              <div className="text-sm font-semibold text-slate-400">
+                                Trống
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -182,11 +182,16 @@ const menuItems = [
     ],
   },
   {
-    text: "Phân ca nhân viên",
+    text: "Phân ca làm việc",
     icon: <ArticleIcon />,
     path: "/admin/staff-schedules",
     roles: [UserRole.ADMIN, UserRole.MANAGER],
     children: [
+      {
+        text: "Phân ca nhân viên",
+        path: "/admin/staff-schedules/assign",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
       {
         text: "Lịch làm nhân viên",
         path: "/admin/staff-schedules",
@@ -197,11 +202,16 @@ const menuItems = [
   {
     text: "Lịch làm việc của tôi",
     icon: <ArticleIcon />,
-    path: "/admin/staff-schedules",
+    path: "/admin/staff-schedules/my/request",
     roles: [UserRole.STAFF],
     children: [
       {
-        text: "Lịch làm việc ",
+        text: "Chọn lịch làm",
+        path: "/admin/staff-schedules/my/request",
+        roles: [UserRole.STAFF],
+      },
+      {
+        text: "Xem lịch làm",
         path: "/admin/staff-schedules/my",
         roles: [UserRole.STAFF],
       },
@@ -437,10 +447,12 @@ function ScanDialogContent({
           .catch(() => {});
         scannerRef.current = null;
       }
-      setMode("menu");
-      setCode("");
-      setScanError(null);
-      queueMicrotask(() => setCameraActive(false));
+      queueMicrotask(() => {
+        setMode("menu");
+        setCode("");
+        setScanError(null);
+        setCameraActive(false);
+      });
     }
   }, [open]);
 
@@ -813,7 +825,7 @@ export default function AdminLayout({
 
         return hasParentAccess && hasValidChildren;
       });
-  }, [user?.role]);
+  }, [user]);
 
   const renderDrawerContent = (collapsed: boolean) => (
     <Box
