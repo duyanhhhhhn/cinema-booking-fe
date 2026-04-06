@@ -77,7 +77,10 @@ export default function RoomManagement() {
   const stats = {
     totalRooms: roomsData?.length ?? 0,
     showing: rooms.length,
-    totalSeats: rooms.reduce((sum, room) => sum + Number(room.totalSeats || 0), 0),
+    totalSeats: rooms.reduce(
+      (sum, room) => sum + Number(room.totalSeats || 0),
+      0,
+    ),
   };
 
   return (
@@ -111,7 +114,8 @@ export default function RoomManagement() {
                 Quản lý Phòng Chiếu
               </h1>
               <p className="mt-2 max-w-2xl text-[14px] font-medium leading-7 text-zinc-500 sm:text-[15px]">
-                Tạo phòng chiếu mới, theo dõi số lượng ghế và quản lý từng phòng theo rạp phụ trách.
+                Tạo phòng chiếu mới, theo dõi số lượng ghế và quản lý từng phòng
+                theo rạp phụ trách.
               </p>
             </div>
 

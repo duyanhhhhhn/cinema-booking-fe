@@ -13,10 +13,11 @@ import {
   Chip,
   Typography,
 } from "@mui/material";
-import { Delete, Visibility } from "@mui/icons-material";
+import { Visibility, ToggleOn, ToggleOff } from "@mui/icons-material";
 import { IRoom } from "../type";
-import { useDeleteRoomMutation } from "../room";
+import { useToggleRoomStatusMutation } from "../room";
 import { toast } from "sonner";
+import { mapNumberToStatus } from "../roomStatus";
 
 interface Props {
   rooms: IRoom[];
@@ -24,8 +25,9 @@ interface Props {
 }
 
 export default function RoomTable({ rooms, setSelectedRoom }: Props) {
-  const deleteMutation = useDeleteRoomMutation();
+  const toggleStatusMutation = useToggleRoomStatusMutation();
 
+  // ===== TYPE CHIP =====
   const renderTypeChip = (type: string) => (
     <Chip
       label={type || "—"}
@@ -40,6 +42,54 @@ export default function RoomTable({ rooms, setSelectedRoom }: Props) {
     />
   );
 
+  // ===== STATUS CHIP =====
+  const renderStatusChip = (statusNumber: number) => {
+    const status = mapNumberToStatus(statusNumber);
+    const isActive = status === "ACTIVE";
+
+    return (
+      <Chip
+        label={isActive ? "ACTIVE" : "INACTIVE"}
+        size="small"
+        sx={{
+          fontWeight: 800,
+          borderRadius: "999px",
+          background: isActive
+            ? "linear-gradient(135deg,#ecfdf5,#d1fae5)"
+            : "linear-gradient(135deg,#fef2f2,#fee2e2)",
+          color: isActive ? "#059669" : "#dc2626",
+          border: isActive ? "1px solid #a7f3d0" : "1px solid #fecaca",
+        }}
+      />
+    );
+  };
+
+  // ===== TOGGLE STATUS (FIX QUAN TRỌNG) =====
+  const handleToggleStatus = (room: IRoom) => {
+    const newStatus = room.status === 1 ? 0 : 1; // ✅ tính status mới
+
+    toggleStatusMutation.mutate(
+      {
+        id: room.id,
+        status: newStatus, // ✅ gửi đúng body BE cần
+      },
+      {
+        onSuccess: () => {
+          const next = newStatus === 1 ? "ACTIVE" : "INACTIVE";
+
+          toast.success("Cập nhật trạng thái thành công", {
+            description: `Phòng "${room.name}" → ${next}`,
+          });
+        },
+        onError: (error: any) => {
+          toast.error("Cập nhật thất bại", {
+            description: error?.message || "Không thể cập nhật trạng thái.",
+          });
+        },
+      },
+    );
+  };
+
   return (
     <TableContainer
       component={Paper}
@@ -49,133 +99,75 @@ export default function RoomTable({ rooms, setSelectedRoom }: Props) {
         border: "1px solid #ececf2",
         overflow: "hidden",
         boxShadow: "0 18px 46px rgba(15,23,42,0.04)",
-        fontFamily: "Roboto, sans-serif",
       }}
     >
-      <Table sx={{ minWidth: 720 }}>
+      <Table sx={{ minWidth: 900 }}>
+        {/* ===== HEADER ===== */}
         <TableHead>
-          <TableRow
-            sx={{
-              background:
-                "linear-gradient(180deg, rgba(250,250,250,1) 0%, rgba(244,244,245,1) 100%)",
-            }}
-          >
-            <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
-              ID
-            </TableCell>
-            <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
-              Tên phòng
-            </TableCell>
-            <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
-              Rạp
-            </TableCell>
-            <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
-              Loại
-            </TableCell>
-            <TableCell sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
-              Tổng ghế
-            </TableCell>
-            <TableCell align="right" sx={{ fontWeight: 900, color: "#3f3f46", py: 2 }}>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 900 }}>ID</TableCell>
+            <TableCell sx={{ fontWeight: 900 }}>Tên phòng</TableCell>
+            <TableCell sx={{ fontWeight: 900 }}>Rạp</TableCell>
+            <TableCell sx={{ fontWeight: 900 }}>Loại</TableCell>
+            <TableCell sx={{ fontWeight: 900 }}>Tổng ghế</TableCell>
+            <TableCell sx={{ fontWeight: 900 }}>Trạng thái</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 900 }}>
               Hành động
             </TableCell>
           </TableRow>
         </TableHead>
 
         <TableBody>
-          {rooms.length === 0 ? (
+          {/* EMPTY */}
+          {rooms.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} sx={{ borderBottom: 0 }}>
-                <Box sx={{ py: 8, textAlign: "center", color: "#71717a" }}>
-                  <Typography sx={{ fontSize: 20, fontWeight: 900, color: "#18181b" }}>
-                    Chưa có phòng phù hợp
-                  </Typography>
-                  <Typography sx={{ mt: 1, fontSize: 14, fontWeight: 500 }}>
-                    Hãy thử chọn rạp khác hoặc thay đổi từ khóa tìm kiếm.
-                  </Typography>
+              <TableCell colSpan={7}>
+                <Box textAlign="center" py={6}>
+                  <Typography fontWeight={800}>Không có dữ liệu</Typography>
                 </Box>
               </TableCell>
             </TableRow>
-          ) : null}
+          )}
 
+          {/* DATA */}
           {rooms.map((room) => (
-            <TableRow
-              key={room.id}
-              hover
-              sx={{
-                "&:hover": { backgroundColor: "#fffdfd" },
-                "&:last-child td": { borderBottom: 0 },
-              }}
-            >
-              <TableCell sx={{ py: 2, fontWeight: 800, color: "#71717a" }}>
-                #{room.id}
+            <TableRow key={room.id} hover>
+              {/* ID */}
+              <TableCell>#{room.id}</TableCell>
+
+              {/* NAME */}
+              <TableCell onClick={() => setSelectedRoom(room)}>
+                <Typography fontWeight={800}>{room.name}</Typography>
               </TableCell>
 
-              <TableCell
-                sx={{ py: 2, cursor: "pointer" }}
-                onClick={() => setSelectedRoom(room)}
-              >
-                <Typography sx={{ fontSize: 15, fontWeight: 900, color: "#18181b" }}>
-                  {room.name}
-                </Typography>
-                <Typography sx={{ mt: 0.5, fontSize: 12, fontWeight: 700, color: "#a1a1aa" }}>
-                  Xem chi tiết và sơ đồ ghế
-                </Typography>
-              </TableCell>
+              {/* CINEMA */}
+              <TableCell>{room.cinemaName || "—"}</TableCell>
 
-              <TableCell sx={{ py: 2, fontWeight: 700, color: "#3f3f46" }}>
-                {room.cinemaName}
-              </TableCell>
+              {/* TYPE */}
+              <TableCell>{renderTypeChip(room.type)}</TableCell>
 
-              <TableCell sx={{ py: 2 }}>{renderTypeChip(room.type)}</TableCell>
+              {/* TOTAL SEATS */}
+              <TableCell>{room.totalSeats ?? 0}</TableCell>
 
-              <TableCell sx={{ py: 2, fontWeight: 900, color: "#18181b" }}>
-                {room.totalSeats}
-              </TableCell>
+              {/* STATUS */}
+              <TableCell>{renderStatusChip(room.status)}</TableCell>
 
+              {/* ACTION */}
               <TableCell align="right">
-                <IconButton
-                  onClick={() => setSelectedRoom(room)}
-                  sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: "14px",
-                    backgroundColor: "#fff7f7",
-                    color: "#dc2626",
-                    border: "1px solid #fecaca",
-                    mr: 1,
-                    "&:hover": { backgroundColor: "#fff1f2" },
-                  }}
-                >
-                  <Visibility fontSize="small" />
+                {/* VIEW */}
+                <IconButton onClick={() => setSelectedRoom(room)}>
+                  <Visibility />
                 </IconButton>
 
+                {/* TOGGLE */}
                 <IconButton
-                  onClick={() =>
-                    deleteMutation.mutate(room.id, {
-                      onSuccess: () => {
-                        toast.success("Xóa phòng thành công", {
-                          description: `Phòng "${room.name}" đã được xóa khỏi hệ thống.`,
-                        });
-                      },
-                      onError: (error: any) => {
-                        toast.error("Xóa phòng thất bại", {
-                          description:
-                            error?.message || "Không thể xóa phòng chiếu này.",
-                        });
-                      },
-                    })
-                  }
+                  onClick={() => handleToggleStatus(room)}
                   sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: "14px",
-                    backgroundColor: "#fff1f2",
-                    color: "#dc2626",
-                    border: "1px solid #fecaca",
-                    "&:hover": { backgroundColor: "#ffe4e6" },
+                    ml: 1,
+                    color: room.status === 1 ? "#16a34a" : "#dc2626",
                   }}
                 >
-                  <Delete fontSize="small" />
+                  {room.status === 1 ? <ToggleOn /> : <ToggleOff />}
                 </IconButton>
               </TableCell>
             </TableRow>

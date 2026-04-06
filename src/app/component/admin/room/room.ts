@@ -100,6 +100,13 @@ export class Room extends Model {
       },
     });
   }
+  // ================= TOGGLE STATUS =================
+  static toggleRoomStatus(id: number, status: number) {
+    return this.api.patch<{ message: string; data: IRoom }>({
+      url: `/rooms/${id}/status`,
+      data: { status },
+    });
+  }
 }
 
 Room.setup();
@@ -126,11 +133,13 @@ export function useUpdateRoomMutation() {
     mutationFn: ({ id, payload }: { id: number; payload: IRoomRequest }) =>
       Room.updateRoom(id, payload).then((res) => res.data.data),
     onSuccess: (_, variables) => {
+      // invalidate room detail
       queryClient.invalidateQueries({
         queryKey: Room.queryKeys.roomDetail(variables.id),
       });
       queryClient.invalidateQueries({
-        queryKey: Room.queryKeys.listRooms(variables.payload.cinemaId),
+        queryKey: ["ROOM", "LIST_ROOMS"],
+        exact: false,
       });
     },
   });
@@ -182,4 +191,18 @@ export function useGetRoomDetailQuery(roomId: number) {
 
 export function useGetRoomDetailClientQuery(roomId: number) {
   return useQuery(Room.getRoomDetailClient(roomId));
+}
+export function useToggleRoomStatusMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: number }) =>
+      Room.toggleRoomStatus(id, status).then((res) => res.data.data),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["ROOM", "LIST_ROOMS"],
+      });
+    },
+  });
 }
