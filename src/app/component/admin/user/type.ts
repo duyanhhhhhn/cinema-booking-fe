@@ -17,5 +17,6 @@ export interface IStaff {
   isActive: boolean;
   avatarUrl?: string;
   cinemaId: string;
+  role?: string;
   position: string;
 }

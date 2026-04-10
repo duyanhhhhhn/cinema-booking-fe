@@ -28,8 +28,17 @@ const modelConfig = {
 
 export class WorkShift extends Model {
   static queryKeys = {
+    detail: "WORK_SHIFT_DETAIL_QUERY",
     create: "WORK_SHIFT_CREATE_MUTATION",
+    update: "WORK_SHIFT_UPDATE_MUTATION",
+    delete: "WORK_SHIFT_DELETE_MUTATION",
   };
+
+  static getById(id: number) {
+    return this.api.get<IResponse<IStaffShiftTemplate>>({
+      url: `/staff/work_shift/${id}`,
+    });
+  }
 
   static create(payload: CreateWorkShiftPayload) {
     return this.api.post<IResponse<IStaffShiftTemplate>>({
@@ -39,6 +48,23 @@ export class WorkShift extends Model {
         startTime: payload.startTime,
         endTime: payload.endTime,
       },
+    });
+  }
+
+  static update(id: number, payload: CreateWorkShiftPayload) {
+    return this.api.put<IResponse<IStaffShiftTemplate>>({
+      url: `/staff/work_shift/${id}`,
+      data: {
+        name: payload.name,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+      },
+    });
+  }
+
+  static delete(id: number) {
+    return this.api.delete<IResponse<string>>({
+      url: `/staff/work_shift/${id}`,
     });
   }
 }

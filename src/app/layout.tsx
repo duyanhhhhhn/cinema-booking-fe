@@ -4,6 +4,7 @@ import "./globals.css";
 import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { Toaster as SonnerToaster } from "sonner";
 import ClientLayoutWrapper from "./component/layout/ClientLayoutWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -44,6 +45,7 @@ export default function RootLayout({
                 pauseOnHover
                 theme="light"
                 />
+                <SonnerToaster richColors closeButton position="top-right" />
               </GlobalRouteGuard>
             </AuthProvider>
           </StoreProvider>

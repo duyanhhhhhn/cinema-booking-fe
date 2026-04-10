@@ -56,6 +56,16 @@ interface AssignStaffModalProps {
 const fieldClass =
   "h-11 w-full rounded-none border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-red-600 focus:ring-0";
 
+const neutralSummaryMeta = {
+  lightBadgeClass: "border border-slate-200 bg-slate-100 text-slate-600",
+  label: "Chưa chọn",
+};
+
+const draftSummaryMeta = {
+  lightBadgeClass: "border border-sky-200 bg-sky-50 text-sky-700",
+  label: "Chưa lưu",
+};
+
 export default function AssignStaffModal({
   open,
   onClose,
@@ -79,6 +89,15 @@ export default function AssignStaffModal({
       : ScheduleStatus.CONFIRMED;
   const statusMeta = getStatusMeta(actionStatus);
   const currentStatusMeta = getStatusMeta(selectedSchedule?.status);
+  const hasSelection =
+    Number(form.staffId || 0) > 0 &&
+    Number(form.shiftId || 0) > 0 &&
+    Boolean(form.workDate);
+  const summaryStatusMeta = !hasSelection
+    ? neutralSummaryMeta
+    : selectedSchedule
+      ? statusMeta
+      : draftSummaryMeta;
 
   const canCancel = Boolean(selectedSchedule);
   const canSubmit =
@@ -121,7 +140,7 @@ export default function AssignStaffModal({
               <div className="flex items-start justify-between gap-5">
                 <div>
                   <h3 className="text-[28px] font-black tracking-[-0.03em] text-slate-900">
-                    Quyết định phân ca
+                    Phân ca
                   </h3>
                 </div>
 
@@ -191,7 +210,7 @@ export default function AssignStaffModal({
 
                   <div className="rounded-none border border-slate-200 bg-white p-4">
                     <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                      Ngày làm việc
+                      Ngày
                     </label>
                     <input
                       type="date"
@@ -211,7 +230,7 @@ export default function AssignStaffModal({
                 <div className="rounded-none border border-slate-200 bg-white p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                      Ca làm mẫu
+                      Ca
                     </div>
 
                     {selectedShift ? (
@@ -257,7 +276,7 @@ export default function AssignStaffModal({
 
                 <div className="rounded-none border border-slate-200 bg-white p-4">
                   <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                    Quyết định của quản lý
+                    Thao tác
                   </div>
 
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -276,7 +295,7 @@ export default function AssignStaffModal({
                         </div>
                         <div>
                           <div className={`text-sm font-black ${actionStatus === ScheduleStatus.CONFIRMED ? "text-white" : "text-slate-900"}`}>
-                            Chốt lịch chính thức
+                            Chốt
                           </div>
                         </div>
                       </div>
@@ -300,7 +319,7 @@ export default function AssignStaffModal({
                         </div>
                         <div>
                           <div className={`text-sm font-black ${actionStatus === ScheduleStatus.CANCELLED && canCancel ? "text-white" : "text-slate-900"}`}>
-                            Huỷ ca hiện có
+                            Huỷ ca
                           </div>
                         </div>
                       </div>
@@ -312,14 +331,14 @@ export default function AssignStaffModal({
               <aside className="space-y-4">
                 <div className="rounded-none border border-slate-200 bg-white p-4">
                   <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                    Tóm tắt hành động
+                    Tóm tắt
                   </div>
 
                   <div className="mt-4">
                     <span
-                      className={`inline-flex items-center rounded-none px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${statusMeta.lightBadgeClass}`}
+                      className={`inline-flex items-center rounded-none px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${summaryStatusMeta.lightBadgeClass}`}
                     >
-                      {statusMeta.label}
+                      {summaryStatusMeta.label}
                     </span>
                   </div>
 
@@ -357,7 +376,7 @@ export default function AssignStaffModal({
 
                 <div className="rounded-none border border-slate-200 bg-white p-4">
                   <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                    Lịch đang được chọn
+                    Đang chọn
                   </div>
 
                   {selectedSchedule ? (
@@ -383,7 +402,7 @@ export default function AssignStaffModal({
                     </div>
                   ) : (
                     <div className="mt-4 rounded-none border border-dashed border-slate-300 bg-white px-4 py-6 text-sm text-slate-500">
-                      Tạo mới
+                      Mới
                     </div>
                   )}
                 </div>

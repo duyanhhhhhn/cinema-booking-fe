@@ -9,7 +9,10 @@ import { useNotification } from "@/hooks/useNotification";
 import {
   Schedule,
   ScheduleStatus,
+  type IStaffRegistrationWindow,
   type IStaffScheduleItem,
+  type IStaffSwapRequestItem,
+  SwapRequestStatus,
 } from "@/types/data/staff/schedule/schedule";
 
 import StaffScheduleThisWeek from "./StaffScheduleThisWeek";
@@ -40,10 +43,10 @@ const surfaceClass = "border border-slate-200 bg-white";
 const secondaryButtonClass =
   "border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50";
 const tableGridStyle = {
-  gridTemplateColumns: "220px repeat(7, minmax(132px, 1fr))",
+  gridTemplateColumns: "240px repeat(7, minmax(148px, 1fr))",
 } as const;
 const STAFF_REQUEST_MIN_WEEK_OFFSET = 1;
-const STAFF_REQUEST_MAX_WEEK_OFFSET = 2;
+const STAFF_REQUEST_MAX_WEEK_OFFSET = 1;
 
 function SummaryTile({
   label,
@@ -135,7 +138,7 @@ function StaffTabs({ mode }: { mode: StaffSelfScheduleMode }) {
             : "border-slate-300 bg-white text-slate-700"
         }`}
       >
-        Chọn lịch làm
+        Đăng ký
       </Link>
       <Link
         href="/admin/staff-schedules/my"
@@ -145,7 +148,13 @@ function StaffTabs({ mode }: { mode: StaffSelfScheduleMode }) {
             : "border-slate-300 bg-white text-slate-700"
         }`}
       >
-        Xem lịch làm
+        Lịch làm
+      </Link>
+      <Link
+        href="/admin/staff-schedules/my/swaps"
+        className="inline-flex items-center border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-slate-400"
+      >
+        Nhờ làm thay
       </Link>
     </div>
   );
@@ -179,7 +188,7 @@ function PersonalScheduleBoard({
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[1144px]">
+        <div className="min-w-[1280px]">
           <div
             className="grid border-b border-slate-200 bg-slate-50"
             style={tableGridStyle}
@@ -306,8 +315,6 @@ export default function MySchedule({
 
   const today = new Date();
   const todayIso = toIsoDate(today);
-  const todayDay = today.getDay();
-  const canRegisterToday = todayDay === 6 || todayDay === 0;
 
   const defaultRequestWeekDays = useMemo(
     () => getWeekDays(STAFF_REQUEST_MIN_WEEK_OFFSET),
@@ -346,11 +353,20 @@ export default function MySchedule({
       return selectedDate;
     }
 
+    if (!isRequestMode && viewWeekOffset === 0) {
+      return todayIso;
+    }
+
     return activeWeekDays[0]?.iso ?? todayIso;
-  }, [activeWeekDays, selectedDate, todayIso]);
+  }, [activeWeekDays, isRequestMode, selectedDate, todayIso, viewWeekOffset]);
 
   const qShifts = useQuery({
     ...Schedule.getShiftTemplates(),
+    enabled: isStaff && isRequestMode,
+  });
+
+  const qRegistrationWindow = useQuery({
+    ...Schedule.getRegistrationWindow(),
     enabled: isStaff && isRequestMode,
   });
 
@@ -359,7 +375,9 @@ export default function MySchedule({
       startDate,
       endDate,
     }),
-    enabled: isStaff && isRequestMode,
+    enabled: isStaff,
+    refetchInterval: 15000,
+    staleTime: 5000,
   });
 
   const qCinemaSchedule = useQuery({
@@ -368,11 +386,31 @@ export default function MySchedule({
       endDate,
     }),
     enabled: isStaff && !isRequestMode,
+    refetchInterval: 15000,
+    staleTime: 5000,
+  });
+
+  const qIncomingSwapRequests = useQuery({
+    ...Schedule.getSwapRequests({
+      box: "incoming",
+    }),
+    enabled: isStaff && isRequestMode,
+  });
+
+  const qOutgoingSwapRequests = useQuery({
+    ...Schedule.getSwapRequests({
+      box: "outgoing",
+    }),
+    enabled: isStaff && isRequestMode,
   });
 
   const shifts = useMemo(
     () => (Array.isArray(qShifts.data?.data) ? qShifts.data.data : []),
     [qShifts.data],
+  );
+  const registrationWindow: IStaffRegistrationWindow | null = useMemo(
+    () => qRegistrationWindow.data?.data ?? null,
+    [qRegistrationWindow.data],
   );
   const myScheduleItems: IStaffScheduleItem[] = useMemo(
     () => (Array.isArray(qMySchedule.data?.data) ? qMySchedule.data.data : []),
@@ -381,6 +419,20 @@ export default function MySchedule({
   const cinemaScheduleItems: IStaffScheduleItem[] = useMemo(
     () => (Array.isArray(qCinemaSchedule.data?.data) ? qCinemaSchedule.data.data : []),
     [qCinemaSchedule.data],
+  );
+  const incomingSwapRequests: IStaffSwapRequestItem[] = useMemo(
+    () =>
+      Array.isArray(qIncomingSwapRequests.data?.data)
+        ? qIncomingSwapRequests.data.data
+        : [],
+    [qIncomingSwapRequests.data],
+  );
+  const outgoingSwapRequests: IStaffSwapRequestItem[] = useMemo(
+    () =>
+      Array.isArray(qOutgoingSwapRequests.data?.data)
+        ? qOutgoingSwapRequests.data.data
+        : [],
+    [qOutgoingSwapRequests.data],
   );
 
   const groupedByDate = useMemo(() => {
@@ -470,6 +522,22 @@ export default function MySchedule({
     shifts.find((item) => Number(item.id) === effectiveSelectedShiftId) ?? null;
   const selectedDayEntries = groupedByDate.get(effectiveSelectedDate) ?? [];
   const totalHours = getTotalHours(confirmedItems, [ScheduleStatus.CONFIRMED]);
+  const incomingPendingCount = useMemo(
+    () =>
+      incomingSwapRequests.filter(
+        (item) => item.status === SwapRequestStatus.PENDING_STAFF_RESPONSE,
+      ).length,
+    [incomingSwapRequests],
+  );
+  const outgoingPendingCount = useMemo(
+    () =>
+      outgoingSwapRequests.filter(
+        (item) =>
+          item.status === SwapRequestStatus.PENDING_STAFF_RESPONSE ||
+          item.status === SwapRequestStatus.PENDING_ADMIN_APPROVAL,
+      ).length,
+    [outgoingSwapRequests],
+  );
 
   const requestMutation = useMutation({
     mutationFn: () =>
@@ -496,6 +564,9 @@ export default function MySchedule({
   const staffName =
     displayStaff?.fullName || user?.fullName || user?.email || "Nhân viên";
   const staffPosition = getPositionLabel(displayStaff?.position || role);
+  const isRegistrationWindowLoading = isRequestMode && qRegistrationWindow.isLoading;
+  const canRegisterToday = registrationWindow?.staffCanRegisterNow ?? false;
+  const isRegistrationForceOpen = Boolean(registrationWindow?.forceOpen);
 
   const canSubmit =
     isRequestMode &&
@@ -532,9 +603,32 @@ export default function MySchedule({
     setSelectedDate(value);
   };
 
+  const handleViewWeekChange = (nextOffset: number) => {
+    const nextWeekDays = getWeekDays(nextOffset);
+    const currentIndex = viewWeekDays.findIndex(
+      (day) => day.iso === effectiveSelectedDate,
+    );
+    const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+
+    setViewWeekOffset(nextOffset);
+    setSelectedDate(
+      nextOffset === 0
+        ? todayIso
+        : nextWeekDays[safeIndex]?.iso ?? nextWeekDays[0]?.iso ?? todayIso,
+    );
+  };
+
   const activeError = isRequestMode
-    ? qMySchedule.isError
+    ? qRegistrationWindow.isError
+      ? getErrorMessage(qRegistrationWindow.error)
+      : qShifts.isError
+      ? getErrorMessage(qShifts.error)
+      : qMySchedule.isError
       ? getErrorMessage(qMySchedule.error)
+      : qIncomingSwapRequests.isError
+      ? getErrorMessage(qIncomingSwapRequests.error)
+      : qOutgoingSwapRequests.isError
+      ? getErrorMessage(qOutgoingSwapRequests.error)
       : ""
     : qCinemaSchedule.isError
     ? getErrorMessage(qCinemaSchedule.error)
@@ -570,11 +664,8 @@ export default function MySchedule({
       <div className="space-y-4 border-b border-slate-200 pb-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="text-xs font-bold uppercase tracking-[0.24em] text-red-600">
-              Staff Schedule
-            </div>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">
-              {isRequestMode ? "Chọn lịch làm" : "Lịch làm toàn rạp"}
+            <h1 className="text-3xl font-bold text-slate-900">
+              {isRequestMode ? "Đăng ký lịch" : "Lịch làm"}
             </h1>
           </div>
 
@@ -598,40 +689,26 @@ export default function MySchedule({
             >
               Tuần sau
             </button>
-            <button
-              type="button"
-              onClick={() => handleRequestWeekChange(STAFF_REQUEST_MAX_WEEK_OFFSET)}
-              className={
-                requestWeekOffset === STAFF_REQUEST_MAX_WEEK_OFFSET
-                  ? "bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-                  : secondaryButtonClass
-              }
-            >
-              Tuần kế
-            </button>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => setViewWeekOffset((prev) => prev - 1)}
+              onClick={() => handleViewWeekChange(viewWeekOffset - 1)}
               className={secondaryButtonClass}
             >
               Tuần trước
             </button>
             <button
               type="button"
-              onClick={() => {
-                setViewWeekOffset(0);
-                setSelectedDate(getWeekDays(0)[0]?.iso ?? todayIso);
-              }}
+              onClick={() => handleViewWeekChange(0)}
               className="bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
             >
               Tuần này
             </button>
             <button
               type="button"
-              onClick={() => setViewWeekOffset((prev) => prev + 1)}
+              onClick={() => handleViewWeekChange(viewWeekOffset + 1)}
               className={secondaryButtonClass}
             >
               Tuần sau
@@ -644,11 +721,11 @@ export default function MySchedule({
             <>
               <SummaryTile label="Đã chốt" value={String(confirmedItems.length)} />
               <SummaryTile label="Chờ duyệt" value={String(pendingItems.length)} />
-              <SummaryTile label="Giờ chính thức" value={`${totalHours.toFixed(1)}h`} />
+              <SummaryTile label="Giờ" value={`${totalHours.toFixed(1)}h`} />
             </>
           ) : (
             <>
-              <SummaryTile label="Nhân viên có ca" value={String(cinemaRows.length)} />
+              <SummaryTile label="Có ca" value={String(cinemaRows.length)} />
               <SummaryTile label="Đã chốt" value={String(cinemaConfirmedCount)} />
               <SummaryTile label="Chờ duyệt" value={String(cinemaPendingCount)} />
             </>
@@ -664,13 +741,17 @@ export default function MySchedule({
 
       {isRequestMode ? (
         <>
-          {!canRegisterToday ? (
+          {!isRegistrationWindowLoading && isRegistrationForceOpen ? (
+            <div className="border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              Admin đang mở đăng ký ngay. Bạn vẫn chỉ chọn lịch của tuần sau.
+            </div>
+          ) : !isRegistrationWindowLoading && !canRegisterToday ? (
             <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              Chỉ đăng ký vào thứ 7 hoặc chủ nhật. STAFF chỉ chọn giữa tuần sau và tuần kế tiếp.
+              Chỉ đăng ký vào thứ 7 hoặc chủ nhật.
             </div>
           ) : null}
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
             <PersonalScheduleBoard
               weekDays={requestWeekDays}
               staffName={staffName}
@@ -789,9 +870,35 @@ export default function MySchedule({
               </div>
             </aside>
           </div>
+
+          <section className={`${surfaceClass} overflow-hidden`}>
+            <div className="grid gap-5 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_58%,#fff7ed_100%)] px-5 py-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-center">
+              <div>
+                <div className="text-2xl font-black text-slate-900">Nhờ làm thay</div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="border border-white/70 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700">
+                    {incomingPendingCount} chờ phản hồi
+                  </div>
+                  <div className="border border-white/70 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700">
+                    {outgoingPendingCount} đã gửi
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Link
+                  href="/admin/staff-schedules/my/swaps"
+                  className="inline-flex h-12 w-full items-center justify-center bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700"
+                >
+                  Mở nhờ làm thay
+                </Link>
+              </div>
+            </div>
+          </section>
         </>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
           <StaffScheduleThisWeek
             weekDays={viewWeekDays}
             rows={cinemaRows}

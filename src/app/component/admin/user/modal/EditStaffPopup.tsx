@@ -81,13 +81,15 @@ export default function EditStaffPopup({
   const [step, setStep] = useState<PopupStep>("selection");
 
   const roleType = watch("roleType");
+  const effectiveRoleType: RoleType = roleType === "MANAGER" ? "MANAGER" : "STAFF";
 
   const currentUserRole = String(
     (user as any)?.role || (user as any)?.position || "",
   ).toUpperCase();
   const isManagerAccount = !isAdmin || currentUserRole === "MANAGER";
   const isTargetManager =
-    String(staff?.position || "").toUpperCase() === "MANAGER";
+    String((staff as any)?.role || staff?.position || "").toUpperCase() ===
+    "MANAGER";
   const targetRoleType: RoleType = isTargetManager ? "MANAGER" : "STAFF";
 
   const currentCinemaName = useMemo(() => {
@@ -144,24 +146,36 @@ export default function EditStaffPopup({
     targetRoleType,
   ]);
 
-  const handleChooseRole = () => {
-    setValue("roleType", targetRoleType);
+  const handleChooseRole = (nextRoleType: RoleType) => {
+    setValue("roleType", nextRoleType, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
 
-    if (targetRoleType === "MANAGER") {
-      setValue("position", undefined);
+    if (nextRoleType === "MANAGER") {
+      setValue("position", undefined, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     } else {
       const nextPosition =
         staff?.position && STAFF_POSITIONS.includes(staff.position as any)
           ? staff.position
           : "";
-      setValue("position", nextPosition);
+      setValue("position", nextPosition, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     }
 
     setStep("form");
   };
 
   const onSubmit = (data: FormValues) => {
-    if (targetRoleType === "STAFF" && !data.position) {
+    const nextRoleType: RoleType =
+      data.roleType === "MANAGER" ? "MANAGER" : "STAFF";
+
+    if (nextRoleType === "STAFF" && !data.position) {
       n.error("Vui lòng chọn chức vụ cho nhân viên");
       return;
     }
@@ -181,9 +195,9 @@ export default function EditStaffPopup({
       email: data.email,
       phone: data.phone,
       password: data.password || undefined,
-      roleId: targetRoleType === "MANAGER" ? 2 : 3,
+      roleId: nextRoleType === "MANAGER" ? 2 : 3,
       position:
-        targetRoleType === "MANAGER"
+        nextRoleType === "MANAGER"
           ? "MANAGER"
           : data.position || staff.position,
       cinemaId: isAdmin ? data.cinemaId : (user as any)?.cinemaId,
@@ -228,7 +242,7 @@ export default function EditStaffPopup({
 
   const renderManagerCard = (disabled = false) => (
     <Box
-      onClick={disabled ? undefined : handleChooseRole}
+      onClick={disabled ? undefined : () => handleChooseRole("MANAGER")}
       sx={{
         flex: 1,
         cursor: disabled ? "not-allowed" : "pointer",
@@ -266,7 +280,7 @@ export default function EditStaffPopup({
 
         <Box>
           <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
-            Cập nhật quản lý
+            Manager
           </Typography>
           <Typography
             sx={{
@@ -276,8 +290,7 @@ export default function EditStaffPopup({
               lineHeight: 1.7,
             }}
           >
-            Tài khoản đang được chỉnh sửa là quản lý, vì vậy chỉ được mở biểu
-            mẫu cập nhật quản lý tương ứng.
+            Gán tài khoản này thành quản lý của rạp đã chọn.
           </Typography>
 
           <Stack
@@ -286,9 +299,9 @@ export default function EditStaffPopup({
             alignItems="center"
             sx={{ mt: 2.25, color: "#334155" }}
           >
-            <StorefrontOutlinedIcon sx={{ fontSize: 17 }} />
-            <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>
-              {currentCinemaName}
+              <StorefrontOutlinedIcon sx={{ fontSize: 17 }} />
+              <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>
+                {currentCinemaName}
             </Typography>
           </Stack>
         </Box>
@@ -298,7 +311,7 @@ export default function EditStaffPopup({
 
   const renderStaffCard = (disabled = false) => (
     <Box
-      onClick={disabled ? undefined : handleChooseRole}
+      onClick={disabled ? undefined : () => handleChooseRole("STAFF")}
       sx={{
         flex: 1,
         cursor: disabled ? "not-allowed" : "pointer",
@@ -336,7 +349,7 @@ export default function EditStaffPopup({
 
         <Box>
           <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
-            Cập nhật nhân viên
+            Staff
           </Typography>
           <Typography
             sx={{
@@ -346,8 +359,7 @@ export default function EditStaffPopup({
               lineHeight: 1.7,
             }}
           >
-            Tài khoản đang được chỉnh sửa là nhân viên, vì vậy chỉ được mở biểu
-            mẫu cập nhật nhân viên để tránh đổi sai loại tài khoản.
+            Gán tài khoản này thành nhân viên và chọn chức vụ phù hợp.
           </Typography>
 
           <Stack
@@ -405,8 +417,7 @@ export default function EditStaffPopup({
             lineHeight: 1.7,
           }}
         >
-          Khi chỉnh sửa tài khoản, hệ thống chỉ cho phép mở đúng biểu mẫu tương
-          ứng với loại tài khoản hiện tại để tránh sửa sai role.
+          Chọn role muốn áp dụng khi cập nhật tài khoản này.
         </Typography>
       </Box>
 
@@ -425,8 +436,8 @@ export default function EditStaffPopup({
         </Typography>
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          {renderManagerCard(!isTargetManager)}
-          {renderStaffCard(isTargetManager)}
+          {renderManagerCard(false)}
+          {renderStaffCard(false)}
         </Stack>
       </Box>
     </Box>
@@ -517,7 +528,7 @@ export default function EditStaffPopup({
                   },
                 }}
               >
-                Quay lại
+                Đổi role
               </Button>
             )}
           </Stack>
@@ -531,7 +542,7 @@ export default function EditStaffPopup({
               lineHeight: 1.15,
             }}
           >
-            {targetRoleType === "MANAGER"
+            {effectiveRoleType === "MANAGER"
               ? "Cập nhật tài khoản quản lý"
               : "Cập nhật tài khoản nhân viên"}
           </Typography>
@@ -543,8 +554,7 @@ export default function EditStaffPopup({
               lineHeight: 1.7,
             }}
           >
-            Chỉnh sửa thông tin tài khoản, ảnh đại diện và dữ liệu phân quyền mà
-            vẫn giữ nguyên loại tài khoản hiện tại.
+            Chỉnh sửa thông tin và lưu lại với role đang chọn.
           </Typography>
         </Box>
 
@@ -557,10 +567,10 @@ export default function EditStaffPopup({
             alignItems: "center",
             justifyContent: "center",
             bgcolor:
-              targetRoleType === "MANAGER"
+              effectiveRoleType === "MANAGER"
                 ? "rgba(220, 38, 38, 0.10)"
                 : "rgba(37, 99, 235, 0.10)",
-            color: targetRoleType === "MANAGER" ? "#c81e1e" : "#2563eb",
+            color: effectiveRoleType === "MANAGER" ? "#c81e1e" : "#2563eb",
           }}
         >
           <EditOutlinedIcon />
@@ -629,7 +639,7 @@ export default function EditStaffPopup({
               />
             )}
 
-            {targetRoleType === "STAFF" && (
+            {effectiveRoleType === "STAFF" && (
               <Controller
                 name="position"
                 control={control}

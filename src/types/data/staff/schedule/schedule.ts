@@ -28,8 +28,56 @@ export interface IStaffScheduleItem {
   id: number;
   workDate: string;
   status: ScheduleStatus;
+  requestedByRole?: string | null;
   staff: IStaffScheduleStaff;
   shift: IStaffShiftTemplate;
+}
+
+export const SwapRequestStatus = {
+  PENDING_STAFF_RESPONSE: "PENDING_STAFF_RESPONSE",
+  PENDING_ADMIN_APPROVAL: "PENDING_ADMIN_APPROVAL",
+  STAFF_REJECTED: "STAFF_REJECTED",
+  ADMIN_APPROVED: "ADMIN_APPROVED",
+  ADMIN_REJECTED: "ADMIN_REJECTED",
+  CANCELLED: "CANCELLED",
+} as const;
+
+export type SwapRequestStatus =
+  (typeof SwapRequestStatus)[keyof typeof SwapRequestStatus];
+
+export interface IStaffSwapRequestItem {
+  id: number;
+  scheduleId: number;
+  approvedScheduleId?: number | null;
+  status: SwapRequestStatus;
+  note?: string | null;
+  workDate: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  requester: IStaffScheduleStaff;
+  target: IStaffScheduleStaff;
+  shift: IStaffShiftTemplate;
+  sourceScheduleStatus: ScheduleStatus;
+}
+
+export interface ISwapCandidate extends IStaffScheduleStaff {}
+
+export interface IStaffRegistrationWindow {
+  forceOpen: boolean;
+  weekendOpenToday: boolean;
+  staffCanRegisterNow: boolean;
+}
+
+export interface CreateSwapRequestPayload {
+  scheduleId: number;
+  targetStaffId: number;
+  note?: string | null;
+}
+
+export interface SwapRequestQueryFilters {
+  box?: "incoming" | "outgoing" | "review";
+  status?: SwapRequestStatus | "" | null;
+  cinemaId?: number | null;
 }
 
 export interface ScheduleFormData {
@@ -85,6 +133,9 @@ export class Schedule extends Model {
     mySchedule: "STAFF_SCHEDULE_MY_QUERY",
     cinemaSchedule: "STAFF_SCHEDULE_CINEMA_QUERY",
     upsert: "STAFF_SCHEDULE_UPSERT_MUTATION",
+    swapCandidates: "STAFF_SCHEDULE_SWAP_CANDIDATES_QUERY",
+    swapRequests: "STAFF_SCHEDULE_SWAP_REQUESTS_QUERY",
+    registrationWindow: "STAFF_SCHEDULE_REGISTRATION_WINDOW_QUERY",
   };
 
   static getShiftTemplates() {
@@ -145,6 +196,88 @@ export class Schedule extends Model {
     return this.api.post<IResponse<IStaffScheduleItem>>({
       url: "/staff/schedule",
       data: normalizePayload(payload),
+    });
+  }
+
+  static getRegistrationWindow() {
+    return {
+      queryKey: [this.queryKeys.registrationWindow],
+      queryFn: () =>
+        this.api
+          .get<IResponse<IStaffRegistrationWindow>>({
+            url: "/staff/schedule/registration-window",
+          })
+          .then((res) => res.data),
+    };
+  }
+
+  static updateRegistrationWindow(forceOpen: boolean) {
+    return this.api.put<IResponse<IStaffRegistrationWindow>>({
+      url: "/staff/schedule/registration-window",
+      data: { forceOpen },
+    });
+  }
+
+  static getSwapCandidates(scheduleId: number) {
+    return {
+      queryKey: [this.queryKeys.swapCandidates, scheduleId],
+      queryFn: () =>
+        this.api
+          .get<IResponse<ISwapCandidate[]>>({
+            url: "/staff/schedule/swap/candidates",
+            params: { scheduleId },
+          })
+          .then((res) => res.data),
+    };
+  }
+
+  static getSwapRequests(filters: SwapRequestQueryFilters = {}) {
+    return {
+      queryKey: [
+        this.queryKeys.swapRequests,
+        filters.box ?? null,
+        filters.status ?? null,
+        filters.cinemaId ?? null,
+      ],
+      queryFn: () =>
+        this.api
+          .get<IResponse<IStaffSwapRequestItem[]>>({
+            url: "/staff/schedule/swap-requests",
+            params: {
+              ...(filters.box ? { box: filters.box } : {}),
+              ...(filters.status ? { status: filters.status } : {}),
+              ...(filters.cinemaId ? { cinemaId: filters.cinemaId } : {}),
+            },
+          })
+          .then((res) => res.data),
+    };
+  }
+
+  static createSwapRequest(payload: CreateSwapRequestPayload) {
+    return this.api.post<IResponse<IStaffSwapRequestItem>>({
+      url: "/staff/schedule/swap-requests",
+      data: {
+        scheduleId: Number(payload.scheduleId),
+        targetStaffId: Number(payload.targetStaffId),
+        ...(payload.note ? { note: payload.note } : {}),
+      },
+    });
+  }
+
+  static respondSwapRequest(
+    id: number,
+    action: "ACCEPT" | "REJECT" | "CANCEL",
+  ) {
+    return this.api.put<IResponse<IStaffSwapRequestItem>>({
+      url: `/staff/schedule/swap-requests/${id}/respond`,
+      data: { action },
+    });
+  }
+
+  static reviewSwapRequest(id: number, action: "APPROVE" | "REJECT") {
+    return this.api.put<IResponse<IStaffSwapRequestItem>>({
+      url: `/staff/schedule/swap-requests/${id}/review`,
+      data: { action },
     });
   }
 }

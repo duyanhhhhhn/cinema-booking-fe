@@ -3,6 +3,7 @@ import type {
   IStaffScheduleItem,
   IStaffScheduleStaff,
   ScheduleStatus,
+  SwapRequestStatus,
 } from "@/types/data/staff/schedule/schedule";
 import type { IStaffShiftTemplate } from "@/types/data/staff/workshift";
 
@@ -76,6 +77,53 @@ const STATUS_META: Record<
     lightDotClass: "bg-rose-500",
     label: "Đã hủy",
     note: "Ca đã bị hủy",
+  },
+};
+
+const SWAP_STATUS_META: Record<
+  string,
+  {
+    lightBadgeClass: string;
+    lightCardClass: string;
+    label: string;
+    note: string;
+  }
+> = {
+  PENDING_STAFF_RESPONSE: {
+    lightBadgeClass: "border border-sky-200 bg-sky-50 text-sky-700",
+    lightCardClass: "border border-sky-200 bg-sky-50 text-slate-900",
+    label: "Chờ phản hồi",
+    note: "Đang chờ nhân viên được nhờ xác nhận",
+  },
+  PENDING_ADMIN_APPROVAL: {
+    lightBadgeClass: "border border-amber-200 bg-amber-50 text-amber-700",
+    lightCardClass: "border border-amber-200 bg-amber-50 text-slate-900",
+    label: "Chờ manager duyệt",
+    note: "Nhân viên làm thay đã đồng ý",
+  },
+  STAFF_REJECTED: {
+    lightBadgeClass: "border border-rose-200 bg-rose-50 text-rose-700",
+    lightCardClass: "border border-rose-200 bg-rose-50 text-slate-900",
+    label: "Đã từ chối",
+    note: "Nhân viên được nhờ đã từ chối",
+  },
+  ADMIN_APPROVED: {
+    lightBadgeClass: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+    lightCardClass: "border border-emerald-200 bg-emerald-50 text-slate-900",
+    label: "Đã duyệt",
+    note: "Manager đã duyệt chuyển ca",
+  },
+  ADMIN_REJECTED: {
+    lightBadgeClass: "border border-rose-200 bg-rose-50 text-rose-700",
+    lightCardClass: "border border-rose-200 bg-rose-50 text-slate-900",
+    label: "Manager từ chối",
+    note: "Yêu cầu không được duyệt",
+  },
+  CANCELLED: {
+    lightBadgeClass: "border border-slate-200 bg-slate-100 text-slate-600",
+    lightCardClass: "border border-slate-200 bg-slate-100 text-slate-900",
+    label: "Đã hủy",
+    note: "Người gửi đã hủy yêu cầu",
   },
 };
 
@@ -321,6 +369,13 @@ export function groupSchedulesByCell(items: IStaffScheduleItem[]) {
 
 export function getStatusMeta(status?: ScheduleStatus | string | null) {
   return STATUS_META[String(status || "").toUpperCase()] ?? STATUS_META.ASSIGNED;
+}
+
+export function getSwapStatusMeta(status?: SwapRequestStatus | string | null) {
+  return (
+    SWAP_STATUS_META[String(status || "").toUpperCase()] ??
+    SWAP_STATUS_META.PENDING_STAFF_RESPONSE
+  );
 }
 
 export function getErrorMessage(error: any) {

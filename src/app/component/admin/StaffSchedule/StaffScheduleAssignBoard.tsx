@@ -21,8 +21,9 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Add,
   AddCircleOutline,
+  DeleteOutlineOutlined,
   DragIndicator,
-  InfoOutlined,
+  EditOutlined,
   RadioButtonChecked,
   WarningAmberRounded,
 } from "@mui/icons-material";
@@ -71,10 +72,13 @@ interface StaffScheduleAssignBoardProps {
     _shiftId: number,
   ) => void;
   onOpenCreateShift: () => void;
+  onEditShift: (_shift: IStaffShiftTemplate) => void;
+  onDeleteShift: (_shift: IStaffShiftTemplate) => void;
   quickAssignPending?: boolean;
+  shiftTemplatePending?: boolean;
 }
 
-const tableColumns = "230px repeat(7, minmax(180px, 1fr))";
+const tableColumns = "250px repeat(7, minmax(210px, 1fr))";
 
 function buildCellId(staffId: number, workDate: string) {
   return `staff-cell:${staffId}:${workDate}`;
@@ -98,11 +102,15 @@ function DraggableShiftCard({
   shift,
   selected = false,
   onSelect,
+  onEdit,
+  onDelete,
   disabled = false,
 }: {
   shift: IStaffShiftTemplate;
   selected?: boolean;
   onSelect: (_shiftId: number) => void;
+  onEdit: (_shift: IStaffShiftTemplate) => void;
+  onDelete: (_shift: IStaffShiftTemplate) => void;
   disabled?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -122,10 +130,20 @@ function DraggableShiftCard({
     touchAction: disabled ? "auto" : "none",
   } as React.CSSProperties;
 
+  const stopCardAction = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
+      onClick={() => {
+        if (!disabled) {
+          onSelect(shift.id);
+        }
+      }}
       className={`border px-4 py-4 shadow-sm transition ${
         selected
           ? "border-red-600 bg-red-50 text-slate-900 shadow-[0_14px_32px_rgba(220,38,38,0.10)]"
@@ -140,29 +158,47 @@ function DraggableShiftCard({
         <div className="min-w-0">
           <div className="truncate text-sm font-bold">{shift.name}</div>
           <div className="mt-1 text-xs text-slate-500">{formatShiftRange(shift)}</div>
+          <div
+            className={`mt-3 text-[11px] font-semibold ${
+              selected ? "text-red-600" : "text-slate-500"
+            }`}
+          >
+            {selected ? "Đang chọn" : "Chọn"}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={disabled}
-            onPointerDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }}
+            onPointerDown={stopCardAction}
             onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onSelect(shift.id);
+              stopCardAction(event);
+              onEdit(shift);
             }}
             className={`flex h-9 w-9 items-center justify-center border ${
               selected
-                ? "border-red-600 bg-red-600 text-white"
-                : "border-red-100 bg-red-50 text-red-600"
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-200 bg-white text-slate-700"
             } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
-            aria-label="Chọn ca"
+            aria-label="Sửa ca"
           >
-            <Add fontSize="small" />
+            <EditOutlined fontSize="small" />
+          </button>
+          <button
+            type="button"
+            disabled={disabled}
+            onPointerDown={stopCardAction}
+            onClick={(event) => {
+              stopCardAction(event);
+              onDelete(shift);
+            }}
+            className={`flex h-9 w-9 items-center justify-center border border-rose-100 bg-rose-50 text-rose-600 ${
+              disabled ? "cursor-not-allowed opacity-60" : ""
+            }`}
+            aria-label="Xóa ca"
+          >
+            <DeleteOutlineOutlined fontSize="small" />
           </button>
           <div
             className={`flex h-9 w-9 items-center justify-center border ${
@@ -210,7 +246,7 @@ function DroppableCell({
       {isOver ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center border-2 border-dashed border-red-500 bg-red-50/40">
           <div className="bg-red-600 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white">
-            Thả để gán ca
+            Thả vào đây
           </div>
         </div>
       ) : null}
@@ -247,6 +283,9 @@ export default function StaffScheduleAssignBoard({
   onQuickAssign,
   onOpenCreateShift,
   quickAssignPending = false,
+  onEditShift,
+  onDeleteShift,
+  shiftTemplatePending = false,
 }: StaffScheduleAssignBoardProps) {
   const [activeShiftId, setActiveShiftId] = useState<number | null>(null);
   const [selectedTemplateShiftId, setSelectedTemplateShiftId] = useState<number | null>(
@@ -363,54 +402,17 @@ export default function StaffScheduleAssignBoard({
 
   return (
     <div className={`${staffScheduleRoboto.className} space-y-4`}>
-      <section className="border border-slate-200 bg-white px-5 py-4">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-black text-slate-900">
-              <InfoOutlined sx={{ fontSize: 18 }} className="text-red-600" />
-              Cách dùng
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
-              <span className="border border-slate-200 bg-slate-50 px-3 py-2">
-                1. Bấm dấu + để chọn ca
-              </span>
-              <span className="border border-slate-200 bg-slate-50 px-3 py-2">
-                2. Kéo vào ô hoặc bấm Gán
-              </span>
-              <span className="border border-slate-200 bg-slate-50 px-3 py-2">
-                3. Bấm thẻ ca để sửa hoặc huỷ
-              </span>
-            </div>
-          </div>
-
-          <div className="border border-slate-200 bg-slate-50 px-4 py-4">
-            <div className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-              Giới hạn cảnh báo
-            </div>
-            <div className="mt-3 space-y-2 text-sm font-semibold text-slate-900">
-              <div>{STAFF_SCHEDULE_MAX_ACTIVE_SHIFTS_PER_DAY} ca/ngày</div>
-              <div>{STAFF_SCHEDULE_MAX_ACTIVE_HOURS_PER_DAY} giờ/ngày</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className={`${staffScheduleSurface} p-4`}>
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="text-sm font-semibold text-slate-700">Ca mẫu</div>
-          <div className="flex items-center gap-2">
-            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-red-600">
-              Kéo thả hoặc chọn
-            </div>
-            <button
-              type="button"
-              onClick={onOpenCreateShift}
-              className="inline-flex h-9 w-9 items-center justify-center border border-red-600 bg-red-600 text-white hover:bg-red-700"
-              aria-label="Thêm ca mẫu"
-            >
-              <Add fontSize="small" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onOpenCreateShift}
+            className="inline-flex h-9 w-9 items-center justify-center border border-red-600 bg-red-600 text-white hover:bg-red-700"
+            aria-label="Thêm ca mẫu"
+          >
+            <Add fontSize="small" />
+          </button>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -421,7 +423,9 @@ export default function StaffScheduleAssignBoard({
                 shift={shift}
                 selected={Number(selectedTemplateShiftId || 0) === Number(shift.id)}
                 onSelect={(shiftId) => setSelectedTemplateShiftId(shiftId)}
-                disabled={quickAssignPending}
+                onEdit={onEditShift}
+                onDelete={onDeleteShift}
+                disabled={quickAssignPending || shiftTemplatePending}
               />
             ))
           ) : (
@@ -440,9 +444,7 @@ export default function StaffScheduleAssignBoard({
             {selectedTemplateShift?.name || "Chưa chọn ca"}
           </div>
           <div className="mt-1 text-xs text-slate-500">
-            {selectedTemplateShift
-              ? formatShiftRange(selectedTemplateShift)
-              : "Bấm dấu + trên ca mẫu hoặc kéo thẳng card ca vào ô lịch."}
+            {selectedTemplateShift ? formatShiftRange(selectedTemplateShift) : "-"}
           </div>
         </div>
       </section>
@@ -455,7 +457,7 @@ export default function StaffScheduleAssignBoard({
           onDragEnd={handleDragEnd}
         >
           <div className="overflow-x-auto">
-            <div className="min-w-[1490px]">
+            <div className="min-w-[1720px]">
               <div
                 className="grid border-b border-slate-200 bg-white"
                 style={{ gridTemplateColumns: tableColumns }}
@@ -597,12 +599,17 @@ export default function StaffScheduleAssignBoard({
                             hasActiveSelection={Boolean(selectedTemplateShift)}
                             isOverloaded={isOverloaded}
                           >
-                            <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2">
-                              <div className="space-y-1">
+                            <div className="flex items-start justify-between gap-2 border-b border-slate-200 px-3 py-2">
+                              <button
+                                type="button"
+                                disabled={quickAssignPending}
+                                onClick={() => handleCellQuickAssign(staff, day.iso)}
+                                className="min-w-0 flex-1 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                              >
                                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
                                   {day.dayLabel}/{day.monthLabel}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold">
+                                <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
                                   <span className="border border-slate-200 bg-slate-50 px-2 py-1 text-slate-600">
                                     {loadSummary.activeCount
                                       ? `${loadSummary.activeCount} ca`
@@ -612,27 +619,21 @@ export default function StaffScheduleAssignBoard({
                                     {formatHourLabel(loadSummary.activeHours)}
                                   </span>
                                 </div>
-                              </div>
+                                <div className="mt-1 text-[11px] font-semibold text-red-600">
+                                  {selectedTemplateShift
+                                    ? `Gán ${selectedTemplateShift.name}`
+                                    : "Mở ô"}
+                                </div>
+                              </button>
 
-                              <div className="flex items-center gap-2">
-                                {isOverloaded ? (
-                                  <span
-                                    className="inline-flex h-8 w-8 items-center justify-center border border-amber-300 bg-amber-100 text-amber-700"
-                                    title="Ô này đang vượt ngưỡng cảnh báo"
-                                  >
-                                    <WarningAmberRounded sx={{ fontSize: 16 }} />
-                                  </span>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  disabled={quickAssignPending}
-                                  onClick={() => handleCellQuickAssign(staff, day.iso)}
-                                  className="inline-flex h-8 items-center gap-1 border border-red-600 bg-red-600 px-3 text-[11px] font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+                              {isOverloaded ? (
+                                <span
+                                  className="inline-flex h-8 w-8 items-center justify-center border border-amber-300 bg-amber-100 text-amber-700"
+                                  title="Ô này đang vượt ngưỡng cảnh báo"
                                 >
-                                  <AddCircleOutline sx={{ fontSize: 14 }} />
-                                  {selectedTemplateShift ? "Gán" : "Mở"}
-                                </button>
-                              </div>
+                                  <WarningAmberRounded sx={{ fontSize: 16 }} />
+                                </span>
+                              ) : null}
                             </div>
 
                             <div className="flex flex-1 flex-col px-3 py-3">
@@ -717,12 +718,12 @@ export default function StaffScheduleAssignBoard({
                                   <span>
                                     {selectedTemplateShift
                                       ? `Gán ${selectedTemplateShift.name}`
-                                      : "Chọn ca hoặc kéo vào ô"}
+                                      : "Chọn ca"}
                                   </span>
                                   <span className="mt-1 text-[11px] font-medium text-slate-400">
                                     {selectedTemplateShift
                                       ? formatShiftRange(selectedTemplateShift)
-                                      : "Ca mẫu ở phía trên"}
+                                      : "-"}
                                   </span>
                                 </button>
                               )}

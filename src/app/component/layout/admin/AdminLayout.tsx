@@ -48,8 +48,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -57,6 +55,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import { Html5Qrcode } from "html5-qrcode";
 import { UserRole } from "@/types/role";
+import AdminNotificationBell from "./AdminNotificationBell";
 
 const SCANNER_ELEMENT_ID = "admin-qr-scanner";
 
@@ -197,6 +196,11 @@ const menuItems = [
         path: "/admin/staff-schedules",
         roles: [UserRole.ADMIN, UserRole.MANAGER],
       },
+      {
+        text: "Duyệt làm thay",
+        path: "/admin/staff-schedules/swaps",
+        roles: [UserRole.MANAGER],
+      },
     ],
   },
   {
@@ -213,6 +217,11 @@ const menuItems = [
       {
         text: "Xem lịch làm",
         path: "/admin/staff-schedules/my",
+        roles: [UserRole.STAFF],
+      },
+      {
+        text: "Nhờ làm thay",
+        path: "/admin/staff-schedules/my/swaps",
         roles: [UserRole.STAFF],
       },
     ],
@@ -950,6 +959,7 @@ export default function AdminLayout({
             >
               <QrCodeScannerIcon />
             </IconButton>
+            <AdminNotificationBell role={user?.role} />
             <Box
               sx={{
                 display: "flex",

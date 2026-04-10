@@ -37,6 +37,16 @@ interface AssignStaffPanelProps {
 const fieldClass =
   "h-11 w-full rounded-none border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-red-600 focus:ring-0";
 
+const neutralSummaryMeta = {
+  lightBadgeClass: "border border-slate-200 bg-slate-100 text-slate-600",
+  label: "Chưa chọn",
+};
+
+const draftSummaryMeta = {
+  lightBadgeClass: "border border-sky-200 bg-sky-50 text-sky-700",
+  label: "Chưa lưu",
+};
+
 export default function AssignStaffPanel({
   form,
   onChange,
@@ -59,6 +69,15 @@ export default function AssignStaffPanel({
       ? ScheduleStatus.CANCELLED
       : ScheduleStatus.CONFIRMED;
   const statusMeta = getStatusMeta(actionStatus);
+  const hasSelection =
+    Number(form.staffId || 0) > 0 &&
+    Number(form.shiftId || 0) > 0 &&
+    Boolean(form.workDate);
+  const summaryStatusMeta = !hasSelection
+    ? neutralSummaryMeta
+    : selectedSchedule
+      ? statusMeta
+      : draftSummaryMeta;
 
   const canCancel = Boolean(selectedSchedule);
   const canSubmit =
@@ -79,7 +98,7 @@ export default function AssignStaffPanel({
     <aside className={`${staffScheduleRoboto.className} space-y-4`}>
       <div className={`${staffScheduleSurface} sticky top-6 p-5`}>
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-black text-slate-900">Xử lý phân ca</h2>
+          <h2 className="text-xl font-black text-slate-900">Phân ca</h2>
           <button
             type="button"
             onClick={onReset}
@@ -160,7 +179,7 @@ export default function AssignStaffPanel({
 
           <div>
             <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-              Quyết định
+              Thao tác
             </div>
             <div className="grid gap-2">
               <button
@@ -173,7 +192,7 @@ export default function AssignStaffPanel({
                 }`}
               >
                 <EventAvailable fontSize="small" />
-                <span className="text-sm font-bold">Chốt lịch</span>
+                <span className="text-sm font-bold">Chốt</span>
               </button>
               <button
                 type="button"
@@ -196,9 +215,9 @@ export default function AssignStaffPanel({
           <div className="border border-slate-200 p-4">
             <div className="mb-3">
               <span
-                className={`inline-flex items-center rounded-none px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${statusMeta.lightBadgeClass}`}
+                className={`inline-flex items-center rounded-none px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${summaryStatusMeta.lightBadgeClass}`}
               >
-                {statusMeta.label}
+                {summaryStatusMeta.label}
               </span>
             </div>
 

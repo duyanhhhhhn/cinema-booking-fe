@@ -271,6 +271,7 @@ export default function CreateShowtimeModal({
                   <select
                     value={form.roomId}
                     onChange={(e) => onRoomChange(Number(e.target.value))}
+                    disabled={resources.length === 0}
                     className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base font-bold text-slate-900 outline-none transition focus:border-red-400 focus:bg-white"
                   >
                     <option value={0}>-- Chọn phòng --</option>
@@ -281,7 +282,9 @@ export default function CreateShowtimeModal({
                     ))}
                   </select>
                   <div className="mt-3 text-sm text-slate-500">
-                    {selectedRoom
+                    {resources.length === 0
+                      ? "Không có phòng đang hoạt động. Phòng bảo trì hoặc tạm ngưng đã được ẩn."
+                      : selectedRoom
                       ? `Đang chọn ${selectedRoom.name} ${selectedRoom.type ? `• ${selectedRoom.type}` : ""}`
                       : "Chọn phòng trước để lọc phim phù hợp."}
                   </div>
@@ -390,11 +393,12 @@ export default function CreateShowtimeModal({
                         <button
                           type="button"
                           onClick={handleMovieSearchToggle}
+                          disabled={!form.roomId || resources.length === 0}
                           className={`flex h-11 w-11 items-center justify-center rounded-2xl border bg-white shadow-sm transition ${
                             showMovieSearch
                               ? "border-red-200 text-red-500"
                               : "border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-500"
-                          }`}
+                          } disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-300`}
                           aria-label="Tìm phim"
                         >
                           <Search fontSize="small" />
@@ -446,9 +450,17 @@ export default function CreateShowtimeModal({
                               <div className="rounded-[20px] border border-red-200 bg-red-50 p-5 text-sm text-red-600">
                                 Không tải được danh sách phim.
                               </div>
+                            ) : resources.length === 0 ? (
+                              <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+                                Rạp này chưa có phòng đang hoạt động nên chưa thể chọn phim để tạo suất chiếu.
+                              </div>
+                            ) : !selectedRoom ? (
+                              <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+                                Chọn phòng trước để lọc phim theo loại phòng.
+                              </div>
                             ) : filteredMovies.length === 0 ? (
                               <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
-                                Không có phim phù hợp với phòng {selectedRoom?.type ?? "đã chọn"}.
+                                Không có phim khả dụng cho phòng {selectedRoom?.type ?? "đã chọn"}.
                               </div>
                             ) : (
                               <div className="space-y-2.5">

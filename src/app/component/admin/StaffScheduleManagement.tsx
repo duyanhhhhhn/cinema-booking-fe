@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useDeferredValue, useMemo, useState } from "react";
 import {
+  ApprovalRounded,
   ChecklistRtl,
   InfoOutlined,
   CheckCircleOutlineRounded,
@@ -42,10 +43,16 @@ import type { ICinema } from "@/types/data/cinema/types";
 import {
   Schedule,
   ScheduleStatus,
+  type IStaffRegistrationWindow,
   type IStaffScheduleItem,
+  type IStaffSwapRequestItem,
   type ScheduleFormData,
 } from "@/types/data/staff/schedule/schedule";
-import { WorkShift, type CreateWorkShiftPayload } from "@/types/data/staff/workshift";
+import {
+  WorkShift,
+  type CreateWorkShiftPayload,
+  type IStaffShiftTemplate,
+} from "@/types/data/staff/workshift";
 
 type StaffScheduleScreenMode = "overview" | "assign";
 
@@ -141,11 +148,13 @@ function PageHeader({
   role,
   weekLabel,
   currentModeRoute,
+  showSwapReview,
 }: {
   title: string;
   role: string;
   weekLabel: string;
   currentModeRoute: string;
+  showSwapReview: boolean;
 }) {
   return (
     <section className="overflow-hidden rounded-none border border-slate-200 bg-white">
@@ -175,7 +184,7 @@ function PageHeader({
             }`}
           >
             <ViewWeek fontSize="small" />
-            Lịch làm nhân viên
+            Lịch làm
           </Link>
           <Link
             href="/admin/staff-schedules/assign"
@@ -186,8 +195,17 @@ function PageHeader({
             }`}
           >
             <ChecklistRtl fontSize="small" />
-            Phân ca nhân viên
+            Phân ca
           </Link>
+          {showSwapReview ? (
+            <Link
+              href="/admin/staff-schedules/swaps"
+              className="inline-flex items-center gap-2 rounded-none border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-slate-400"
+            >
+              <ApprovalRounded fontSize="small" />
+              Duyệt làm thay
+            </Link>
+          ) : null}
         </div>
       </div>
     </section>
@@ -236,7 +254,6 @@ function showScheduleToast(
       icon: false,
       closeButton: false,
       className: `!min-h-0 !overflow-hidden !border-l-4 ${styles.border} !bg-white !p-0 !shadow-[0_20px_48px_rgba(15,23,42,0.14)]`,
-      bodyClassName: "!p-0",
       autoClose: 4200,
     },
   );
@@ -265,6 +282,7 @@ export default function StaffScheduleManagement({
   const [selectedSchedule, setSelectedSchedule] =
     useState<IStaffScheduleItem | null>(null);
   const [openCreateShiftDialog, setOpenCreateShiftDialog] = useState(false);
+  const [editingShift, setEditingShift] = useState<IStaffShiftTemplate | null>(null);
   const [form, setForm] = useState<ScheduleFormData>({
     staffId: null,
     shiftId: 0,
@@ -333,6 +351,19 @@ export default function StaffScheduleManagement({
       (isManager || (isAdmin && Boolean(effectiveCinemaId))),
   });
 
+  const qSwapReviews = useQuery({
+    ...Schedule.getSwapRequests({
+      box: "review",
+      cinemaId: effectiveCinemaId,
+    }),
+    enabled: Boolean(user) && isManager && Boolean(effectiveCinemaId),
+  });
+
+  const qRegistrationWindow = useQuery({
+    ...Schedule.getRegistrationWindow(),
+    enabled: Boolean(user) && (isAdmin || isManager),
+  });
+
   const shifts = useMemo(
     () => (Array.isArray(qShifts.data?.data) ? qShifts.data.data : []),
     [qShifts.data],
@@ -340,6 +371,14 @@ export default function StaffScheduleManagement({
   const schedules = useMemo(
     () => (Array.isArray(qSchedules.data?.data) ? qSchedules.data.data : []),
     [qSchedules.data],
+  );
+  const swapReviews: IStaffSwapRequestItem[] = useMemo(
+    () => (Array.isArray(qSwapReviews.data?.data) ? qSwapReviews.data.data : []),
+    [qSwapReviews.data],
+  );
+  const registrationWindow: IStaffRegistrationWindow | null = useMemo(
+    () => qRegistrationWindow.data?.data ?? null,
+    [qRegistrationWindow.data],
   );
   const staffFromApi: IStaff[] = useMemo(
     () => (Array.isArray(qStaffs.data?.data) ? qStaffs.data.data.flat() : []),
@@ -511,6 +550,7 @@ export default function StaffScheduleManagement({
         "Tạo ca mẫu thành công",
         response.message || "Ca mẫu mới đã sẵn sàng để sử dụng khi phân công.",
       );
+      setEditingShift(null);
       setOpenCreateShiftDialog(false);
       queryClient.invalidateQueries({
         queryKey: [Schedule.queryKeys.shifts],
@@ -518,6 +558,82 @@ export default function StaffScheduleManagement({
     },
     onError: (error) => {
       showScheduleToast("error", "Không thể tạo ca mẫu", getErrorMessage(error));
+    },
+  });
+
+  const updateShiftMutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: CreateWorkShiftPayload;
+    }) => WorkShift.update(id, payload).then((response) => response.data),
+    onSuccess: (response) => {
+      showScheduleToast(
+        "success",
+        "Cập nhật ca mẫu thành công",
+        response.message || "Ca mẫu đã được cập nhật.",
+      );
+      setEditingShift(null);
+      setOpenCreateShiftDialog(false);
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.shifts],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.cinemaSchedule],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.mySchedule],
+      });
+    },
+    onError: (error) => {
+      showScheduleToast("error", "Không thể cập nhật ca mẫu", getErrorMessage(error));
+    },
+  });
+
+  const deleteShiftMutation = useMutation({
+    mutationFn: (shiftId: number) =>
+      WorkShift.delete(shiftId).then((response) => response.data),
+    onSuccess: (response) => {
+      showScheduleToast(
+        "success",
+        "Xóa ca mẫu thành công",
+        response.message || "Ca mẫu đã được xóa khỏi hệ thống.",
+      );
+      setEditingShift(null);
+      setOpenCreateShiftDialog(false);
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.shifts],
+      });
+    },
+    onError: (error) => {
+      showScheduleToast("error", "Không thể xóa ca mẫu", getErrorMessage(error));
+    },
+  });
+
+  const updateRegistrationWindowMutation = useMutation({
+    mutationFn: (forceOpen: boolean) =>
+      Schedule.updateRegistrationWindow(forceOpen).then((response) => response.data),
+    onSuccess: (response, forceOpen) => {
+      showScheduleToast(
+        "success",
+        forceOpen ? "Đã mở đăng ký ngay" : "Đã bật lại cuối tuần",
+        response.message ||
+          (forceOpen
+            ? "Staff có thể đăng ký tuần sau ngay hôm nay."
+            : "Staff chỉ đăng ký vào thứ 7, chủ nhật."),
+      );
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.registrationWindow],
+      });
+    },
+    onError: (error) => {
+      showScheduleToast(
+        "error",
+        "Không thể đổi chế độ đăng ký",
+        getErrorMessage(error),
+      );
     },
   });
 
@@ -614,6 +730,51 @@ export default function StaffScheduleManagement({
     });
   };
 
+  const handleOpenCreateShiftDialog = () => {
+    setEditingShift(null);
+    setOpenCreateShiftDialog(true);
+  };
+
+  const handleOpenEditShiftDialog = (shift: IStaffShiftTemplate) => {
+    setEditingShift(shift);
+    setOpenCreateShiftDialog(true);
+  };
+
+  const handleCloseShiftDialog = () => {
+    if (createShiftMutation.isPending || updateShiftMutation.isPending) {
+      return;
+    }
+    setEditingShift(null);
+    setOpenCreateShiftDialog(false);
+  };
+
+  const handleSubmitShift = (payload: CreateWorkShiftPayload) => {
+    if (editingShift?.id) {
+      updateShiftMutation.mutate({
+        id: Number(editingShift.id),
+        payload,
+      });
+      return;
+    }
+
+    createShiftMutation.mutate(payload);
+  };
+
+  const handleDeleteShift = (shift: IStaffShiftTemplate) => {
+    if (deleteShiftMutation.isPending) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(
+      `Bạn có chắc muốn xóa ca mẫu "${shift.name}" không?`,
+    );
+    if (!shouldDelete) {
+      return;
+    }
+
+    deleteShiftMutation.mutate(Number(shift.id));
+  };
+
   const resetFilters = () => {
     setSelectedStaffId(null);
     setStatusFilter("");
@@ -661,9 +822,112 @@ export default function StaffScheduleManagement({
     ? getErrorMessage((qSchedules as any).error)
     : qStaffs.isError
       ? getErrorMessage((qStaffs as any).error)
-      : qCinemas.isError
-        ? getErrorMessage((qCinemas as any).error)
-        : "";
+      : qShifts.isError
+        ? getErrorMessage((qShifts as any).error)
+        : qRegistrationWindow.isError
+          ? getErrorMessage((qRegistrationWindow as any).error)
+        : qSwapReviews.isError
+          ? getErrorMessage((qSwapReviews as any).error)
+        : qCinemas.isError
+          ? getErrorMessage((qCinemas as any).error)
+          : "";
+
+  const registrationWindowPanel =
+    qRegistrationWindow.isLoading || registrationWindow ? (
+      <section className={`${staffScheduleSurface} p-5`}>
+        <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="text-lg font-black text-slate-900">Mở đăng ký</div>
+          <div
+            className={`border px-3 py-2 text-sm font-semibold ${
+              registrationWindow?.forceOpen
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-slate-200 bg-slate-50 text-slate-700"
+            }`}
+          >
+            {qRegistrationWindow.isLoading
+              ? "Đang tải..."
+              : registrationWindow?.forceOpen
+                ? "Đang mở ngay"
+                : "Theo cuối tuần"}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-center">
+          <div className="text-sm text-slate-600">
+            {registrationWindow?.forceOpen
+              ? "Staff được đăng ký tuần sau ngay hôm nay."
+              : "Staff chỉ đăng ký vào thứ 7, chủ nhật."}
+          </div>
+
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={() =>
+                updateRegistrationWindowMutation.mutate(
+                  !Boolean(registrationWindow?.forceOpen),
+                )
+              }
+              disabled={
+                qRegistrationWindow.isLoading ||
+                updateRegistrationWindowMutation.isPending
+              }
+              className={`inline-flex h-11 items-center justify-center border px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 ${
+                registrationWindow?.forceOpen
+                  ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                  : "border-red-600 bg-red-600 text-white hover:bg-red-700"
+              }`}
+            >
+              {updateRegistrationWindowMutation.isPending
+                ? "Đang lưu..."
+                : registrationWindow?.forceOpen
+                  ? "Tắt mở ngay"
+                  : "Mở ngay"}
+            </button>
+          ) : (
+            <div className="flex h-11 items-center justify-center border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500">
+              Chỉ admin đổi
+            </div>
+          )}
+        </div>
+      </section>
+    ) : null;
+
+  const swapReviewPanel =
+    isManager && (qSwapReviews.isLoading || swapReviews.length) ? (
+      <section className={`${staffScheduleSurface} p-5`}>
+        <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="text-lg font-black text-slate-900">Làm thay</div>
+          <div className="border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+            {qSwapReviews.isLoading ? "Đang tải..." : `${swapReviews.length} yêu cầu`}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px] xl:items-center">
+          <Link
+            href="/admin/staff-schedules/swaps"
+            className="inline-flex h-11 items-center justify-center border border-red-600 bg-red-600 px-4 text-sm font-bold text-white hover:bg-red-700"
+          >
+            Mở duyệt
+          </Link>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {qSwapReviews.isLoading ? (
+            <div className="border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              Đang tải...
+            </div>
+          ) : swapReviews.length ? (
+            <div className="border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
+              {swapReviews.length} yêu cầu ở {selectedCinemaName}
+            </div>
+          ) : (
+            <div className="border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              Không có yêu cầu.
+            </div>
+          )}
+        </div>
+      </section>
+    ) : null;
 
   const filters = (
     <section className={`${staffScheduleSurface} p-5`}>
@@ -770,10 +1034,11 @@ export default function StaffScheduleManagement({
     return (
       <div className={`${staffScheduleRoboto.className} space-y-4 text-slate-900`}>
         <PageHeader
-          title="Phân ca nhân viên"
+          title="Phân ca"
           role={role}
           weekLabel={weekLabel}
           currentModeRoute={currentModeRoute}
+          showSwapReview={isManager}
         />
 
         {filters}
@@ -784,7 +1049,10 @@ export default function StaffScheduleManagement({
           </div>
         ) : null}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        {registrationWindowPanel}
+        {swapReviewPanel}
+
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_400px]">
           <div className="space-y-4">
             <div className={`${staffScheduleSurface} px-5 py-4`}>
               <div className="text-lg font-black text-slate-900">
@@ -803,8 +1071,15 @@ export default function StaffScheduleManagement({
               emptyDescription=""
               onOpenCell={openAssignSelection}
               onQuickAssign={handleQuickAssign}
-              onOpenCreateShift={() => setOpenCreateShiftDialog(true)}
+              onOpenCreateShift={handleOpenCreateShiftDialog}
+              onEditShift={handleOpenEditShiftDialog}
+              onDeleteShift={handleDeleteShift}
               quickAssignPending={upsertMutation.isPending}
+              shiftTemplatePending={
+                createShiftMutation.isPending ||
+                updateShiftMutation.isPending ||
+                deleteShiftMutation.isPending
+              }
             />
           </div>
 
@@ -823,9 +1098,11 @@ export default function StaffScheduleManagement({
 
         <CreateWorkShiftDialog
           open={openCreateShiftDialog}
-          onClose={() => setOpenCreateShiftDialog(false)}
-          onSubmit={(payload) => createShiftMutation.mutate(payload)}
-          submitting={createShiftMutation.isPending}
+          onClose={handleCloseShiftDialog}
+          mode={editingShift ? "edit" : "create"}
+          initialValues={editingShift}
+          onSubmit={handleSubmitShift}
+          submitting={createShiftMutation.isPending || updateShiftMutation.isPending}
         />
       </div>
     );
@@ -834,10 +1111,11 @@ export default function StaffScheduleManagement({
   return (
     <div className={`${staffScheduleRoboto.className} space-y-4 text-slate-900`}>
       <PageHeader
-        title="Lịch làm nhân viên"
+        title="Lịch làm"
         role={role}
         weekLabel={weekLabel}
         currentModeRoute={currentModeRoute}
+        showSwapReview={isManager}
       />
 
       {filters}
@@ -847,6 +1125,9 @@ export default function StaffScheduleManagement({
           {errorMessage}
         </div>
       ) : null}
+
+      {registrationWindowPanel}
+      {swapReviewPanel}
 
       <div className={`${staffScheduleSurface} px-5 py-4`}>
         <div className="text-lg font-black text-slate-900">{selectedCinemaName}</div>

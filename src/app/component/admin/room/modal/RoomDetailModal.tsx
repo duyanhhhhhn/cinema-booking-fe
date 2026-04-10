@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
   Box,
@@ -23,6 +23,51 @@ interface SeatPrices extends Record<string, number> {
   VIP: number;
   COUPLE: number;
 }
+
+const sleep = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const convertToUISeatLayout = (seatMap: any[]): any[] => {
+  return seatMap.map((row) => {
+    const seats = row.seats.map((seat: any) => ({
+      col: seat.number,
+      type: seat.type || "STANDARD",
+    }));
+
+    return {
+      row: row.rowLabel,
+      type: row.seats?.[0]?.type || "STANDARD",
+      seats,
+    };
+  });
+};
+
+const convertToBackendSeatLayout = (layout: any[], prices: SeatPrices) => {
+  return layout.map((row) => {
+    const rowLabel = row.row;
+
+    const seats = row.seats.map((seat: any) => {
+      const number = seat.col;
+      const seatType = seat.type || "STANDARD";
+
+      return {
+        id: null,
+        number,
+        code: `${rowLabel}${number}`,
+        type: seatType,
+        status: "AVAILABLE",
+        price: prices[seatType],
+      };
+    });
+
+    return {
+      rowLabel,
+      seats,
+    };
+  });
+};
 
 interface RoomDetailModalProps {
   open: boolean;
@@ -61,120 +106,74 @@ export default function RoomDetailModal({
   const updateSeatMutation = useUpdateSeatLayoutMutation();
   const updateRoomMutation = useUpdateRoomMutation();
 
-  const sleep = (ms: number) =>
-    new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
+  const loadRoomDetail = useCallback(async () => {
+    if (!roomId) return;
 
-  // ================= BE → UI =================
-  const convertToUISeatLayout = (seatMap: any[]): any[] => {
-    return seatMap.map((row) => {
-      const seats = row.seats.map((seat: any) => ({
-        col: seat.number,
-        type: seat.type || "STANDARD",
-      }));
+    setIsInitializing(true);
 
-      return {
-        row: row.rowLabel,
-        type: row.seats?.[0]?.type || "STANDARD",
-        seats,
-      };
-    });
-  };
+    try {
+      let room: any = null;
 
-  // ================= UI → BE =================
-  const convertToBackendSeatLayout = (layout: any[], prices: SeatPrices) => {
-    return layout.map((row) => {
-      const rowLabel = row.row;
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        try {
+          const response = await Room.api.get<any>({
+            url: `/rooms/${roomId}`,
+          });
 
-      const seats = row.seats.map((seat: any) => {
-        const number = seat.col;
-        const seatType = seat.type || "STANDARD";
+          room =
+            (response as any)?.data?.data || (response as any)?.data || null;
 
-        return {
-          id: null,
-          number,
-          code: `${rowLabel}${number}`,
-          type: seatType,
-          status: "AVAILABLE",
-          price: prices[seatType],
-        };
+          if (room) break;
+        } catch (error) {
+          if (attempt === 5) throw error;
+          await sleep(500);
+        }
+      }
+
+      if (!room) return;
+
+      setName(room.name || "");
+      setType(room.type || "2D");
+      setStatus(room.status ?? 1);
+      setTotalSeats(room.totalSeats || 0);
+
+      const rawLayout = room.seatLayout || "[]";
+
+      let parsed: any[] = [];
+      try {
+        parsed = JSON.parse(rawLayout);
+      } catch {
+        parsed = [];
+      }
+
+      const uiLayout = convertToUISeatLayout(parsed);
+      const uiString = JSON.stringify(uiLayout);
+
+      setSeatLayout(uiString);
+      setInitialSeatLayout(uiString);
+      setHasChanges(false);
+    } catch (err) {
+      console.error("Fetch room error:", err);
+      toast.error("Không thể tải chi tiết phòng", {
+        description: "Vui lòng thử lại sau ít giây.",
       });
-
-      return {
-        rowLabel,
-        seats,
-      };
-    });
-  };
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [roomId]);
 
   // ================= FETCH ROOM =================
   useEffect(() => {
-    const fetchRoomDetail = async () => {
-      if (!roomId) return;
-
-      setIsInitializing(true);
-
-      try {
-        let room: any = null;
-
-        for (let attempt = 0; attempt < 6; attempt += 1) {
-          try {
-            const response = await Room.api.get<any>({
-              url: `/rooms/${roomId}`,
-            });
-
-            room =
-              (response as any)?.data?.data || (response as any)?.data || null;
-
-            if (room) break;
-          } catch (error) {
-            if (attempt === 5) throw error;
-            await sleep(500);
-          }
-        }
-
-        if (!room) return;
-
-        setName(room.name || "");
-        setType(room.type || "2D");
-
-        // ✅ NEW: set status từ BE
-        setStatus(room.status ?? 1);
-
-        setTotalSeats(room.totalSeats || 0);
-
-        const rawLayout = room.seatLayout || "[]";
-
-        let parsed: any[] = [];
-        try {
-          parsed = JSON.parse(rawLayout);
-        } catch {
-          parsed = [];
-        }
-
-        const uiLayout = convertToUISeatLayout(parsed);
-
-        const uiString = JSON.stringify(uiLayout);
-
-        setSeatLayout(uiString);
-        setInitialSeatLayout(uiString);
-        setHasChanges(false);
-      } catch (err) {
-        console.error("Fetch room error:", err);
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    if (roomId) fetchRoomDetail();
-  }, [roomId]);
+    if (open && roomId) {
+      void loadRoomDetail();
+    }
+  }, [open, roomId, loadRoomDetail]);
 
   // ================= HANDLE CHANGE =================
   const handleSeatChange = (layout: string, total: number) => {
     setSeatLayout(layout);
     setTotalSeats(total);
-    setHasChanges(true);
+    setHasChanges(layout !== initialSeatLayout);
   };
 
   // ================= SAVE LAYOUT =================
@@ -203,8 +202,10 @@ export default function RoomDetailModal({
       {
         onSuccess: () => {
           toast.success("Saved layout successfully");
+          setSeatLayout(layoutToUse);
           setInitialSeatLayout(layoutToUse);
           setHasChanges(false);
+          void loadRoomDetail();
         },
         onError: () => {
           toast.error("Save layout failed ❌");
@@ -242,6 +243,7 @@ export default function RoomDetailModal({
       {
         onSuccess: () => {
           toast.success("Room updated successfully ✅");
+          void loadRoomDetail();
         },
         onError: (error: any) => {
           toast.error("Room update failed ❌", {
@@ -331,10 +333,28 @@ export default function RoomDetailModal({
 
         {/* CENTER */}
         <Box flex={1} p={2}>
-          <SeatLayoutBuilder
-            initialLayout={parsedLayout}
-            onChange={handleSeatChange}
-          />
+          {isInitializing ? (
+            <Box
+              display="flex"
+              height="100%"
+              minHeight={320}
+              alignItems="center"
+              justifyContent="center"
+              flexDirection="column"
+              gap={1}
+            >
+              <Typography variant="h6">Đang tải sơ đồ ghế...</Typography>
+              <Typography color="text.secondary">
+                Hệ thống đang đồng bộ dữ liệu phòng và danh sách ghế.
+              </Typography>
+            </Box>
+          ) : (
+            <SeatLayoutBuilder
+              key={`${roomId}-${initialSeatLayout}`}
+              initialLayout={parsedLayout}
+              onChange={handleSeatChange}
+            />
+          )}
         </Box>
 
         {/* RIGHT */}

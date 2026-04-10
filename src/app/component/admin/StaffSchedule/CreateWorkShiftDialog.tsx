@@ -18,6 +18,8 @@ import { staffScheduleRoboto } from "./staffScheduleTheme";
 interface CreateWorkShiftDialogProps {
   open: boolean;
   onClose: () => void;
+  mode?: "create" | "edit";
+  initialValues?: Partial<CreateWorkShiftPayload> | null;
   onSubmit: (_payload: CreateWorkShiftPayload) => void;
   submitting?: boolean;
 }
@@ -25,6 +27,8 @@ interface CreateWorkShiftDialogProps {
 export default function CreateWorkShiftDialog({
   open,
   onClose,
+  mode = "create",
+  initialValues = null,
   onSubmit,
   submitting = false,
 }: CreateWorkShiftDialogProps) {
@@ -36,6 +40,16 @@ export default function CreateWorkShiftDialog({
     },
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (!open) return;
+
+    methods.reset({
+      name: initialValues?.name ?? "",
+      startTime: initialValues?.startTime ?? "",
+      endTime: initialValues?.endTime ?? "",
+    });
+  }, [initialValues, methods, open]);
 
   useEffect(() => {
     if (!open) {
@@ -62,10 +76,16 @@ export default function CreateWorkShiftDialog({
       }}
     >
       <DialogTitle className="border-b border-slate-200 text-[22px] font-bold text-slate-900">
-        Thêm ca mẫu
+        {mode === "edit" ? "Sửa ca mẫu" : "Thêm ca mẫu"}
       </DialogTitle>
 
       <DialogContent className="space-y-5 bg-white pt-5">
+        {mode === "edit" ? (
+          <div className="border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+            Áp dụng cho lịch đang dùng ca này.
+          </div>
+        ) : null}
+
         <div>
           <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
             Tên ca
@@ -152,7 +172,7 @@ export default function CreateWorkShiftDialog({
             },
           }}
         >
-          {submitting ? "Đang lưu" : "Thêm ca"}
+          {submitting ? "Đang lưu" : mode === "edit" ? "Lưu thay đổi" : "Thêm ca"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { Box, Chip } from "@mui/material";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetCinemaForAdminQuery } from "@/types/data/cinema/cinema";
@@ -14,6 +15,44 @@ import StaffTable from "./table/StaffTable";
 import CustomPagination from "../table/CustomPagination";
 import AddStaffPopup from "./modal/AddStaffPopup";
 import EditStaffPopup from "./modal/EditStaffPopup";
+
+const STAFF_ROLE_SECTIONS = [
+  {
+    key: "MANAGER",
+    title: "Quản lý",
+    description: "Tài khoản quản lý chi nhánh",
+  },
+  {
+    key: "TICKET_SELLER",
+    title: "Nhân viên bán vé",
+    description: "Phụ trách quầy vé",
+  },
+  {
+    key: "TICKET_CHECKER",
+    title: "Nhân viên soát vé",
+    description: "Phụ trách kiểm tra vé",
+  },
+  {
+    key: "CLEANER",
+    title: "Nhân viên vệ sinh",
+    description: "Phụ trách vệ sinh rạp",
+  },
+  {
+    key: "SECURITY",
+    title: "Nhân viên an ninh",
+    description: "Phụ trách an ninh",
+  },
+  {
+    key: "TECHNICIAN",
+    title: "Nhân viên kỹ thuật",
+    description: "Phụ trách thiết bị",
+  },
+  {
+    key: "OTHER_STAFF",
+    title: "Nhân viên khác",
+    description: "Các tài khoản staff chưa gán đúng nhóm",
+  },
+] as const;
 
 export default function StaffManagement() {
   const { user } = useAuth();
@@ -102,6 +141,45 @@ export default function StaffManagement() {
     return data;
   }, [staffData?.data, selectedCinema, userIsManager, user]);
 
+  const groupedStaffSections = useMemo(() => {
+    const normalizeRole = (item: IStaff) =>
+      String(item.role || item.position || "").toUpperCase();
+    const normalizePosition = (item: IStaff) =>
+      String(item.position || "").toUpperCase();
+
+    return STAFF_ROLE_SECTIONS.map((section) => {
+      const items = staffs.filter((item) => {
+        const roleCode = normalizeRole(item);
+        const positionCode = normalizePosition(item);
+
+        if (section.key === "MANAGER") {
+          return roleCode === "MANAGER" || positionCode === "MANAGER";
+        }
+
+        if (roleCode === "MANAGER" || positionCode === "MANAGER") {
+          return false;
+        }
+
+        if (section.key === "OTHER_STAFF") {
+          return ![
+            "TICKET_SELLER",
+            "TICKET_CHECKER",
+            "CLEANER",
+            "SECURITY",
+            "TECHNICIAN",
+          ].includes(positionCode);
+        }
+
+        return positionCode === section.key;
+      });
+
+      return {
+        ...section,
+        items,
+      };
+    }).filter((section) => section.items.length > 0);
+  }, [staffs]);
+
   // Cập nhật query params trên URL
   const updateQueryParams = (
     params: Record<string, string | number | null>,
@@ -170,12 +248,53 @@ export default function StaffManagement() {
           </button>
         </div>
 
-        <StaffTable
-          staffs={staffs}
-          refetch={refetch}
-          onEdit={setEditStaff}
-          cinemaMap={cinemaMap}
-        />
+        {groupedStaffSections.length ? (
+          <div className="space-y-6">
+            {groupedStaffSections.map((section) => (
+              <section
+                key={section.key}
+                className="overflow-hidden rounded-2xl border border-zinc-200 bg-white"
+              >
+                <div className="flex flex-col gap-3 border-b border-zinc-200 bg-zinc-50 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tight text-zinc-900">
+                      {section.title}
+                    </h2>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      {section.description}
+                    </p>
+                  </div>
+
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Chip
+                      label={`${section.items.length} tài khoản`}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: "999px",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e4e4e7",
+                      }}
+                    />
+                  </Box>
+                </div>
+
+                <div className="p-5">
+                  <StaffTable
+                    staffs={section.items}
+                    refetch={refetch}
+                    onEdit={setEditStaff}
+                    cinemaMap={cinemaMap}
+                    emptyMessage={`Không có ${section.title.toLowerCase()}`}
+                  />
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-10 text-center text-zinc-500">
+            Không có dữ liệu nhân sự phù hợp.
+          </div>
+        )}
 
         <CustomPagination
           itemsPerPage={staffData?.meta?.perPage || 10}

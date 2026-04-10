@@ -254,6 +254,15 @@ export default function ShowtimeSchedulerScreen() {
       return;
     }
 
+    if (resources.length === 0) {
+      notify({
+        type: "warning",
+        title: "Không có phòng khả dụng",
+        desc: "Rạp này hiện không có phòng đang hoạt động. Phòng tạm ngưng đã được ẩn khỏi lịch chiếu.",
+      });
+      return;
+    }
+
     const firstRoomId = resources?.[0]?.id ?? 0;
     setForm((prev) => ({
       ...prev,
@@ -575,6 +584,12 @@ export default function ShowtimeSchedulerScreen() {
       </div>
 
       <div className="px-3 py-5 sm:px-4 xl:px-5">
+        {!qScheduler.isLoading && cinemaId > 0 && resources.length === 0 ? (
+          <div className="mb-4 rounded-[24px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm font-bold text-amber-700 shadow-sm">
+            Rạp này hiện chưa có phòng đang hoạt động. Các phòng có status 0 đã được ẩn và không thể thêm hoặc dời suất chiếu vào đó.
+          </div>
+        ) : null}
+
         <SchedulerBoard
           resources={resources}
           events={events}
@@ -607,7 +622,7 @@ export default function ShowtimeSchedulerScreen() {
 
         <button
           onClick={openCreateModal}
-          disabled={cinemaId <= 0}
+          disabled={cinemaId <= 0 || resources.length === 0}
           className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-[24px] border border-red-400 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] text-white shadow-[0_22px_52px_rgba(239,68,68,0.28)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
           <Add />

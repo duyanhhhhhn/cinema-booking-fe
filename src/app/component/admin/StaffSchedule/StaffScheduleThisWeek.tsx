@@ -109,10 +109,10 @@ export default function StaffScheduleThisWeek({
   return (
     <div className={`${staffScheduleRoboto.className} ${staffScheduleSurface} overflow-hidden`}>
       <div className="overflow-x-auto">
-        <div className="min-w-[1540px]">
+        <div className="min-w-[1660px]">
           <div
             className="grid border-b border-slate-200 bg-white"
-            style={{ gridTemplateColumns: "240px repeat(7, minmax(185px, 1fr))" }}
+            style={{ gridTemplateColumns: "260px repeat(7, minmax(200px, 1fr))" }}
           >
             <div className="sticky left-0 z-20 border-r border-slate-200 bg-white px-5 py-4">
               <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
@@ -204,7 +204,7 @@ export default function StaffScheduleThisWeek({
                 key={staff.id}
                 className="grid border-b border-slate-200 last:border-b-0"
                 style={{
-                  gridTemplateColumns: "240px repeat(7, minmax(185px, 1fr))",
+                  gridTemplateColumns: "260px repeat(7, minmax(200px, 1fr))",
                 }}
               >
                 <div
