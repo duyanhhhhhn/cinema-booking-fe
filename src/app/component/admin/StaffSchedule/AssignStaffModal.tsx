@@ -18,12 +18,12 @@ import { ScheduleStatus } from "@/types/data/staff/schedule/schedule";
 import type { IStaffShiftTemplate } from "@/types/data/staff/workshift";
 
 import {
+  canWriteShiftSchedule,
   formatDateLong,
   formatShiftRange,
   getInitials,
   getPositionLabel,
   getStatusMeta,
-  isFutureOrToday,
   resolveMediaUrl,
 } from "./staffScheduleUtils";
 import {
@@ -100,11 +100,15 @@ export default function AssignStaffModal({
       : draftSummaryMeta;
 
   const canCancel = Boolean(selectedSchedule);
+  const targetShiftForAction =
+    actionStatus === ScheduleStatus.CANCELLED
+      ? selectedSchedule?.shift ?? selectedShift ?? null
+      : selectedShift ?? null;
   const canSubmit =
     Number(form.staffId || 0) > 0 &&
     Number(form.shiftId || 0) > 0 &&
     Boolean(form.workDate) &&
-    isFutureOrToday(form.workDate) &&
+    canWriteShiftSchedule(form.workDate, targetShiftForAction) &&
     (actionStatus !== ScheduleStatus.CANCELLED || canCancel);
 
   const submitText =
@@ -410,9 +414,10 @@ export default function AssignStaffModal({
             </div>
 
             <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-end">
-              {!isFutureOrToday(form.workDate) && form.workDate ? (
+              {!canWriteShiftSchedule(form.workDate, targetShiftForAction) &&
+              form.workDate ? (
                 <div className="mr-auto text-sm text-amber-700">
-                  Không thể thao tác lịch cho ngày đã qua.
+                  Không thể thao tác ca đã bắt đầu hoặc đã qua.
                 </div>
               ) : <div className="mr-auto" />}
 

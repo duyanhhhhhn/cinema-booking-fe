@@ -3,6 +3,8 @@ import type {
   IStaffScheduleItem,
   IStaffScheduleStaff,
   ScheduleStatus,
+  UrgentRequestStatus,
+  UrgentRequestType,
   SwapRequestStatus,
 } from "@/types/data/staff/schedule/schedule";
 import type { IStaffShiftTemplate } from "@/types/data/staff/workshift";
@@ -124,6 +126,41 @@ const SWAP_STATUS_META: Record<
     lightCardClass: "border border-slate-200 bg-slate-100 text-slate-900",
     label: "Đã hủy",
     note: "Người gửi đã hủy yêu cầu",
+  },
+};
+
+const URGENT_STATUS_META: Record<
+  string,
+  {
+    lightBadgeClass: string;
+    lightCardClass: string;
+    label: string;
+    note: string;
+  }
+> = {
+  PENDING_ADMIN_APPROVAL: {
+    lightBadgeClass: "border border-amber-200 bg-amber-50 text-amber-700",
+    lightCardClass: "border border-amber-200 bg-amber-50 text-slate-900",
+    label: "Chờ duyệt",
+    note: "Đang chờ quản lý/admin xử lý",
+  },
+  ADMIN_APPROVED: {
+    lightBadgeClass: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+    lightCardClass: "border border-emerald-200 bg-emerald-50 text-slate-900",
+    label: "Đã duyệt",
+    note: "Yêu cầu đã được chấp thuận",
+  },
+  ADMIN_REJECTED: {
+    lightBadgeClass: "border border-rose-200 bg-rose-50 text-rose-700",
+    lightCardClass: "border border-rose-200 bg-rose-50 text-slate-900",
+    label: "Từ chối",
+    note: "Yêu cầu không được duyệt",
+  },
+  CANCELLED: {
+    lightBadgeClass: "border border-slate-200 bg-slate-100 text-slate-600",
+    lightCardClass: "border border-slate-200 bg-slate-100 text-slate-900",
+    label: "Đã hủy",
+    note: "Yêu cầu đã bị hủy",
   },
 };
 
@@ -279,6 +316,46 @@ export function isShiftActiveAt(
   return now.getTime() >= range.start.getTime() && now.getTime() < range.end.getTime();
 }
 
+export function isShiftStartedAt(
+  workDate?: string | null,
+  shift?: IStaffShiftTemplate | null,
+  now = new Date(),
+) {
+  const range = getShiftDateRange(workDate, shift);
+  if (!range) return false;
+  return now.getTime() >= range.start.getTime();
+}
+
+export function isShiftEndedAt(
+  workDate?: string | null,
+  shift?: IStaffShiftTemplate | null,
+  now = new Date(),
+) {
+  const range = getShiftDateRange(workDate, shift);
+  if (!range) return false;
+  return now.getTime() >= range.end.getTime();
+}
+
+export function canWriteShiftSchedule(
+  workDate?: string | null,
+  shift?: IStaffShiftTemplate | null,
+  now = new Date(),
+) {
+  const range = getShiftDateRange(workDate, shift);
+  if (!range) return false;
+  return range.start.getTime() > now.getTime();
+}
+
+export function canCreateUrgentShiftRequest(
+  workDate?: string | null,
+  shift?: IStaffShiftTemplate | null,
+  now = new Date(),
+) {
+  const range = getShiftDateRange(workDate, shift);
+  if (!range) return false;
+  return toIsoDate(now) === String(workDate || "") && now.getTime() < range.end.getTime();
+}
+
 export function getTotalHours(
   items: IStaffScheduleItem[],
   statuses: ScheduleStatus[] = [],
@@ -376,6 +453,24 @@ export function getSwapStatusMeta(status?: SwapRequestStatus | string | null) {
     SWAP_STATUS_META[String(status || "").toUpperCase()] ??
     SWAP_STATUS_META.PENDING_STAFF_RESPONSE
   );
+}
+
+export function getUrgentStatusMeta(status?: UrgentRequestStatus | string | null) {
+  return (
+    URGENT_STATUS_META[String(status || "").toUpperCase()] ??
+    URGENT_STATUS_META.PENDING_ADMIN_APPROVAL
+  );
+}
+
+export function getUrgentTypeLabel(type?: UrgentRequestType | string | null) {
+  const normalized = String(type || "").toUpperCase();
+  if (normalized === "LATE_ARRIVAL") {
+    return "Xin đi muộn";
+  }
+  if (normalized === "EMERGENCY_LEAVE") {
+    return "Hủy khẩn";
+  }
+  return "Yêu cầu khẩn";
 }
 
 export function getErrorMessage(error: any) {

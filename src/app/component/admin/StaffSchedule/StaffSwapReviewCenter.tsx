@@ -36,32 +36,62 @@ import {
 } from "./staffScheduleTheme";
 
 function HeaderTabs() {
-  const linkClass =
-    "inline-flex items-center gap-2 rounded-none border px-4 py-2.5 text-sm font-bold transition";
+  const tabs = [
+    {
+      href: "/admin/staff-schedules",
+      label: "Lịch làm",
+      description: "Mở bảng tuần của nhân viên trong chi nhánh.",
+      icon: <ViewWeek fontSize="small" />,
+    },
+    {
+      href: "/admin/staff-schedules/assign",
+      label: "Phân ca",
+      description: "Tạo hoặc chỉnh ca trực tiếp trên bảng phân công.",
+      icon: <ChecklistRtl fontSize="small" />,
+    },
+    {
+      href: "/admin/staff-schedules/swaps",
+      label: "Duyệt làm thay",
+      description: "Kiểm tra và phản hồi các yêu cầu đổi ca.",
+      icon: <ApprovalRounded fontSize="small" />,
+    },
+  ];
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <Link
-        href="/admin/staff-schedules"
-        className={`${linkClass} border-slate-300 bg-white text-slate-700 hover:border-slate-400`}
-      >
-        <ViewWeek fontSize="small" />
-        Lịch làm
-      </Link>
-      <Link
-        href="/admin/staff-schedules/assign"
-        className={`${linkClass} border-slate-300 bg-white text-slate-700 hover:border-slate-400`}
-      >
-        <ChecklistRtl fontSize="small" />
-        Phân ca
-      </Link>
-      <Link
-        href="/admin/staff-schedules/swaps"
-        className={`${linkClass} border-red-600 bg-red-600 text-white hover:bg-red-700`}
-      >
-        <ApprovalRounded fontSize="small" />
-        Duyệt làm thay
-      </Link>
+    <div className="grid gap-3 lg:grid-cols-3">
+      {tabs.map((item) => {
+        const active = item.href === "/admin/staff-schedules/swaps";
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`block border px-4 py-4 text-left transition ${
+              active
+                ? "border-red-600 bg-red-600 text-white shadow-[0_18px_38px_rgba(220,38,38,0.18)]"
+                : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            <div
+              className={`flex h-10 w-10 items-center justify-center border ${
+                active
+                  ? "border-white/30 bg-white/10 text-white"
+                  : "border-red-100 bg-red-50 text-red-600"
+              }`}
+            >
+              {item.icon}
+            </div>
+            <div className="mt-4 text-base font-black">{item.label}</div>
+            <div
+              className={`mt-2 text-sm leading-6 ${
+                active ? "text-white/85" : "text-slate-500"
+              }`}
+            >
+              {item.description}
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -366,14 +396,21 @@ export default function StaffSwapReviewCenter() {
       <ConfirmDialog />
 
       <section className={`${staffScheduleSurface} overflow-hidden`}>
-        <div className="grid gap-6 border-b border-slate-200 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_55%,#eff6ff_100%)] px-6 py-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-center">
+        <div className="grid gap-6 border-b border-slate-200 bg-white px-6 py-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-center">
           <div>
+            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+              Điều phối lịch ca
+            </div>
             <h1 className="text-[32px] font-black tracking-[-0.04em] text-slate-900">
               Duyệt làm thay
             </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              Chọn nhanh đúng bảng để quay lại xem lịch, phân ca hoặc tiếp tục
+              duyệt yêu cầu đổi ca của staff.
+            </p>
           </div>
 
-          <div className="border border-white/70 bg-white/80 px-4 py-4">
+          <div className="border border-slate-200 bg-white px-4 py-4">
             <div className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
               Chi nhánh
             </div>

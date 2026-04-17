@@ -21,9 +21,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
   MenuItem,
-  Switch,
   Tabs,
   Tab,
 } from "@mui/material";
@@ -241,18 +239,18 @@ export default function ContentManagement() {
           {editingItem ? `Chỉnh sửa ${tabValue === 0 ? "bài viết" : "banner"}` : `Thêm ${tabValue === 0 ? "bài viết" : "banner"} mới`}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} className="mt-2">
-            <Grid item xs={12}>
+          <div className="mt-2 grid gap-4">
+            <div>
               <TextField
                 fullWidth
                 label="Tiêu đề"
                 defaultValue={editingItem?.title || ""}
                 required
               />
-            </Grid>
+            </div>
             {tabValue === 0 ? (
               <>
-                <Grid item xs={6}>
+                <div className="grid gap-4 md:grid-cols-2">
                   <TextField
                     fullWidth
                     label="Danh mục"
@@ -264,8 +262,6 @@ export default function ContentManagement() {
                     <MenuItem value="Tin tức">Tin tức</MenuItem>
                     <MenuItem value="Review">Review</MenuItem>
                   </TextField>
-                </Grid>
-                <Grid item xs={6}>
                   <TextField
                     fullWidth
                     label="Trạng thái"
@@ -276,8 +272,8 @@ export default function ContentManagement() {
                     <MenuItem value="published">Đã đăng</MenuItem>
                     <MenuItem value="draft">Bản nháp</MenuItem>
                   </TextField>
-                </Grid>
-                <Grid item xs={12}>
+                </div>
+                <div>
                   <TextField
                     fullWidth
                     label="Mô tả ngắn"
@@ -285,8 +281,8 @@ export default function ContentManagement() {
                     rows={2}
                     defaultValue={editingItem?.description || ""}
                   />
-                </Grid>
-                <Grid item xs={12}>
+                </div>
+                <div>
                   <TextField
                     fullWidth
                     label="Nội dung"
@@ -294,11 +290,11 @@ export default function ContentManagement() {
                     rows={10}
                     defaultValue={editingItem?.content || ""}
                   />
-                </Grid>
+                </div>
               </>
             ) : (
               <>
-                <Grid item xs={6}>
+                <div className="grid gap-4 md:grid-cols-2">
                   <TextField
                     fullWidth
                     label="Vị trí"
@@ -310,8 +306,6 @@ export default function ContentManagement() {
                     <MenuItem value="movie-detail">Chi tiết phim</MenuItem>
                     <MenuItem value="promotion">Trang khuyến mãi</MenuItem>
                   </TextField>
-                </Grid>
-                <Grid item xs={6}>
                   <TextField
                     fullWidth
                     label="Trạng thái"
@@ -322,8 +316,8 @@ export default function ContentManagement() {
                     <MenuItem value="active">Hoạt động</MenuItem>
                     <MenuItem value="inactive">Tắt</MenuItem>
                   </TextField>
-                </Grid>
-                <Grid item xs={6}>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
                   <TextField
                     fullWidth
                     label="Ngày bắt đầu"
@@ -332,8 +326,6 @@ export default function ContentManagement() {
                     InputLabelProps={{ shrink: true }}
                     required
                   />
-                </Grid>
-                <Grid item xs={6}>
                   <TextField
                     fullWidth
                     label="Ngày kết thúc"
@@ -342,18 +334,18 @@ export default function ContentManagement() {
                     InputLabelProps={{ shrink: true }}
                     required
                   />
-                </Grid>
-                <Grid item xs={12}>
+                </div>
+                <div>
                   <TextField
                     fullWidth
                     label="Link URL"
                     defaultValue={editingItem?.url || ""}
                     placeholder="https://example.com"
                   />
-                </Grid>
+                </div>
               </>
             )}
-          </Grid>
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Hủy</Button>

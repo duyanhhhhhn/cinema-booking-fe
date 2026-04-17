@@ -4,7 +4,9 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
+  CalendarMonthRounded,
   CheckCircleRounded,
+  EditCalendarRounded,
   PendingRounded,
   PersonAddAlt1Rounded,
   SwapHorizRounded,
@@ -24,6 +26,7 @@ import {
 
 import {
   addDays,
+  canWriteShiftSchedule,
   formatDateLong,
   formatShiftRange,
   getErrorMessage,
@@ -36,29 +39,61 @@ import {
 const surfaceClass = "border border-slate-200 bg-white";
 
 function StaffTabs() {
-  const linkClass =
-    "inline-flex items-center border px-4 py-2.5 text-sm font-bold transition";
+  const tabs = [
+    {
+      href: "/admin/staff-schedules/my/request",
+      label: "Đăng ký tuần sau",
+      description: "Chọn ngày và ca để gửi đăng ký làm việc.",
+      icon: <EditCalendarRounded fontSize="small" />,
+      active: false,
+    },
+    {
+      href: "/admin/staff-schedules/my",
+      label: "Xem bảng lịch",
+      description: "Theo dõi lịch của bạn và lịch chung trong rạp.",
+      icon: <CalendarMonthRounded fontSize="small" />,
+      active: false,
+    },
+    {
+      href: "/admin/staff-schedules/my/swaps",
+      label: "Nhờ làm thay",
+      description: "Gửi yêu cầu hoặc phản hồi lời nhờ đổi ca.",
+      icon: <SwapHorizRounded fontSize="small" />,
+      active: true,
+    },
+  ];
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <Link
-        href="/admin/staff-schedules/my/request"
-        className={`${linkClass} border-slate-300 bg-white text-slate-700 hover:border-slate-400`}
-      >
-        Đăng ký
-      </Link>
-      <Link
-        href="/admin/staff-schedules/my"
-        className={`${linkClass} border-slate-300 bg-white text-slate-700 hover:border-slate-400`}
-      >
-        Lịch làm
-      </Link>
-      <Link
-        href="/admin/staff-schedules/my/swaps"
-        className={`${linkClass} border-red-600 bg-red-600 text-white hover:bg-red-700`}
-      >
-        Nhờ làm thay
-      </Link>
+    <div className="grid gap-3 lg:grid-cols-3">
+      {tabs.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`block border px-4 py-4 text-left transition ${
+            item.active
+              ? "border-red-600 bg-red-600 text-white shadow-[0_18px_38px_rgba(220,38,38,0.18)]"
+              : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
+          }`}
+        >
+          <div
+            className={`flex h-10 w-10 items-center justify-center border ${
+              item.active
+                ? "border-white/30 bg-white/10 text-white"
+                : "border-red-100 bg-red-50 text-red-600"
+            }`}
+          >
+            {item.icon}
+          </div>
+          <div className="mt-4 text-base font-black">{item.label}</div>
+          <div
+            className={`mt-2 text-sm leading-6 ${
+              item.active ? "text-white/85" : "text-slate-500"
+            }`}
+          >
+            {item.description}
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
@@ -344,11 +379,6 @@ export default function StaffSwapCenter() {
     refetchInterval: 15000,
   });
 
-  const qSwapCandidates = useQuery({
-    ...Schedule.getSwapCandidates(selectedSwapScheduleId),
-    enabled: isStaff && selectedSwapScheduleId > 0,
-  });
-
   const mySwapScheduleItems: IStaffScheduleItem[] = useMemo(
     () => (Array.isArray(qMySwapSchedule.data?.data) ? qMySwapSchedule.data.data : []),
     [qMySwapSchedule.data],
@@ -367,32 +397,61 @@ export default function StaffSwapCenter() {
         : [],
     [qOutgoingSwapRequests.data],
   );
-  const swapCandidates: ISwapCandidate[] = useMemo(
-    () => (Array.isArray(qSwapCandidates.data?.data) ? qSwapCandidates.data.data : []),
-    [qSwapCandidates.data],
-  );
 
   const swappableItems = useMemo(
     () =>
       mySwapScheduleItems
         .filter((item) => item.status === ScheduleStatus.CONFIRMED)
-        .filter((item) => item.workDate >= todayIso)
+        .filter((item) => canWriteShiftSchedule(item.workDate, item.shift))
         .sort((left, right) => {
           const dateCompare = String(left.workDate).localeCompare(String(right.workDate));
           if (dateCompare !== 0) return dateCompare;
           return String(left.shift.startTime).localeCompare(String(right.shift.startTime));
         }),
-    [mySwapScheduleItems, todayIso],
+    [mySwapScheduleItems],
+  );
+
+  const effectiveSelectedSwapScheduleId = useMemo(() => {
+    if (!swappableItems.length) return 0;
+
+    return swappableItems.some(
+      (item) => Number(item.id) === Number(selectedSwapScheduleId),
+    )
+      ? Number(selectedSwapScheduleId)
+      : Number(swappableItems[0]?.id || 0);
+  }, [selectedSwapScheduleId, swappableItems]);
+
+  const qSwapCandidates = useQuery({
+    ...Schedule.getSwapCandidates(effectiveSelectedSwapScheduleId),
+    enabled: isStaff && effectiveSelectedSwapScheduleId > 0,
+  });
+
+  const swapCandidates: ISwapCandidate[] = useMemo(
+    () => (Array.isArray(qSwapCandidates.data?.data) ? qSwapCandidates.data.data : []),
+    [qSwapCandidates.data],
   );
 
   const selectedSwapSchedule =
-    swappableItems.find((item) => Number(item.id) === Number(selectedSwapScheduleId)) ??
+    swappableItems.find(
+      (item) => Number(item.id) === Number(effectiveSelectedSwapScheduleId),
+    ) ??
     swappableItems[0] ??
     null;
 
+  const effectiveSelectedSwapTargetId = useMemo(() => {
+    if (!swapCandidates.length) return 0;
+
+    return swapCandidates.some(
+      (item) => Number(item.id) === Number(selectedSwapTargetId),
+    )
+      ? Number(selectedSwapTargetId)
+      : Number(swapCandidates[0]?.id || 0);
+  }, [selectedSwapTargetId, swapCandidates]);
+
   const selectedSwapTarget =
-    swapCandidates.find((item) => Number(item.id) === Number(selectedSwapTargetId)) ??
-    null;
+    swapCandidates.find(
+      (item) => Number(item.id) === Number(effectiveSelectedSwapTargetId),
+    ) ?? null;
 
   const incomingPendingCount = useMemo(
     () =>
@@ -464,38 +523,6 @@ export default function StaffSwapCenter() {
   }, [outgoingSwapRequests]);
 
   useEffect(() => {
-    if (!swappableItems.length) {
-      if (selectedSwapScheduleId !== 0) {
-        setSelectedSwapScheduleId(0);
-      }
-      return;
-    }
-
-    const hasCurrent = swappableItems.some(
-      (item) => Number(item.id) === Number(selectedSwapScheduleId),
-    );
-    if (!hasCurrent) {
-      setSelectedSwapScheduleId(Number(swappableItems[0]?.id || 0));
-    }
-  }, [selectedSwapScheduleId, swappableItems]);
-
-  useEffect(() => {
-    if (!swapCandidates.length) {
-      if (selectedSwapTargetId !== 0) {
-        setSelectedSwapTargetId(0);
-      }
-      return;
-    }
-
-    const hasCurrent = swapCandidates.some(
-      (item) => Number(item.id) === Number(selectedSwapTargetId),
-    );
-    if (!hasCurrent) {
-      setSelectedSwapTargetId(Number(swapCandidates[0]?.id || 0));
-    }
-  }, [selectedSwapTargetId, swapCandidates]);
-
-  useEffect(() => {
     if (!focusRequestId) return;
 
     const timer = window.setTimeout(() => {
@@ -511,7 +538,7 @@ export default function StaffSwapCenter() {
     mutationFn: () =>
       Schedule.createSwapRequest({
         scheduleId: Number(selectedSwapSchedule?.id || 0),
-        targetStaffId: Number(selectedSwapTargetId || 0),
+        targetStaffId: Number(effectiveSelectedSwapTargetId || 0),
         note: swapNote.trim() || null,
       }).then((response) => response.data),
     onSuccess: (response) => {
@@ -565,7 +592,7 @@ export default function StaffSwapCenter() {
 
   const canCreateSwapRequest =
     selectedSwapSchedule != null &&
-    Number(selectedSwapTargetId || 0) > 0 &&
+    Number(effectiveSelectedSwapTargetId || 0) > 0 &&
     !createSwapMutation.isPending;
 
   const activeError = qMySwapSchedule.isError
@@ -650,11 +677,18 @@ export default function StaffSwapCenter() {
       <ConfirmDialog />
 
       <section className="space-y-4 border-b border-slate-200 pb-5">
-        <div className="overflow-hidden border border-rose-200 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_55%,#fff7ed_100%)]">
-          <div className="px-5 py-4">
+        <div className="overflow-hidden border border-slate-200 bg-white">
+          <div className="px-5 py-5">
+            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+              Ca làm cá nhân
+            </div>
             <h1 className="text-[28px] font-black tracking-[-0.03em] text-slate-900">
               Nhờ làm thay
             </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Chọn đúng bảng bên dưới để quay lại đăng ký lịch, xem bảng ca
+              hoặc tiếp tục xử lý yêu cầu làm thay.
+            </p>
           </div>
         </div>
 
@@ -695,7 +729,7 @@ export default function StaffSwapCenter() {
             : ""
         }`}
       >
-        <div className="flex flex-col gap-3 border-b border-slate-200 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_62%,#eff6ff_100%)] px-4 py-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-3 border-b border-slate-200 bg-white px-4 py-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <div className="text-lg font-black text-slate-900">Cần xác nhận</div>
             <div className="mt-1 text-sm text-slate-600">
@@ -765,6 +799,9 @@ export default function StaffSwapCenter() {
 
               <div>
                 <div className="text-lg font-black text-slate-900">Người được nhờ</div>
+                <div className="mt-1 text-sm text-slate-500">
+                  Chỉ hiện nhân viên cùng vị trí và đang trống ca.
+                </div>
                 <div className="mt-2 max-h-[320px] space-y-3 overflow-y-auto pr-1">
                   {!selectedSwapSchedule ? (
                     <div className="border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
@@ -779,13 +816,16 @@ export default function StaffSwapCenter() {
                       <CandidatePickCard
                         key={candidate.id}
                         item={candidate}
-                        active={Number(candidate.id) === Number(selectedSwapTargetId)}
+                        active={
+                          Number(candidate.id) ===
+                          Number(effectiveSelectedSwapTargetId)
+                        }
                         onClick={() => setSelectedSwapTargetId(Number(candidate.id))}
                       />
                     ))
                   ) : (
                     <div className="border border-dashed border-amber-300 bg-amber-50 px-4 py-6 text-sm text-amber-700">
-                      Không có staff trống ca này.
+                      Không có nhân viên cùng vị trí đang trống ca này.
                     </div>
                   )}
                 </div>

@@ -401,7 +401,7 @@ export default function StaffScheduleAssignBoard({
   }
 
   return (
-    <div className={`${staffScheduleRoboto.className} space-y-4`}>
+    <div className={`${staffScheduleRoboto.className} min-w-0 space-y-4`}>
       <section className={`${staffScheduleSurface} p-4`}>
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="text-sm font-semibold text-slate-700">Ca mẫu</div>
@@ -456,7 +456,7 @@ export default function StaffScheduleAssignBoard({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="overflow-x-auto">
+          <div className="w-full overflow-x-auto pb-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]">
             <div className="min-w-[1720px]">
               <div
                 className="grid border-b border-slate-200 bg-white"
@@ -481,7 +481,7 @@ export default function StaffScheduleAssignBoard({
                       key={day.iso}
                       className={`border-r px-4 py-4 last:border-r-0 ${
                         isToday
-                          ? "border-red-200 bg-red-50/70"
+                          ? "border-red-200 bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.12)]"
                           : "border-slate-200 bg-white"
                       }`}
                     >

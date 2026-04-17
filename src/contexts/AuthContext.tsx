@@ -27,6 +27,7 @@ export interface User {
   fullName?: string;
   phone?: string;
   role: Role;
+  position?: string;
   avatar: string;
   createdAt: string;
   /** Id rạp gắn với staff/manager (do API /users/me trả về) */
@@ -87,6 +88,7 @@ function decodeToken(token: string): User | null {
       fullName: decoded.fullName || decoded.full_name || decoded.name,
       phone: decoded.phone,
       role: decoded.role || UserRole.CLIENT,
+      position: decoded.position,
       avatar: decoded.avatarUrl,
       createdAt: decoded.createdAt || decoded.iat,
       cinemaId: decoded.cinemaId != null ? decoded.cinemaId : undefined,
@@ -142,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fullName: userData.fullName || userData.full_name || userData.name,
             phone: userData.phone,
             role: userData.role || UserRole.CLIENT,
+            position: userData.position,
             avatar: userData.avatarUrl,
             createdAt: userData.createdAt || userData.iat,
             cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
@@ -172,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     retryData.fullName || retryData.full_name || retryData.name,
                   phone: retryData.phone,
                   role: retryData.role || UserRole.CLIENT,
+                  position: retryData.position,
                   avatar: retryData.avatar,
                   createdAt: retryData.createdAt || retryData.iat,
                   cinemaId: retryData.cinemaId != null ? retryData.cinemaId : undefined,
@@ -225,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 userData.fullName || userData.full_name || userData.name,
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
+              position: userData.position,
               avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
               cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,

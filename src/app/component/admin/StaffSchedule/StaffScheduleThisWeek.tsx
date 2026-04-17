@@ -107,8 +107,8 @@ export default function StaffScheduleThisWeek({
   }
 
   return (
-    <div className={`${staffScheduleRoboto.className} ${staffScheduleSurface} overflow-hidden`}>
-      <div className="overflow-x-auto">
+    <div className={`${staffScheduleRoboto.className} ${staffScheduleSurface} min-w-0 overflow-hidden`}>
+      <div className="w-full overflow-x-auto pb-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]">
         <div className="min-w-[1660px]">
           <div
             className="grid border-b border-slate-200 bg-white"
@@ -138,7 +138,7 @@ export default function StaffScheduleThisWeek({
                   key={day.iso}
                   className={`border-r px-4 py-4 last:border-r-0 ${
                     isToday
-                      ? "border-red-200 bg-red-50/70"
+                      ? "border-red-200 bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.12)]"
                       : "border-slate-200 bg-white"
                   }`}
                 >
@@ -209,7 +209,9 @@ export default function StaffScheduleThisWeek({
               >
                 <div
                   className={`sticky left-0 z-10 border-r border-slate-200 px-5 py-4 ${
-                    isHighlighted ? "bg-red-50" : "bg-white"
+                    isHighlighted
+                      ? "bg-white shadow-[inset_4px_0_0_rgba(220,38,38,0.9)]"
+                      : "bg-white"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -255,9 +257,9 @@ export default function StaffScheduleThisWeek({
                       key={`${staff.id}-${day.iso}`}
                       className={`border-r border-slate-200 p-3 last:border-r-0 ${
                         isToday
-                          ? "bg-red-50/40"
+                          ? "bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.12)]"
                           : isHighlighted
-                          ? "bg-red-50/50"
+                          ? "bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]"
                           : "bg-white"
                       }`}
                     >

@@ -23,7 +23,6 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Badge,
   Avatar,
   Menu,
   MenuItem,
@@ -36,10 +35,10 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 
 // Import Icons MUI (Thay thế cho ti-icons để đảm bảo hiển thị đẹp)
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import PieChartIcon from "@mui/icons-material/PieChart";
 import DomainIcon from "@mui/icons-material/Domain";
 import MovieIcon from "@mui/icons-material/Movie";
 import LocalActivityIcon from "@mui/icons-material/LocalActivity";
@@ -56,11 +55,21 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Html5Qrcode } from "html5-qrcode";
 import { UserRole } from "@/types/role";
 import AdminNotificationBell from "./AdminNotificationBell";
+import { Schedule, ScheduleStatus } from "@/types/data/staff/schedule/schedule";
+import {
+  addDays,
+  isShiftActiveAt,
+  toIsoDate,
+} from "@/app/component/admin/StaffSchedule/staffScheduleUtils";
 
 const SCANNER_ELEMENT_ID = "admin-qr-scanner";
 
 const drawerWidth = 260;
 const collapsedWidth = 72;
+
+function isTicketSellerPosition(value?: string | null) {
+  return String(value || "").toUpperCase() === "TICKET_SELLER";
+}
 
 // --- Cấu hình Menu Data (Dữ liệu mới của bạn) ---
 const menuItems = [
@@ -181,19 +190,19 @@ const menuItems = [
     ],
   },
   {
-    text: "Phân ca làm việc",
+    text: "Lịch ca nhân viên",
     icon: <ArticleIcon />,
     path: "/admin/staff-schedules",
     roles: [UserRole.ADMIN, UserRole.MANAGER],
     children: [
       {
-        text: "Phân ca nhân viên",
-        path: "/admin/staff-schedules/assign",
+        text: "Xem bảng lịch",
+        path: "/admin/staff-schedules",
         roles: [UserRole.ADMIN, UserRole.MANAGER],
       },
       {
-        text: "Lịch làm nhân viên",
-        path: "/admin/staff-schedules",
+        text: "Phân công và duyệt",
+        path: "/admin/staff-schedules/assign",
         roles: [UserRole.ADMIN, UserRole.MANAGER],
       },
       {
@@ -204,18 +213,18 @@ const menuItems = [
     ],
   },
   {
-    text: "Lịch làm việc của tôi",
+    text: "Ca làm của tôi",
     icon: <ArticleIcon />,
     path: "/admin/staff-schedules/my/request",
     roles: [UserRole.STAFF],
     children: [
       {
-        text: "Chọn lịch làm",
+        text: "Đăng ký tuần sau",
         path: "/admin/staff-schedules/my/request",
         roles: [UserRole.STAFF],
       },
       {
-        text: "Xem lịch làm",
+        text: "Xem bảng lịch",
         path: "/admin/staff-schedules/my",
         roles: [UserRole.STAFF],
       },
@@ -303,7 +312,16 @@ const SidebarItem = ({
           </span>
         </ListItemIcon>
         <ListItemText
-          primary={item.text}
+          primary={
+            <span className="flex w-full items-start justify-between gap-2">
+              <span className="min-w-0">{item.text}</span>
+              {item.badgeText ? (
+                <span className="shrink-0 rounded-[6px] border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase leading-none tracking-[0.12em] text-emerald-700 shadow-[0_4px_10px_rgba(16,185,129,0.18)]">
+                  {item.badgeText}
+                </span>
+              ) : null}
+            </span>
+          }
           primaryTypographyProps={{
             fontSize: "0.95rem",
             fontWeight: isParentActive ? 600 : 400,
@@ -757,6 +775,9 @@ export default function AdminLayout({
 
   // 1. Logic Auth & Menu từ code cũ
   const { user, logout } = useAuth(); // Lấy thông tin user
+  const normalizedRole = String(user?.role || "").toUpperCase();
+  const normalizedPosition = String((user as any)?.position || "").toUpperCase();
+  const isStaffUser = normalizedRole === UserRole.STAFF;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
 
@@ -777,6 +798,49 @@ export default function AdminLayout({
 
   const desktopExpanded = desktopSidebarOpen || sidebarHover;
   const desktopSidebarWidth = desktopExpanded ? drawerWidth : collapsedWidth;
+  const scheduleQueryRange = useMemo(() => {
+    const now = new Date();
+    return {
+      startDate: toIsoDate(addDays(now, -1)),
+      endDate: toIsoDate(addDays(now, 1)),
+    };
+  }, []);
+
+  const qMySchedule = useQuery({
+    ...Schedule.getMySchedule({
+      startDate: scheduleQueryRange.startDate,
+      endDate: scheduleQueryRange.endDate,
+    }),
+    enabled: Boolean(user) && isStaffUser,
+    refetchInterval: 15000,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
+  });
+
+  const activeTicketSellerShift = useMemo(() => {
+    if (!isStaffUser) {
+      return null;
+    }
+
+    const items = Array.isArray(qMySchedule.data?.data) ? qMySchedule.data.data : [];
+    const now = new Date();
+
+    return (
+      items.find((item) => {
+        const itemPosition = String(
+          item.staff.position || item.staff.roleName || normalizedPosition || "",
+        ).toUpperCase();
+
+        return (
+          item.status !== ScheduleStatus.CANCELLED &&
+          isTicketSellerPosition(itemPosition) &&
+          isShiftActiveAt(item.workDate, item.shift, now)
+        );
+      }) ?? null
+    );
+  }, [isStaffUser, normalizedPosition, qMySchedule.data]);
+
+  const hasActiveTicketSellerShift = Boolean(activeTicketSellerShift);
 
   // --- Handlers ---
   const handleDrawerToggle = () => {
@@ -797,11 +861,6 @@ export default function AdminLayout({
 
   const handleMenuClose = () => setAnchorEl(null);
 
-  const handleProfileNavigate = () => {
-    handleMenuClose();
-    router.push("/profile");
-  };
-
   const handleLogout = async () => {
     handleMenuClose();
     await logout();
@@ -813,6 +872,32 @@ export default function AdminLayout({
 
     return menuItems
       .map((item) => {
+        if (!item) return item;
+
+        if (normalizedRole === UserRole.STAFF && item.path === "/admin/services") {
+          return hasActiveTicketSellerShift
+            ? {
+                text: "Bán vé",
+                icon: <ConfirmationNumberIcon />,
+                path: "/admin/sell-tickets",
+                roles: [UserRole.STAFF],
+                badgeText: "ĐANG TRỰC",
+              }
+            : null;
+        }
+
+        if (
+          normalizedRole === UserRole.STAFF &&
+          item.path === "/admin/staff-schedules/my/request"
+        ) {
+          return {
+            ...item,
+            children: item.children?.filter(
+              (child) => child.path === "/admin/staff-schedules/my",
+            ),
+          };
+        }
+
         // 1. Lọc menu con (children) trước
         if (item.children) {
           const filteredChildren = item.children.filter(
@@ -826,15 +911,17 @@ export default function AdminLayout({
         return item;
       })
       .filter((item) => {
+        if (!item) return false;
         // 2. Kiểm tra quyền truy cập của menu cha
         const hasParentAccess = !item.roles || item.roles.includes(user.role);
 
         // 3. Đảm bảo: Nếu menu cha có menu con, thì phải còn ít nhất 1 menu con mới hiển thị
-        const hasValidChildren = !item.children || item.children.length > 0;
+        const children = "children" in item ? item.children : undefined;
+        const hasValidChildren = !children || children.length > 0;
 
         return hasParentAccess && hasValidChildren;
       });
-  }, [user]);
+  }, [hasActiveTicketSellerShift, normalizedRole, user]);
 
   const renderDrawerContent = (collapsed: boolean) => (
     <Box
@@ -893,7 +980,7 @@ export default function AdminLayout({
           flex: 1,
           "&::-webkit-scrollbar": { display: "none" },
           scrollbarWidth: "none",
-          "-ms-overflow-style": "none",
+          msOverflowStyle: "none",
         }}
       >
         {authorizedMenuItems.map((item) => (

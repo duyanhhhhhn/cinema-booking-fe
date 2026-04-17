@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import React, { useDeferredValue, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ApprovalRounded,
   ChecklistRtl,
@@ -10,6 +11,8 @@ import {
   Storefront,
   ViewWeek,
   WarningAmberRounded,
+  ScheduleRounded,
+  ReportProblemOutlined,
 } from "@mui/icons-material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -22,8 +25,11 @@ import StaffScheduleAssignBoard from "@/app/component/admin/StaffSchedule/StaffS
 import StaffScheduleThisWeek from "@/app/component/admin/StaffSchedule/StaffScheduleThisWeek";
 import {
   buildProjectedCellLoadSummary,
+  canWriteShiftSchedule,
   formatWeekRange,
   getErrorMessage,
+  getUrgentStatusMeta,
+  getUrgentTypeLabel,
   getWeekDays,
   groupSchedulesByCell,
   normalizeNumber,
@@ -45,8 +51,10 @@ import {
   ScheduleStatus,
   type IStaffRegistrationWindow,
   type IStaffScheduleItem,
+  type IStaffUrgentRequestItem,
   type IStaffSwapRequestItem,
   type ScheduleFormData,
+  UrgentRequestStatus,
 } from "@/types/data/staff/schedule/schedule";
 import {
   WorkShift,
@@ -143,6 +151,12 @@ function WeekSwitcher({
   );
 }
 
+function getManagementRoleLabel(role: string) {
+  if (role === "ADMIN") return "Admin hệ thống";
+  if (role === "MANAGER") return "Manager chi nhánh";
+  return role || "Quản trị";
+}
+
 function PageHeader({
   title,
   role,
@@ -156,57 +170,95 @@ function PageHeader({
   currentModeRoute: string;
   showSwapReview: boolean;
 }) {
+  const roleLabel = getManagementRoleLabel(role);
+  const roleDescription =
+    role === "ADMIN"
+      ? "Chọn chi nhánh rồi mở đúng bảng để xem lịch, phân ca hoặc kiểm soát thời gian đăng ký của staff."
+      : "Theo dõi lịch của chi nhánh, phân ca và xử lý yêu cầu làm thay trong cùng một cụm màn hình.";
+  const navigationItems = [
+    {
+      href: "/admin/staff-schedules",
+      label: "Lịch làm",
+      description: "Xem bảng tuần và lọc nhanh theo nhân viên hoặc trạng thái.",
+      icon: <ViewWeek fontSize="small" />,
+    },
+    {
+      href: "/admin/staff-schedules/assign",
+      label: "Phân ca",
+      description: "Tạo hoặc chỉnh ca trực tiếp trên bảng phân công.",
+      icon: <ChecklistRtl fontSize="small" />,
+    },
+    ...(showSwapReview
+      ? [
+          {
+            href: "/admin/staff-schedules/swaps",
+            label: "Duyệt làm thay",
+            description: "Kiểm tra và phản hồi các yêu cầu đổi ca của staff.",
+            icon: <ApprovalRounded fontSize="small" />,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <section className="overflow-hidden rounded-none border border-slate-200 bg-white">
-      <div className="flex flex-col gap-4 px-6 py-6 xl:flex-row xl:items-center xl:justify-between">
-        <h1 className="text-[32px] font-black tracking-[-0.04em] text-slate-900">
-          {title}
-        </h1>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="rounded-none border border-slate-300 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-700">
-            {role}
+      <div className="grid gap-5 border-b border-slate-200 bg-white px-6 py-6 xl:grid-cols-[minmax(0,1fr)_260px] xl:items-center">
+        <div>
+          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+            Điều phối lịch ca
           </div>
-          <div className="rounded-none border border-red-600 bg-red-600 px-4 py-2 text-xs font-semibold text-white">
+          <h1 className="mt-2 text-[32px] font-black tracking-[-0.04em] text-slate-900">
+            {title}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+            {roleDescription}
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="rounded-none border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-slate-700">
+            {roleLabel}
+          </div>
+          <div className="rounded-none border border-red-600 bg-red-600 px-4 py-3 text-sm font-semibold text-white">
             {weekLabel}
           </div>
         </div>
       </div>
 
-      <div className="border-t border-slate-200 px-6 py-4">
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/staff-schedules"
-            className={`inline-flex items-center gap-2 rounded-none border px-4 py-2.5 text-sm font-bold ${
-              currentModeRoute === "/admin/staff-schedules"
-                ? "border-red-600 bg-red-600 text-white"
-                : "border-slate-300 bg-white text-slate-700"
-            }`}
-          >
-            <ViewWeek fontSize="small" />
-            Lịch làm
-          </Link>
-          <Link
-            href="/admin/staff-schedules/assign"
-            className={`inline-flex items-center gap-2 rounded-none border px-4 py-2.5 text-sm font-bold ${
-              currentModeRoute === "/admin/staff-schedules/assign"
-                ? "border-red-600 bg-red-600 text-white"
-                : "border-slate-300 bg-white text-slate-700"
-            }`}
-          >
-            <ChecklistRtl fontSize="small" />
-            Phân ca
-          </Link>
-          {showSwapReview ? (
+      <div className="grid gap-3 px-6 py-4 lg:grid-cols-3">
+        {navigationItems.map((item) => {
+          const active = currentModeRoute === item.href;
+
+          return (
             <Link
-              href="/admin/staff-schedules/swaps"
-              className="inline-flex items-center gap-2 rounded-none border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-slate-400"
+              key={item.href}
+              href={item.href}
+              className={`group block border px-4 py-4 text-left transition ${
+                active
+                  ? "border-red-600 bg-red-600 text-white shadow-[0_18px_38px_rgba(220,38,38,0.18)]"
+                  : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
+              }`}
             >
-              <ApprovalRounded fontSize="small" />
-              Duyệt làm thay
+              <div
+                className={`flex h-10 w-10 items-center justify-center border ${
+                  active
+                    ? "border-white/30 bg-white/10 text-white"
+                    : "border-red-100 bg-red-50 text-red-600"
+                }`}
+              >
+                {item.icon}
+              </div>
+              <div className="mt-4 text-base font-black">{item.label}</div>
+              <div
+                className={`mt-2 text-sm leading-6 ${
+                  active ? "text-white/85" : "text-slate-500"
+                }`}
+              >
+                {item.description}
+              </div>
             </Link>
-          ) : null}
-        </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -259,11 +311,88 @@ function showScheduleToast(
   );
 }
 
+function UrgentReviewCard({
+  item,
+  pendingAction,
+  onApprove,
+  onReject,
+}: {
+  item: IStaffUrgentRequestItem;
+  pendingAction?: string | null;
+  onApprove: (_id: number) => void;
+  onReject: (_id: number) => void;
+}) {
+  const meta = getUrgentStatusMeta(item.status);
+
+  return (
+    <article
+      id={`urgent-review-card-${item.id}`}
+      className={`border px-4 py-4 ${meta.lightCardClass}`}
+    >
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-700">
+              {item.type === "LATE_ARRIVAL" ? (
+                <ScheduleRounded sx={{ fontSize: 14 }} />
+              ) : (
+                <ReportProblemOutlined sx={{ fontSize: 14 }} />
+              )}
+              {getUrgentTypeLabel(item.type)}
+            </span>
+            <span
+              className={`inline-flex items-center px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${meta.lightBadgeClass}`}
+            >
+              {meta.label}
+            </span>
+          </div>
+
+          <div className="mt-3 text-base font-black text-slate-900">
+            {item.requester.fullName}
+          </div>
+          <div className="mt-1 text-sm text-slate-600">
+            {item.shift.name} • {item.workDate}
+          </div>
+          <div className="mt-1 text-sm text-slate-600">
+            {item.shift.startTime.slice(0, 5)} - {item.shift.endTime.slice(0, 5)}
+          </div>
+          {item.expectedArrivalTime ? (
+            <div className="mt-2 text-sm font-semibold text-slate-700">
+              Dự kiến có mặt: {String(item.expectedArrivalTime).slice(0, 5)}
+            </div>
+          ) : null}
+          <div className="mt-3 text-sm leading-6 text-slate-700">{item.reason}</div>
+        </div>
+
+        <div className="flex min-w-[220px] flex-col gap-2 xl:items-end">
+          <button
+            type="button"
+            disabled={pendingAction === `approve-${item.id}`}
+            onClick={() => onApprove(item.id)}
+            className="h-10 border border-red-600 bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+          >
+            {pendingAction === `approve-${item.id}` ? "Đang duyệt..." : "Duyệt"}
+          </button>
+          <button
+            type="button"
+            disabled={pendingAction === `reject-${item.id}`}
+            onClick={() => onReject(item.id)}
+            className="h-10 border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+          >
+            {pendingAction === `reject-${item.id}` ? "Đang xử lý..." : "Từ chối"}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function StaffScheduleManagement({
   mode = "overview",
 }: {
   mode?: StaffScheduleScreenMode;
 }) {
+  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
 
@@ -271,12 +400,14 @@ export default function StaffScheduleManagement({
   const isAdmin = role === "ADMIN";
   const isManager = role === "MANAGER";
   const isAssignMode = mode === "assign";
+  const focusUrgentRequestId = Number(searchParams.get("focusUrgentRequest") || 0);
 
   const [weekOffset, setWeekOffset] = useState(() => (isAssignMode ? 1 : 0));
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<ScheduleStatus | "">("");
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [pendingUrgentAction, setPendingUrgentAction] = useState<string | null>(null);
   const deferredKeyword = useDeferredValue(searchKeyword.trim().toLowerCase());
 
   const [selectedSchedule, setSelectedSchedule] =
@@ -359,9 +490,20 @@ export default function StaffScheduleManagement({
     enabled: Boolean(user) && isManager && Boolean(effectiveCinemaId),
   });
 
+  const qUrgentReviews = useQuery({
+    ...Schedule.getUrgentRequests({
+      box: "review",
+      status: UrgentRequestStatus.PENDING_ADMIN_APPROVAL,
+      cinemaId: effectiveCinemaId,
+    }),
+    enabled: Boolean(user) && (isManager || isAdmin) && Boolean(effectiveCinemaId),
+    refetchInterval: 15000,
+    staleTime: 5000,
+  });
+
   const qRegistrationWindow = useQuery({
     ...Schedule.getRegistrationWindow(),
-    enabled: Boolean(user) && (isAdmin || isManager),
+    enabled: Boolean(user) && isAdmin,
   });
 
   const shifts = useMemo(
@@ -375,6 +517,10 @@ export default function StaffScheduleManagement({
   const swapReviews: IStaffSwapRequestItem[] = useMemo(
     () => (Array.isArray(qSwapReviews.data?.data) ? qSwapReviews.data.data : []),
     [qSwapReviews.data],
+  );
+  const urgentReviews: IStaffUrgentRequestItem[] = useMemo(
+    () => (Array.isArray(qUrgentReviews.data?.data) ? qUrgentReviews.data.data : []),
+    [qUrgentReviews.data],
   );
   const registrationWindow: IStaffRegistrationWindow | null = useMemo(
     () => qRegistrationWindow.data?.data ?? null,
@@ -404,6 +550,18 @@ export default function StaffScheduleManagement({
 
     return sortByName([...map.values()]);
   }, [baseStaffOptions, schedules]);
+
+  useEffect(() => {
+    if (!focusUrgentRequestId || !urgentReviews.length) return;
+
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById(`urgent-review-card-${focusUrgentRequestId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 160);
+
+    return () => window.clearTimeout(timer);
+  }, [focusUrgentRequestId, urgentReviews.length]);
 
   const effectiveSelectedStaffId = useMemo(() => {
     if (!selectedStaffId) return null;
@@ -637,6 +795,54 @@ export default function StaffScheduleManagement({
     },
   });
 
+  const reviewUrgentMutation = useMutation({
+    mutationFn: ({
+      id,
+      action,
+    }: {
+      id: number;
+      action: "APPROVE" | "REJECT";
+    }) => Schedule.reviewUrgentRequest(id, action).then((response) => response.data),
+    onMutate: ({ id, action }) => {
+      const token = `${action.toLowerCase()}-${id}`;
+      setPendingUrgentAction(token);
+      return { token };
+    },
+    onSuccess: (response, variables) => {
+      showScheduleToast(
+        "success",
+        variables.action === "APPROVE" ? "Đã duyệt yêu cầu khẩn" : "Đã từ chối yêu cầu khẩn",
+        response.message || "Yêu cầu khẩn đã được cập nhật.",
+      );
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.urgentRequests],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.cinemaSchedule],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [Schedule.queryKeys.mySchedule],
+      });
+    },
+    onError: (error) => {
+      showScheduleToast("error", "Không thể xử lý yêu cầu khẩn", getErrorMessage(error));
+    },
+    onSettled: () => {
+      setPendingUrgentAction(null);
+    },
+  });
+
+  const getFormTargetShift = () => {
+    if (form.status === ScheduleStatus.CANCELLED) {
+      return selectedSchedule?.shift ?? null;
+    }
+
+    return shifts.find((item) => Number(item.id) === Number(form.shiftId || 0)) ?? null;
+  };
+
+  const getShiftTemplateById = (shiftId: number) =>
+    shifts.find((item) => Number(item.id) === Number(shiftId)) ?? null;
+
   const patchForm = (patch: Partial<ScheduleFormData>) => {
     const shouldResetSelection =
       Object.prototype.hasOwnProperty.call(patch, "staffId") ||
@@ -688,6 +894,16 @@ export default function StaffScheduleManagement({
   };
 
   const handleSubmit = () => {
+    const targetShift = getFormTargetShift();
+    if (!canWriteShiftSchedule(form.workDate, targetShift)) {
+      showScheduleToast(
+        "warning",
+        "Không thể phân ca vào quá khứ",
+        "Ca này đã bắt đầu hoặc đã qua. Hãy chọn ca khác còn hiệu lực.",
+      );
+      return;
+    }
+
     if (form.status !== ScheduleStatus.CANCELLED) {
       const warning = getProjectedLoadWarning(
         form.staffId,
@@ -709,6 +925,16 @@ export default function StaffScheduleManagement({
     workDate: string,
     shiftId: number,
   ) => {
+    const targetShift = getShiftTemplateById(shiftId);
+    if (!canWriteShiftSchedule(workDate, targetShift)) {
+      showScheduleToast(
+        "warning",
+        "Không thể kéo vào ca đã trôi qua",
+        "Ca này đã bắt đầu hoặc đã qua nên không thể phân công thêm.",
+      );
+      return;
+    }
+
     const warning = getProjectedLoadWarning(staff.id, workDate, shiftId, null);
     if (warning) {
       showScheduleToast("warning", "Cảnh báo tải ca", warning);
@@ -728,6 +954,20 @@ export default function StaffScheduleManagement({
       workDate,
       status: ScheduleStatus.CONFIRMED,
     });
+  };
+
+  const requestReviewUrgent = (id: number, action: "APPROVE" | "REJECT") => {
+    const shouldContinue = window.confirm(
+      action === "APPROVE"
+        ? "Duyệt yêu cầu khẩn này?"
+        : "Từ chối yêu cầu khẩn này?",
+    );
+
+    if (!shouldContinue) {
+      return;
+    }
+
+    reviewUrgentMutation.mutate({ id, action });
   };
 
   const handleOpenCreateShiftDialog = () => {
@@ -824,7 +1064,9 @@ export default function StaffScheduleManagement({
       ? getErrorMessage((qStaffs as any).error)
       : qShifts.isError
         ? getErrorMessage((qShifts as any).error)
-        : qRegistrationWindow.isError
+        : qUrgentReviews.isError
+          ? getErrorMessage((qUrgentReviews as any).error)
+        : isAdmin && qRegistrationWindow.isError
           ? getErrorMessage((qRegistrationWindow as any).error)
         : qSwapReviews.isError
           ? getErrorMessage((qSwapReviews as any).error)
@@ -833,7 +1075,7 @@ export default function StaffScheduleManagement({
           : "";
 
   const registrationWindowPanel =
-    qRegistrationWindow.isLoading || registrationWindow ? (
+    isAdmin && (qRegistrationWindow.isLoading || registrationWindow) ? (
       <section className={`${staffScheduleSurface} p-5`}>
         <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="text-lg font-black text-slate-900">Mở đăng ký</div>
@@ -859,35 +1101,29 @@ export default function StaffScheduleManagement({
               : "Staff chỉ đăng ký vào thứ 7, chủ nhật."}
           </div>
 
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={() =>
-                updateRegistrationWindowMutation.mutate(
-                  !Boolean(registrationWindow?.forceOpen),
-                )
-              }
-              disabled={
-                qRegistrationWindow.isLoading ||
-                updateRegistrationWindowMutation.isPending
-              }
-              className={`inline-flex h-11 items-center justify-center border px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 ${
-                registrationWindow?.forceOpen
-                  ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                  : "border-red-600 bg-red-600 text-white hover:bg-red-700"
-              }`}
-            >
-              {updateRegistrationWindowMutation.isPending
-                ? "Đang lưu..."
-                : registrationWindow?.forceOpen
-                  ? "Tắt mở ngay"
-                  : "Mở ngay"}
-            </button>
-          ) : (
-            <div className="flex h-11 items-center justify-center border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500">
-              Chỉ admin đổi
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() =>
+              updateRegistrationWindowMutation.mutate(
+                !Boolean(registrationWindow?.forceOpen),
+              )
+            }
+            disabled={
+              qRegistrationWindow.isLoading ||
+              updateRegistrationWindowMutation.isPending
+            }
+            className={`inline-flex h-11 items-center justify-center border px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 ${
+              registrationWindow?.forceOpen
+                ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                : "border-red-600 bg-red-600 text-white hover:bg-red-700"
+            }`}
+          >
+            {updateRegistrationWindowMutation.isPending
+              ? "Đang lưu..."
+              : registrationWindow?.forceOpen
+                ? "Tắt mở ngay"
+                : "Mở ngay"}
+          </button>
         </div>
       </section>
     ) : null;
@@ -923,6 +1159,40 @@ export default function StaffScheduleManagement({
           ) : (
             <div className="border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
               Không có yêu cầu.
+            </div>
+          )}
+        </div>
+      </section>
+    ) : null;
+
+  const urgentReviewPanel =
+    (isManager || isAdmin) && (qUrgentReviews.isLoading || urgentReviews.length) ? (
+      <section className={`${staffScheduleSurface} p-5`}>
+        <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="text-lg font-black text-slate-900">Yêu cầu khẩn</div>
+          <div className="border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+            {qUrgentReviews.isLoading ? "Đang tải..." : `${urgentReviews.length} yêu cầu`}
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {qUrgentReviews.isLoading ? (
+            <div className="border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              Đang tải...
+            </div>
+          ) : urgentReviews.length ? (
+            urgentReviews.map((item) => (
+              <UrgentReviewCard
+                key={item.id}
+                item={item}
+                pendingAction={pendingUrgentAction}
+                onApprove={(id) => requestReviewUrgent(id, "APPROVE")}
+                onReject={(id) => requestReviewUrgent(id, "REJECT")}
+              />
+            ))
+          ) : (
+            <div className="border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              Không có yêu cầu khẩn.
             </div>
           )}
         </div>
@@ -1051,9 +1321,10 @@ export default function StaffScheduleManagement({
 
         {registrationWindowPanel}
         {swapReviewPanel}
+        {urgentReviewPanel}
 
         <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_400px]">
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <div className={`${staffScheduleSurface} px-5 py-4`}>
               <div className="text-lg font-black text-slate-900">
                 {selectedCinemaName}
@@ -1128,6 +1399,7 @@ export default function StaffScheduleManagement({
 
       {registrationWindowPanel}
       {swapReviewPanel}
+      {urgentReviewPanel}
 
       <div className={`${staffScheduleSurface} px-5 py-4`}>
         <div className="text-lg font-black text-slate-900">{selectedCinemaName}</div>

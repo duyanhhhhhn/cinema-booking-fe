@@ -12,10 +12,10 @@ import type { IStaffShiftTemplate } from "@/types/data/staff/workshift";
 
 import type { StaffScheduleOption } from "./AssignStaffModal";
 import {
+  canWriteShiftSchedule,
   formatDateLong,
   formatShiftRange,
   getStatusMeta,
-  isFutureOrToday,
 } from "./staffScheduleUtils";
 import {
   staffScheduleRoboto,
@@ -80,11 +80,15 @@ export default function AssignStaffPanel({
       : draftSummaryMeta;
 
   const canCancel = Boolean(selectedSchedule);
+  const targetShiftForAction =
+    actionStatus === ScheduleStatus.CANCELLED
+      ? selectedSchedule?.shift ?? selectedShift ?? null
+      : selectedShift ?? null;
   const canSubmit =
     Number(form.staffId || 0) > 0 &&
     Number(form.shiftId || 0) > 0 &&
     Boolean(form.workDate) &&
-    isFutureOrToday(form.workDate) &&
+    canWriteShiftSchedule(form.workDate, targetShiftForAction) &&
     (actionStatus !== ScheduleStatus.CANCELLED || canCancel);
 
   const submitText =
@@ -254,6 +258,13 @@ export default function AssignStaffPanel({
           {warningMessage ? (
             <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               {warningMessage}
+            </div>
+          ) : null}
+
+          {!canWriteShiftSchedule(form.workDate, targetShiftForAction) &&
+          form.workDate ? (
+            <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Không thể thao tác ca đã bắt đầu hoặc đã qua.
             </div>
           ) : null}
 

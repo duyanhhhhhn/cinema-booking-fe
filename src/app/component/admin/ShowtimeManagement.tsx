@@ -21,7 +21,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
   MenuItem,
 } from "@mui/material";
 
@@ -215,8 +214,8 @@ export default function ShowtimeManagement() {
           {editingShowtime ? "Chỉnh sửa suất chiếu" : "Thêm suất chiếu mới"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} className="mt-2">
-            <Grid item xs={12}>
+          <div className="mt-2 grid gap-4">
+            <div>
               <TextField
                 fullWidth
                 label="Phim"
@@ -228,8 +227,8 @@ export default function ShowtimeManagement() {
                 <MenuItem value="2">The Last Kingdom</MenuItem>
                 <MenuItem value="3">Space Odyssey 2024</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={6}>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 fullWidth
                 label="Chi nhánh"
@@ -240,8 +239,6 @@ export default function ShowtimeManagement() {
                 <MenuItem value="1">CineMax Hồ Chí Minh</MenuItem>
                 <MenuItem value="2">CineMax Hà Nội</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={6}>
               <TextField
                 fullWidth
                 label="Phòng chiếu"
@@ -253,8 +250,8 @@ export default function ShowtimeManagement() {
                 <MenuItem value="2">Phòng 2</MenuItem>
                 <MenuItem value="3">Phòng 3</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={6}>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 fullWidth
                 label="Ngày chiếu"
@@ -263,8 +260,6 @@ export default function ShowtimeManagement() {
                 InputLabelProps={{ shrink: true }}
                 required
               />
-            </Grid>
-            <Grid item xs={6}>
               <TextField
                 fullWidth
                 label="Giờ chiếu"
@@ -273,8 +268,8 @@ export default function ShowtimeManagement() {
                 InputLabelProps={{ shrink: true }}
                 required
               />
-            </Grid>
-            <Grid item xs={6}>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 fullWidth
                 label="Định dạng"
@@ -286,8 +281,6 @@ export default function ShowtimeManagement() {
                 <MenuItem value="3D">3D</MenuItem>
                 <MenuItem value="IMAX">IMAX</MenuItem>
               </TextField>
-            </Grid>
-            <Grid item xs={6}>
               <TextField
                 fullWidth
                 label="Giá vé"
@@ -295,8 +288,8 @@ export default function ShowtimeManagement() {
                 defaultValue={editingShowtime?.price || ""}
                 required
               />
-            </Grid>
-          </Grid>
+            </div>
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Hủy</Button>

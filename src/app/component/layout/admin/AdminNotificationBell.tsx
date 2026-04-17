@@ -147,19 +147,21 @@ export default function AdminNotificationBell({
   };
 
   useEffect(() => {
-    const unreadSwapNotifications = notifications.filter(
-      (item) => !item.read && String(item.type || "").startsWith("STAFF_SWAP"),
+    const unreadActivityNotifications = notifications.filter(
+      (item) =>
+        !item.read &&
+        /^(STAFF_SWAP|STAFF_URGENT|STAFF_LATE)/.test(String(item.type || "")),
     );
 
     if (!readyToastRef.current) {
-      unreadSwapNotifications.forEach((item) => {
+      unreadActivityNotifications.forEach((item) => {
         announcedNotificationIdsRef.current.add(item.id);
       });
       readyToastRef.current = true;
       return;
     }
 
-    unreadSwapNotifications
+    unreadActivityNotifications
       .filter((item) => !announcedNotificationIdsRef.current.has(item.id))
       .slice(0, 3)
       .forEach((item) => {

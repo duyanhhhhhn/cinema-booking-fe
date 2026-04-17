@@ -7,9 +7,7 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid,
   TextField,
-  IconButton,
   Chip,
   Dialog,
   DialogTitle,
@@ -83,9 +81,9 @@ export default function BranchManagement() {
         </Button>
       </div>
 
-      <Grid container spacing={3}>
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {branches.map((branch) => (
-          <Grid item xs={12} md={6} lg={4} key={branch.id}>
+          <div key={branch.id} className="w-full md:w-1/2 xl:w-1/3">
             <Card className="shadow-md hover:shadow-lg transition-shadow h-full">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -142,9 +140,9 @@ export default function BranchManagement() {
                 </div>
               </CardContent>
             </Card>
-          </Grid>
+          </div>
         ))}
-      </Grid>
+      </div>
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
@@ -152,16 +150,16 @@ export default function BranchManagement() {
           {editingBranch ? "Chỉnh sửa chi nhánh" : "Thêm chi nhánh mới"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} className="mt-2">
-            <Grid item xs={12}>
+          <div className="mt-2 grid gap-4">
+            <div>
               <TextField
                 fullWidth
                 label="Tên chi nhánh"
                 defaultValue={editingBranch?.name || ""}
                 required
               />
-            </Grid>
-            <Grid item xs={12}>
+            </div>
+            <div>
               <TextField
                 fullWidth
                 label="Địa chỉ"
@@ -170,24 +168,22 @@ export default function BranchManagement() {
                 defaultValue={editingBranch?.address || ""}
                 required
               />
-            </Grid>
-            <Grid item xs={6}>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 fullWidth
                 label="Số điện thoại"
                 defaultValue={editingBranch?.phone || ""}
                 required
               />
-            </Grid>
-            <Grid item xs={6}>
               <TextField
                 fullWidth
                 label="Quản lý"
                 defaultValue={editingBranch?.manager || ""}
                 required
               />
-            </Grid>
-          </Grid>
+            </div>
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Hủy</Button>

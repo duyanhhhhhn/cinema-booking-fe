@@ -13,6 +13,8 @@ export interface Movie {
   rating: number;
   duration: number;
   format?: string;
+  isShowing?: boolean;
+  comingSoon?: boolean;
   genre: string[];
   director?: string;
   cast?: string[];
