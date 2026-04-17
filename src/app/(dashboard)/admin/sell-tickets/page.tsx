@@ -17,21 +17,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import React, { useCallback, useMemo, useState } from "react";
 import { Seat } from "@/types/data/seat/seat";
 import { Combo, IComboItem } from "@/types/data/combo/combo";
-import { Schedule, ScheduleStatus } from "@/types/data/staff/schedule/schedule";
-import {
-  addDays,
-  isShiftActiveAt,
-  toIsoDate,
-} from "@/app/component/admin/StaffSchedule/staffScheduleUtils";
 import {
   ICreateBookingForAdminForm,
   useCreateBookingForAdminMutation,
 } from "@/types/data/booking/booking";
 import { useNotification } from "@/hooks/useNotification";
-
-function isTicketSellerPosition(value?: string | null) {
-  return String(value || "").toUpperCase() === "TICKET_SELLER";
-}
+import { useStaffTicketSellingAccess } from "@/hooks/useStaffTicketSellingAccess";
 
 function flattenShowtimes(
   data: unknown,
@@ -55,6 +46,8 @@ function flattenShowtimes(
 
 export default function AdminSellTicketsPage() {
   const { user, isAdmin } = useAuth();
+  const { canAccessTicketSelling, isLoadingAccess } =
+    useStaffTicketSellingAccess();
   const { searchQuery, updateQuery, serializeQuery } = useRouteQuery();
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
   const [selectedShowtime, setSelectedShowtime] =
@@ -66,50 +59,6 @@ export default function AdminSellTicketsPage() {
   >("CASH");
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const scheduleQueryRange = useMemo(() => {
-    const now = new Date();
-    return {
-      startDate: toIsoDate(addDays(now, -1)),
-      endDate: toIsoDate(addDays(now, 1)),
-    };
-  }, []);
-  const normalizedRole = String(user?.role || "").toUpperCase();
-  const normalizedPosition = String((user as any)?.position || "").toUpperCase();
-  const isStaffUser = normalizedRole === "STAFF";
-
-  const qMySchedule = useQuery({
-    ...Schedule.getMySchedule({
-      startDate: scheduleQueryRange.startDate,
-      endDate: scheduleQueryRange.endDate,
-    }),
-    enabled: Boolean(user) && !isAdmin,
-    refetchInterval: 15000,
-    staleTime: 5000,
-    refetchOnWindowFocus: true,
-  });
-
-  const canAccessSellTickets = useMemo(() => {
-    if (isAdmin || normalizedRole === "MANAGER") {
-      return true;
-    }
-    if (!isStaffUser) {
-      return false;
-    }
-
-    const items = Array.isArray(qMySchedule.data?.data) ? qMySchedule.data.data : [];
-    const now = new Date();
-    return items.some((item) => {
-      const itemPosition = String(
-        item.staff.position || item.staff.roleName || normalizedPosition || "",
-      ).toUpperCase();
-
-      return (
-        item.status !== ScheduleStatus.CANCELLED &&
-        isTicketSellerPosition(itemPosition) &&
-        isShiftActiveAt(item.workDate, item.shift, now)
-      );
-    });
-  }, [isAdmin, isStaffUser, normalizedPosition, normalizedRole, qMySchedule.data]);
 
   const showtimeIdNum = selectedShowtime?.id ?? 0;
   const hasValidShowtimeId = showtimeIdNum > 0;
@@ -378,7 +327,15 @@ export default function AdminSellTicketsPage() {
     selectedPaymentMethod,
   ]);
 
-  if (!canAccessSellTickets) {
+  if (isLoadingAccess) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600">
+        Đang kiểm tra quyền truy cập chức năng bán vé...
+      </div>
+    );
+  }
+
+  if (!canAccessTicketSelling) {
     return (
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-6 text-sm text-amber-800">
         Chỉ nhân viên `TICKET_SELLER` đang trong ca làm hiện tại mới được mở màn hình bán vé.

@@ -35,7 +35,6 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 
 // Import Icons MUI (Thay thế cho ti-icons để đảm bảo hiển thị đẹp)
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -55,21 +54,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Html5Qrcode } from "html5-qrcode";
 import { UserRole } from "@/types/role";
 import AdminNotificationBell from "./AdminNotificationBell";
-import { Schedule, ScheduleStatus } from "@/types/data/staff/schedule/schedule";
-import {
-  addDays,
-  isShiftActiveAt,
-  toIsoDate,
-} from "@/app/component/admin/StaffSchedule/staffScheduleUtils";
+import { useStaffTicketSellingAccess } from "@/hooks/useStaffTicketSellingAccess";
 
 const SCANNER_ELEMENT_ID = "admin-qr-scanner";
 
 const drawerWidth = 260;
 const collapsedWidth = 72;
-
-function isTicketSellerPosition(value?: string | null) {
-  return String(value || "").toUpperCase() === "TICKET_SELLER";
-}
 
 // --- Cấu hình Menu Data (Dữ liệu mới của bạn) ---
 const menuItems = [
@@ -201,6 +191,11 @@ const menuItems = [
         roles: [UserRole.ADMIN, UserRole.MANAGER],
       },
       {
+        text: "Lịch nhân viên đăng ký",
+        path: "/admin/staff-schedules/registrations",
+        roles: [UserRole.MANAGER],
+      },
+      {
         text: "Phân công và duyệt",
         path: "/admin/staff-schedules/assign",
         roles: [UserRole.ADMIN, UserRole.MANAGER],
@@ -208,6 +203,11 @@ const menuItems = [
       {
         text: "Duyệt làm thay",
         path: "/admin/staff-schedules/swaps",
+        roles: [UserRole.MANAGER],
+      },
+      {
+        text: "Thống kê lịch làm",
+        path: "/admin/staff-schedules/stats",
         roles: [UserRole.MANAGER],
       },
     ],
@@ -776,8 +776,7 @@ export default function AdminLayout({
   // 1. Logic Auth & Menu từ code cũ
   const { user, logout } = useAuth(); // Lấy thông tin user
   const normalizedRole = String(user?.role || "").toUpperCase();
-  const normalizedPosition = String((user as any)?.position || "").toUpperCase();
-  const isStaffUser = normalizedRole === UserRole.STAFF;
+  const { canAccessTicketSelling } = useStaffTicketSellingAccess();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
 
@@ -790,57 +789,12 @@ export default function AdminLayout({
   // 3. Popup quét vé (QR)
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const handler = () => setScanDialogOpen(true);
-    window.addEventListener("open-scan-dialog", handler);
-    return () => window.removeEventListener("open-scan-dialog", handler);
-  }, []);
-
   const desktopExpanded = desktopSidebarOpen || sidebarHover;
   const desktopSidebarWidth = desktopExpanded ? drawerWidth : collapsedWidth;
-  const scheduleQueryRange = useMemo(() => {
-    const now = new Date();
-    return {
-      startDate: toIsoDate(addDays(now, -1)),
-      endDate: toIsoDate(addDays(now, 1)),
-    };
-  }, []);
-
-  const qMySchedule = useQuery({
-    ...Schedule.getMySchedule({
-      startDate: scheduleQueryRange.startDate,
-      endDate: scheduleQueryRange.endDate,
-    }),
-    enabled: Boolean(user) && isStaffUser,
-    refetchInterval: 15000,
-    staleTime: 5000,
-    refetchOnWindowFocus: true,
-  });
-
-  const activeTicketSellerShift = useMemo(() => {
-    if (!isStaffUser) {
-      return null;
-    }
-
-    const items = Array.isArray(qMySchedule.data?.data) ? qMySchedule.data.data : [];
-    const now = new Date();
-
-    return (
-      items.find((item) => {
-        const itemPosition = String(
-          item.staff.position || item.staff.roleName || normalizedPosition || "",
-        ).toUpperCase();
-
-        return (
-          item.status !== ScheduleStatus.CANCELLED &&
-          isTicketSellerPosition(itemPosition) &&
-          isShiftActiveAt(item.workDate, item.shift, now)
-        );
-      }) ?? null
-    );
-  }, [isStaffUser, normalizedPosition, qMySchedule.data]);
-
-  const hasActiveTicketSellerShift = Boolean(activeTicketSellerShift);
+  const canUseTicketSellingTools =
+    normalizedRole === UserRole.ADMIN ||
+    normalizedRole === UserRole.MANAGER ||
+    canAccessTicketSelling;
 
   // --- Handlers ---
   const handleDrawerToggle = () => {
@@ -866,6 +820,7 @@ export default function AdminLayout({
     await logout();
     router.push("/");
   };
+
   const authorizedMenuItems = useMemo(() => {
     // Nếu chưa có user (đang tải), trả về mảng rỗng
     if (!user?.role) return [];
@@ -875,7 +830,7 @@ export default function AdminLayout({
         if (!item) return item;
 
         if (normalizedRole === UserRole.STAFF && item.path === "/admin/services") {
-          return hasActiveTicketSellerShift
+          return canAccessTicketSelling
             ? {
                 text: "Bán vé",
                 icon: <ConfirmationNumberIcon />,
@@ -884,18 +839,6 @@ export default function AdminLayout({
                 badgeText: "ĐANG TRỰC",
               }
             : null;
-        }
-
-        if (
-          normalizedRole === UserRole.STAFF &&
-          item.path === "/admin/staff-schedules/my/request"
-        ) {
-          return {
-            ...item,
-            children: item.children?.filter(
-              (child) => child.path === "/admin/staff-schedules/my",
-            ),
-          };
         }
 
         // 1. Lọc menu con (children) trước
@@ -921,7 +864,20 @@ export default function AdminLayout({
 
         return hasParentAccess && hasValidChildren;
       });
-  }, [hasActiveTicketSellerShift, normalizedRole, user]);
+  }, [canAccessTicketSelling, normalizedRole, user]);
+
+  const handleOpenScanDialog = useCallback(() => {
+    if (!canUseTicketSellingTools) {
+      return;
+    }
+    setScanDialogOpen(true);
+  }, [canUseTicketSellingTools]);
+
+  useEffect(() => {
+    const handler = () => handleOpenScanDialog();
+    window.addEventListener("open-scan-dialog", handler);
+    return () => window.removeEventListener("open-scan-dialog", handler);
+  }, [handleOpenScanDialog]);
 
   const renderDrawerContent = (collapsed: boolean) => (
     <Box
@@ -989,7 +945,7 @@ export default function AdminLayout({
             item={item}
             pathname={pathname}
             collapsed={collapsed}
-            onOpenScanDialog={() => setScanDialogOpen(true)}
+            onOpenScanDialog={handleOpenScanDialog}
           />
         ))}
       </List>
@@ -1038,14 +994,16 @@ export default function AdminLayout({
           {/* Phần bên phải: Quét vé, Notification & Profile */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {/* Quét vé - mở popup quét QR */}
-            <IconButton
-              color="inherit"
-              aria-label="Quét vé"
-              onClick={() => setScanDialogOpen(true)}
-              sx={{ color: "#555" }}
-            >
-              <QrCodeScannerIcon />
-            </IconButton>
+            {canUseTicketSellingTools ? (
+              <IconButton
+                color="inherit"
+                aria-label="Quét vé"
+                onClick={handleOpenScanDialog}
+                sx={{ color: "#555" }}
+              >
+                <QrCodeScannerIcon />
+              </IconButton>
+            ) : null}
             <AdminNotificationBell role={user?.role} />
             <Box
               sx={{

@@ -4,18 +4,12 @@ import Link from "next/link";
 import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  ApprovalRounded,
-  ChecklistRtl,
-  InfoOutlined,
-  CheckCircleOutlineRounded,
   Storefront,
-  ViewWeek,
-  WarningAmberRounded,
   ScheduleRounded,
   ReportProblemOutlined,
 } from "@mui/icons-material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import CreateWorkShiftDialog from "@/app/component/admin/StaffSchedule/CreateWorkShiftDialog";
 import { User } from "@/app/component/admin/user/user";
@@ -28,6 +22,7 @@ import {
   canWriteShiftSchedule,
   formatWeekRange,
   getErrorMessage,
+  getShiftWriteValidationMessage,
   getUrgentStatusMeta,
   getUrgentTypeLabel,
   getWeekDays,
@@ -43,7 +38,13 @@ import {
   staffScheduleRoboto,
   staffScheduleSurface,
 } from "@/app/component/admin/StaffSchedule/staffScheduleTheme";
+import ManagerScheduleTabs from "@/app/component/admin/StaffSchedule/ManagerScheduleTabs";
+import {
+  getManagerCinemaId,
+  resolveManagerCinemaName,
+} from "@/app/component/admin/StaffSchedule/managerCinemaUtils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotification } from "@/hooks/useNotification";
 import { Cinema } from "@/types/data/cinema/cinema";
 import type { ICinema } from "@/types/data/cinema/types";
 import {
@@ -162,43 +163,17 @@ function PageHeader({
   role,
   weekLabel,
   currentModeRoute,
-  showSwapReview,
 }: {
   title: string;
   role: string;
   weekLabel: string;
   currentModeRoute: string;
-  showSwapReview: boolean;
 }) {
   const roleLabel = getManagementRoleLabel(role);
   const roleDescription =
     role === "ADMIN"
       ? "Chọn chi nhánh rồi mở đúng bảng để xem lịch, phân ca hoặc kiểm soát thời gian đăng ký của staff."
       : "Theo dõi lịch của chi nhánh, phân ca và xử lý yêu cầu làm thay trong cùng một cụm màn hình.";
-  const navigationItems = [
-    {
-      href: "/admin/staff-schedules",
-      label: "Lịch làm",
-      description: "Xem bảng tuần và lọc nhanh theo nhân viên hoặc trạng thái.",
-      icon: <ViewWeek fontSize="small" />,
-    },
-    {
-      href: "/admin/staff-schedules/assign",
-      label: "Phân ca",
-      description: "Tạo hoặc chỉnh ca trực tiếp trên bảng phân công.",
-      icon: <ChecklistRtl fontSize="small" />,
-    },
-    ...(showSwapReview
-      ? [
-          {
-            href: "/admin/staff-schedules/swaps",
-            label: "Duyệt làm thay",
-            description: "Kiểm tra và phản hồi các yêu cầu đổi ca của staff.",
-            icon: <ApprovalRounded fontSize="small" />,
-          },
-        ]
-      : []),
-  ];
 
   return (
     <section className="overflow-hidden rounded-none border border-slate-200 bg-white">
@@ -225,41 +200,7 @@ function PageHeader({
         </div>
       </div>
 
-      <div className="grid gap-3 px-6 py-4 lg:grid-cols-3">
-        {navigationItems.map((item) => {
-          const active = currentModeRoute === item.href;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`group block border px-4 py-4 text-left transition ${
-                active
-                  ? "border-red-600 bg-red-600 text-white shadow-[0_18px_38px_rgba(220,38,38,0.18)]"
-                  : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
-              }`}
-            >
-              <div
-                className={`flex h-10 w-10 items-center justify-center border ${
-                  active
-                    ? "border-white/30 bg-white/10 text-white"
-                    : "border-red-100 bg-red-50 text-red-600"
-                }`}
-              >
-                {item.icon}
-              </div>
-              <div className="mt-4 text-base font-black">{item.label}</div>
-              <div
-                className={`mt-2 text-sm leading-6 ${
-                  active ? "text-white/85" : "text-slate-500"
-                }`}
-              >
-                {item.description}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+      <ManagerScheduleTabs activeHref={currentModeRoute} role={role} />
     </section>
   );
 }
@@ -271,44 +212,16 @@ function showScheduleToast(
   title: string,
   description: string,
 ) {
-  const styles =
-    variant === "success"
-      ? {
-          border: "border-emerald-100",
-          iconWrap: "border-emerald-200 bg-emerald-50 text-emerald-600",
-          icon: <CheckCircleOutlineRounded sx={{ fontSize: 18 }} />,
-        }
-      : variant === "warning"
-        ? {
-            border: "border-amber-100",
-            iconWrap: "border-amber-200 bg-amber-50 text-amber-600",
-            icon: <WarningAmberRounded sx={{ fontSize: 18 }} />,
-          }
-        : {
-            border: "border-rose-100",
-            iconWrap: "border-rose-200 bg-rose-50 text-rose-600",
-            icon: <InfoOutlined sx={{ fontSize: 18 }} />,
-          };
-
-  toast(
-    <div className="flex items-start gap-3 bg-white px-4 py-4">
-      <div
-        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center border ${styles.iconWrap}`}
-      >
-        {styles.icon}
-      </div>
-      <div className="min-w-0">
-        <div className="text-sm font-black text-slate-900">{title}</div>
-        <div className="mt-1 text-sm leading-5 text-slate-600">{description}</div>
-      </div>
-    </div>,
-    {
-      icon: false,
-      closeButton: false,
-      className: `!min-h-0 !overflow-hidden !border-l-4 ${styles.border} !bg-white !p-0 !shadow-[0_20px_48px_rgba(15,23,42,0.14)]`,
-      autoClose: 4200,
-    },
-  );
+  const payload = { description, duration: 4200 };
+  if (variant === "success") {
+    toast.success(title, payload);
+    return;
+  }
+  if (variant === "warning") {
+    toast.warning(title, payload);
+    return;
+  }
+  toast.error(title, payload);
 }
 
 function UrgentReviewCard({
@@ -394,6 +307,8 @@ export default function StaffScheduleManagement({
 }) {
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
+  const n = useNotification();
+  const { ConfirmDialog } = n;
   const queryClient = useQueryClient();
 
   const role = String(user?.role || "").toUpperCase();
@@ -441,17 +356,22 @@ export default function StaffScheduleManagement({
     [cinemas, isAdmin],
   );
 
+  const managerCinemaId = useMemo(() => getManagerCinemaId(user), [user]);
+
   const effectiveCinemaId = isManager
-    ? normalizeNumber(user?.cinemaId)
+    ? managerCinemaId
     : selectedCinemaId ?? defaultAdminCinemaId;
 
   const selectedCinemaName = useMemo(() => {
+    if (isManager) {
+      return resolveManagerCinemaName(user, cinemas, "Chưa xác định chi nhánh");
+    }
     if (!effectiveCinemaId) return "Chưa chọn chi nhánh";
     return (
       cinemas.find((cinema) => Number(cinema.id) === Number(effectiveCinemaId))
         ?.name ?? `Chi nhánh #${effectiveCinemaId}`
     );
-  }, [cinemas, effectiveCinemaId]);
+  }, [cinemas, effectiveCinemaId, isManager, user]);
 
   const qShifts = useQuery({
     ...Schedule.getShiftTemplates(),
@@ -895,11 +815,16 @@ export default function StaffScheduleManagement({
 
   const handleSubmit = () => {
     const targetShift = getFormTargetShift();
-    if (!canWriteShiftSchedule(form.workDate, targetShift)) {
+    const writeValidationMessage = getShiftWriteValidationMessage(
+      form.workDate,
+      targetShift,
+    );
+    if (writeValidationMessage || !canWriteShiftSchedule(form.workDate, targetShift)) {
       showScheduleToast(
         "warning",
-        "Không thể phân ca vào quá khứ",
-        "Ca này đã bắt đầu hoặc đã qua. Hãy chọn ca khác còn hiệu lực.",
+        "Không thể thêm lịch vào thời gian đã qua",
+        writeValidationMessage ||
+          "Ca này đã bắt đầu hoặc đã qua. Hãy chọn ca khác còn hiệu lực.",
       );
       return;
     }
@@ -926,11 +851,16 @@ export default function StaffScheduleManagement({
     shiftId: number,
   ) => {
     const targetShift = getShiftTemplateById(shiftId);
-    if (!canWriteShiftSchedule(workDate, targetShift)) {
+    const writeValidationMessage = getShiftWriteValidationMessage(
+      workDate,
+      targetShift,
+    );
+    if (writeValidationMessage || !canWriteShiftSchedule(workDate, targetShift)) {
       showScheduleToast(
         "warning",
-        "Không thể kéo vào ca đã trôi qua",
-        "Ca này đã bắt đầu hoặc đã qua nên không thể phân công thêm.",
+        "Không thể thêm lịch vào thời gian đã qua",
+        writeValidationMessage ||
+          "Ca này đã bắt đầu hoặc đã qua nên không thể phân công thêm.",
       );
       return;
     }
@@ -957,17 +887,17 @@ export default function StaffScheduleManagement({
   };
 
   const requestReviewUrgent = (id: number, action: "APPROVE" | "REJECT") => {
-    const shouldContinue = window.confirm(
+    n.confirm(
       action === "APPROVE"
         ? "Duyệt yêu cầu khẩn này?"
         : "Từ chối yêu cầu khẩn này?",
+      {
+        title: "Xác nhận",
+        confirmText: action === "APPROVE" ? "Duyệt" : "Từ chối",
+        cancelText: "Quay lại",
+        onConfirm: () => reviewUrgentMutation.mutate({ id, action }),
+      },
     );
-
-    if (!shouldContinue) {
-      return;
-    }
-
-    reviewUrgentMutation.mutate({ id, action });
   };
 
   const handleOpenCreateShiftDialog = () => {
@@ -1005,14 +935,12 @@ export default function StaffScheduleManagement({
       return;
     }
 
-    const shouldDelete = window.confirm(
-      `Bạn có chắc muốn xóa ca mẫu "${shift.name}" không?`,
-    );
-    if (!shouldDelete) {
-      return;
-    }
-
-    deleteShiftMutation.mutate(Number(shift.id));
+    n.confirm(`Bạn có chắc muốn xóa ca mẫu "${shift.name}" không?`, {
+      title: "Xác nhận",
+      confirmText: "Xóa ca mẫu",
+      cancelText: "Quay lại",
+      onConfirm: () => deleteShiftMutation.mutate(Number(shift.id)),
+    });
   };
 
   const resetFilters = () => {
@@ -1303,12 +1231,12 @@ export default function StaffScheduleManagement({
   if (isAssignMode) {
     return (
       <div className={`${staffScheduleRoboto.className} space-y-4 text-slate-900`}>
+        <ConfirmDialog />
         <PageHeader
           title="Phân ca"
           role={role}
           weekLabel={weekLabel}
           currentModeRoute={currentModeRoute}
-          showSwapReview={isManager}
         />
 
         {filters}
@@ -1381,12 +1309,12 @@ export default function StaffScheduleManagement({
 
   return (
     <div className={`${staffScheduleRoboto.className} space-y-4 text-slate-900`}>
+      <ConfirmDialog />
       <PageHeader
         title="Lịch làm"
         role={role}
         weekLabel={weekLabel}
         currentModeRoute={currentModeRoute}
-        showSwapReview={isManager}
       />
 
       {filters}

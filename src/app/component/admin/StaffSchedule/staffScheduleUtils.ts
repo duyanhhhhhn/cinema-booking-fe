@@ -346,6 +346,34 @@ export function canWriteShiftSchedule(
   return range.start.getTime() > now.getTime();
 }
 
+export function getShiftWriteValidationMessage(
+  workDate?: string | null,
+  shift?: IStaffShiftTemplate | null,
+  now = new Date(),
+) {
+  if (!workDate || !shift) {
+    return null;
+  }
+
+  const range = getShiftDateRange(workDate, shift);
+  if (!range) {
+    return "Dữ liệu ca làm không hợp lệ.";
+  }
+
+  const todayIso = toIsoDate(now);
+  const targetDateIso = String(workDate);
+
+  if (targetDateIso < todayIso) {
+    return "Không thể thêm lịch cho ngày trong quá khứ.";
+  }
+
+  if (targetDateIso === todayIso && range.start.getTime() <= now.getTime()) {
+    return "Nếu là hôm nay, chỉ có thể thêm ca có giờ bắt đầu lớn hơn thời điểm hiện tại.";
+  }
+
+  return null;
+}
+
 export function canCreateUrgentShiftRequest(
   workDate?: string | null,
   shift?: IStaffShiftTemplate | null,

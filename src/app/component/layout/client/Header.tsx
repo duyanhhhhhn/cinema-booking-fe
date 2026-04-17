@@ -12,7 +12,7 @@ import { UserRole } from "@/types";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
   const toggleMenu = () => {
@@ -155,7 +155,7 @@ export default function Header() {
           <Menu
             id="user-menu"
             anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
+            open={Boolean(anchorEl && user)}
             onClose={handleUserMenuClose}
             sx={{
               mt: 1,
@@ -175,52 +175,56 @@ export default function Header() {
               horizontal: "right",
             }}
           >
-            {user.role === UserRole.CLIENT ? (
-              <>
+            {user ? (
+              user.role === UserRole.CLIENT ? (
+                <>
+                  <MenuItem
+                    onClick={handleProfile}
+                    sx={{
+                      "&:hover": { backgroundColor: "#374151" },
+                      gap: 2,
+                    }}
+                  >
+                    <Person fontSize="small" />
+                    Thông tin cá nhân
+                  </MenuItem>
+                  <MenuItem
+                    onClick={handleMyTickets}
+                    sx={{
+                      "&:hover": { backgroundColor: "#374151" },
+                      gap: 2,
+                    }}
+                  >
+                    <ConfirmationNumber fontSize="small" />
+                    Vé của tôi
+                  </MenuItem>
+                </>
+              ) : (
                 <MenuItem
-                  onClick={handleProfile}
+                  onClick={handleAdmin}
                   sx={{
                     "&:hover": { backgroundColor: "#374151" },
                     gap: 2,
                   }}
                 >
                   <Person fontSize="small" />
-                  Thông tin cá nhân
+                  Chuyển đến Trang quản lý
                 </MenuItem>
-                <MenuItem
-                  onClick={handleMyTickets}
-                  sx={{
-                    "&:hover": { backgroundColor: "#374151" },
-                    gap: 2,
-                  }}
-                >
-                  <ConfirmationNumber fontSize="small" />
-                  Vé của tôi
-                </MenuItem>
-              </>
-            ) : (
+              )
+            ) : null}
+            {user ? (
               <MenuItem
-                onClick={handleAdmin}
+                onClick={handleLogout}
                 sx={{
                   "&:hover": { backgroundColor: "#374151" },
                   gap: 2,
+                  color: "#ef4444",
                 }}
               >
-                <Person fontSize="small" />
-                Chuyển đến Trang quản lý
+                <Logout fontSize="small" />
+                Đăng xuất
               </MenuItem>
-            )}
-            <MenuItem
-              onClick={handleLogout}
-              sx={{
-                "&:hover": { backgroundColor: "#374151" },
-                gap: 2,
-                color: "#ef4444",
-              }}
-            >
-              <Logout fontSize="small" />
-              Đăng xuất
-            </MenuItem>
+            ) : null}
           </Menu>
 
           {/* Mobile Menu Button */}

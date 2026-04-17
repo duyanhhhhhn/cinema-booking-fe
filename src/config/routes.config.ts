@@ -77,6 +77,7 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
   // 3. Dịch vụ & Ưu đãi
   { path: "/admin/services", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF], description: "Dịch vụ và ưu đãi" },
   { path: "/admin/tickets", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Vé đã bán" },
+  { path: "/admin/tickets/[code]", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF], description: "Chi tiết vé tại quầy" },
   { path: "/admin/sell-tickets", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF], description: "Bán vé tại quầy" },
   { path: "/admin/combos", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Combo & Đồ ăn" },
   { path: "/admin/vouchers", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Mã giảm giá" },
@@ -95,7 +96,9 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
   // 6. Phân ca làm việc (Dành cho Admin & Manager)
   { path: "/admin/staff-schedules/assign", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Phân ca nhân viên" },
   { path: "/admin/staff-schedules", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Lịch làm nhân viên" },
+  { path: "/admin/staff-schedules/registrations", guard: "admin", fallbackUrl: "/", roles: [UserRole.MANAGER], description: "Lịch nhân viên đăng ký" },
   { path: "/admin/staff-schedules/swaps", guard: "admin", fallbackUrl: "/", roles: [UserRole.MANAGER], description: "Duyệt làm thay" },
+  { path: "/admin/staff-schedules/stats", guard: "admin", fallbackUrl: "/", roles: [UserRole.MANAGER], description: "Thống kê lịch làm" },
 
   // 7. Lịch làm việc cá nhân (Dành riêng cho Staff)
   { path: "/admin/staff-schedules/my/request", guard: "admin", fallbackUrl: "/", roles: [UserRole.STAFF], description: "Chọn lịch làm cá nhân" },
@@ -158,9 +161,10 @@ export function requiresAuth(pathname: string): boolean {
 export function getRedirectUrlByRole(role: UserRole | string): string {
   switch (role) {
     case UserRole.ADMIN:
-    case UserRole.STAFF:
     case UserRole.MANAGER:
       return "/admin";
+    case UserRole.STAFF:
+      return "/admin/staff-schedules/my/request";
     case UserRole.CLIENT:
     default:
       return "/";

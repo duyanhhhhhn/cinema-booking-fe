@@ -28,6 +28,7 @@ export interface User {
   phone?: string;
   role: Role;
   position?: string;
+  cinemaName?: string;
   avatar: string;
   createdAt: string;
   /** Id rạp gắn với staff/manager (do API /users/me trả về) */
@@ -44,8 +45,8 @@ interface AuthContextType {
 
   // Auth actions
   login: (
-    email: string,
-    password: string,
+    _email: string,
+    _password: string,
   ) => Promise<{ success: boolean; error?: string; user?: User }>;
   logout: () => Promise<void>;
 
@@ -89,6 +90,7 @@ function decodeToken(token: string): User | null {
       phone: decoded.phone,
       role: decoded.role || UserRole.CLIENT,
       position: decoded.position,
+      cinemaName: decoded.cinemaName || decoded.cinema_name || decoded.cinema?.name,
       avatar: decoded.avatarUrl,
       createdAt: decoded.createdAt || decoded.iat,
       cinemaId: decoded.cinemaId != null ? decoded.cinemaId : undefined,
@@ -145,6 +147,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: userData.phone,
             role: userData.role || UserRole.CLIENT,
             position: userData.position,
+            cinemaName:
+              userData.cinemaName ||
+              userData.cinema_name ||
+              userData.cinema?.name,
             avatar: userData.avatarUrl,
             createdAt: userData.createdAt || userData.iat,
             cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
@@ -176,6 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   phone: retryData.phone,
                   role: retryData.role || UserRole.CLIENT,
                   position: retryData.position,
+                  cinemaName:
+                    retryData.cinemaName ||
+                    retryData.cinema_name ||
+                    retryData.cinema?.name,
                   avatar: retryData.avatar,
                   createdAt: retryData.createdAt || retryData.iat,
                   cinemaId: retryData.cinemaId != null ? retryData.cinemaId : undefined,
@@ -200,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-    } catch (error) {
+    } catch {
       Auth.handleLogout();
       setUser(null);
     } finally {
@@ -230,6 +240,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
               position: userData.position,
+              cinemaName:
+                userData.cinemaName ||
+                userData.cinema_name ||
+                userData.cinema?.name,
               avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
               cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
@@ -278,6 +292,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 userData.fullName || userData.full_name || userData.name,
               phone: userData.phone,
               role: userData.role || UserRole.CLIENT,
+              cinemaName:
+                userData.cinemaName ||
+                userData.cinema_name ||
+                userData.cinema?.name,
               avatar: userData.avatarUrl,
               createdAt: userData.createdAt || userData.iat,
               cinemaId: userData.cinemaId != null ? userData.cinemaId : undefined,
@@ -287,7 +305,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             loggedInUser = decodeToken(data.accessToken);
             if (loggedInUser) setUser(loggedInUser);
           }
-        } catch (meError: unknown) {
+        } catch {
           loggedInUser = decodeToken(data.accessToken);
           if (loggedInUser) setUser(loggedInUser);
         }

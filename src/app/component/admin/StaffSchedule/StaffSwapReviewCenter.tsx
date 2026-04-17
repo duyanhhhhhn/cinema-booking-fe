@@ -1,14 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  ApprovalRounded,
   PendingActionsRounded,
   StorefrontRounded,
-  ViewWeek,
-  ChecklistRtl,
 } from "@mui/icons-material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -28,73 +24,16 @@ import {
   getInitials,
   getPositionLabel,
   getSwapStatusMeta,
-  normalizeNumber,
 } from "./staffScheduleUtils";
+import ManagerScheduleTabs from "./ManagerScheduleTabs";
+import {
+  getManagerCinemaId,
+  resolveManagerCinemaName,
+} from "./managerCinemaUtils";
 import {
   staffScheduleRoboto,
   staffScheduleSurface,
 } from "./staffScheduleTheme";
-
-function HeaderTabs() {
-  const tabs = [
-    {
-      href: "/admin/staff-schedules",
-      label: "Lịch làm",
-      description: "Mở bảng tuần của nhân viên trong chi nhánh.",
-      icon: <ViewWeek fontSize="small" />,
-    },
-    {
-      href: "/admin/staff-schedules/assign",
-      label: "Phân ca",
-      description: "Tạo hoặc chỉnh ca trực tiếp trên bảng phân công.",
-      icon: <ChecklistRtl fontSize="small" />,
-    },
-    {
-      href: "/admin/staff-schedules/swaps",
-      label: "Duyệt làm thay",
-      description: "Kiểm tra và phản hồi các yêu cầu đổi ca.",
-      icon: <ApprovalRounded fontSize="small" />,
-    },
-  ];
-
-  return (
-    <div className="grid gap-3 lg:grid-cols-3">
-      {tabs.map((item) => {
-        const active = item.href === "/admin/staff-schedules/swaps";
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`block border px-4 py-4 text-left transition ${
-              active
-                ? "border-red-600 bg-red-600 text-white shadow-[0_18px_38px_rgba(220,38,38,0.18)]"
-                : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            <div
-              className={`flex h-10 w-10 items-center justify-center border ${
-                active
-                  ? "border-white/30 bg-white/10 text-white"
-                  : "border-red-100 bg-red-50 text-red-600"
-              }`}
-            >
-              {item.icon}
-            </div>
-            <div className="mt-4 text-base font-black">{item.label}</div>
-            <div
-              className={`mt-2 text-sm leading-6 ${
-                active ? "text-white/85" : "text-slate-500"
-              }`}
-            >
-              {item.description}
-            </div>
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
 
 function SummaryTile({
   label,
@@ -275,15 +214,11 @@ export default function StaffSwapReviewCenter() {
     [qCinemas.data],
   );
 
-  const effectiveCinemaId = normalizeNumber(user?.cinemaId);
+  const effectiveCinemaId = useMemo(() => getManagerCinemaId(user), [user]);
 
   const selectedCinemaName = useMemo(() => {
-    if (!effectiveCinemaId) return "Chưa chọn chi nhánh";
-    return (
-      cinemas.find((cinema) => Number(cinema.id) === Number(effectiveCinemaId))
-        ?.name ?? `Chi nhánh #${effectiveCinemaId}`
-    );
-  }, [cinemas, effectiveCinemaId]);
+    return resolveManagerCinemaName(user, cinemas, "Chưa chọn chi nhánh");
+  }, [cinemas, user]);
 
   const qSwapReviews = useQuery({
     ...Schedule.getSwapRequests({
@@ -421,7 +356,7 @@ export default function StaffSwapReviewCenter() {
         </div>
 
         <div className="px-6 py-4">
-          <HeaderTabs />
+          <ManagerScheduleTabs activeHref="/admin/staff-schedules/swaps" role={role} />
         </div>
       </section>
 

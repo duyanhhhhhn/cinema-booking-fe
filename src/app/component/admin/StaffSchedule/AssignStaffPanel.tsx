@@ -15,6 +15,7 @@ import {
   canWriteShiftSchedule,
   formatDateLong,
   formatShiftRange,
+  getShiftWriteValidationMessage,
   getStatusMeta,
 } from "./staffScheduleUtils";
 import {
@@ -90,6 +91,10 @@ export default function AssignStaffPanel({
     Boolean(form.workDate) &&
     canWriteShiftSchedule(form.workDate, targetShiftForAction) &&
     (actionStatus !== ScheduleStatus.CANCELLED || canCancel);
+  const shiftWriteValidationMessage = getShiftWriteValidationMessage(
+    form.workDate,
+    targetShiftForAction,
+  );
 
   const submitText =
     actionStatus === ScheduleStatus.CANCELLED
@@ -153,17 +158,21 @@ export default function AssignStaffPanel({
             <div className="grid gap-2">
               {shifts.map((shift) => {
                 const active = Number(form.shiftId || 0) === Number(shift.id);
+                const shiftUnavailable =
+                  Boolean(form.workDate) &&
+                  !canWriteShiftSchedule(form.workDate, shift);
 
                 return (
                   <button
                     key={shift.id}
                     type="button"
+                    disabled={shiftUnavailable}
                     onClick={() => onChange({ shiftId: shift.id })}
                     className={`rounded-none border px-3 py-3 text-left ${
                       active
                         ? "border-red-600 bg-red-600 text-white"
                         : "border-slate-200 bg-white text-slate-700"
-                    }`}
+                    } ${shiftUnavailable ? "cursor-not-allowed opacity-50" : ""}`}
                   >
                     <div className="text-sm font-bold">{shift.name}</div>
                     <div className={`mt-1 text-xs ${active ? "text-white" : "text-slate-500"}`}>
@@ -261,10 +270,9 @@ export default function AssignStaffPanel({
             </div>
           ) : null}
 
-          {!canWriteShiftSchedule(form.workDate, targetShiftForAction) &&
-          form.workDate ? (
+          {shiftWriteValidationMessage ? (
             <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Không thể thao tác ca đã bắt đầu hoặc đã qua.
+              {shiftWriteValidationMessage}
             </div>
           ) : null}
 

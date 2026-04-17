@@ -29,6 +29,7 @@ export interface IStaffScheduleItem {
   workDate: string;
   status: ScheduleStatus;
   requestedByRole?: string | null;
+  createdAt?: string | null;
   staff: IStaffScheduleStaff;
   shift: IStaffShiftTemplate;
 }

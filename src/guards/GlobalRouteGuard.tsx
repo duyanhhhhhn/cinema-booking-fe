@@ -5,7 +5,8 @@ import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRouteConfig, getRedirectUrlByRole } from "@/config/routes.config";
-import { isClient, isManagementRole } from "@/types/role";
+import { isClient, isManagementRole, UserRole } from "@/types/role";
+import { useStaffTicketSellingAccess } from "@/hooks/useStaffTicketSellingAccess";
 
 /**
  * Global Route Guard Component
@@ -16,9 +17,16 @@ export function GlobalRouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading, isAuthenticated } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
+  const requiresTicketSellingAccess =
+    pathname === "/admin/sell-tickets" ||
+    /^\/admin\/tickets\/[^/]+$/.test(pathname);
+  const { canAccessTicketSelling, isLoadingAccess } =
+    useStaffTicketSellingAccess({
+      enabled: requiresTicketSellingAccess,
+    });
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || isLoadingAccess) return;
 
     const routeConfig = getRouteConfig(pathname);
 
@@ -77,7 +85,17 @@ export function GlobalRouteGuard({ children }: { children: React.ReactNode }) {
           redirectUrl = "/not-authorized";
         } else if (user && roles && !roles.includes(user.role)) {
           shouldRedirect = true;
-          redirectUrl = "/not-authorized";
+          redirectUrl =
+            user.role === UserRole.STAFF
+              ? "/admin/staff-schedules/my/request"
+              : "/not-authorized";
+        } else if (
+          user?.role === UserRole.STAFF &&
+          requiresTicketSellingAccess &&
+          !canAccessTicketSelling
+        ) {
+          shouldRedirect = true;
+          redirectUrl = "/admin/staff-schedules/my";
         }
         break;
 
@@ -99,10 +117,19 @@ export function GlobalRouteGuard({ children }: { children: React.ReactNode }) {
     } else {
       setIsChecking(false);
     }
-  }, [pathname, user, loading, isAuthenticated, router]);
+  }, [
+    canAccessTicketSelling,
+    isAuthenticated,
+    isLoadingAccess,
+    loading,
+    pathname,
+    requiresTicketSellingAccess,
+    router,
+    user,
+  ]);
 
   // Đang loading hoặc checking - hiển thị loading state
-  if (loading || isChecking) {
+  if (loading || isLoadingAccess || isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-4">
