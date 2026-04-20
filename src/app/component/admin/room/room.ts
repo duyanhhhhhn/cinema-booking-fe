@@ -24,10 +24,19 @@ export class Room extends Model {
   };
 
   // ========================= GET ROOMS =========================
-  static getRooms(cinemaId?: number) {
-    const url = cinemaId ? `/cinemas/${cinemaId}/rooms` : "/rooms";
+  static getRooms(cinemaId?: number, status?: number) {
+    let url = "/rooms";
+    const params: string[] = [];
+
+    if (cinemaId) params.push(`cinemaId=${cinemaId}`);
+    if (status !== undefined) params.push(`status=${status}`);
+
+    if (params.length > 0) {
+      url += "?" + params.join("&");
+    }
+
     return {
-      queryKey: this.queryKeys.listRooms(cinemaId),
+      queryKey: ["ROOM", "LIST_ROOMS", cinemaId, status],
       queryFn: async (): Promise<IRoom[]> => {
         const res = await this.api.get<{ message: string; data: IRoom[] }>({
           url,
@@ -181,8 +190,8 @@ export function useUpdateSeatLayoutMutation(): UseMutationResult<
 }
 
 // ========================= QUERIES =========================
-export function useGetRoomsQuery(cinemaId?: number) {
-  return Room.getRooms(cinemaId);
+export function useGetRoomsQuery(cinemaId?: number, status?: number) {
+  return Room.getRooms(cinemaId, status);
 }
 
 export function useGetRoomDetailQuery(roomId: number) {

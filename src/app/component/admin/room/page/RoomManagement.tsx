@@ -39,7 +39,11 @@ export default function RoomManagement() {
   // =========================
   // GET ROOMS
   // =========================
-  const roomsQueryConfig = useGetRoomsQuery(cinemaId || undefined);
+  const [statusFilter, setStatusFilter] = useState<number | undefined>();
+  const roomsQueryConfig = useGetRoomsQuery(
+    cinemaId || undefined,
+    statusFilter,
+  );
 
   const { data: roomsData, isLoading } = useQuery<IRoom[]>({
     queryKey: roomsQueryConfig.queryKey,
@@ -185,7 +189,7 @@ export default function RoomManagement() {
                   }
                   className="h-14 w-full rounded-[20px] border border-[#e5e7eb] bg-white px-4 text-sm font-black text-zinc-800 outline-none shadow-sm"
                 >
-                  <option value="">Tất cả rạp</option>
+                  <option value="">Tất cả </option>
                   {cinemas.map((cinema) => (
                     <option key={cinema.id} value={cinema.id}>
                       {cinema.name}
@@ -193,7 +197,26 @@ export default function RoomManagement() {
                   ))}
                 </select>
               </div>
-
+              <div className="w-full xl:max-w-[300px]">
+                <div className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-zinc-400">
+                  Lọc theo trạng thái
+                </div>
+                <select
+                  value={statusFilter ?? ""}
+                  onChange={(e) =>
+                    setStatusFilter(
+                      e.target.value === ""
+                        ? undefined
+                        : Number(e.target.value),
+                    )
+                  }
+                  className="h-14 w-full rounded-[20px] border border-[#e5e7eb] bg-white px-4 text-sm font-black text-zinc-800 outline-none shadow-sm"
+                >
+                  <option value="">Tất cả</option>
+                  <option value="1">Đang hoạt động</option>
+                  <option value="0">Không hoạt động</option>
+                </select>
+              </div>
               <div className="w-full xl:max-w-[440px]">
                 <div className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-zinc-400">
                   Tìm kiếm phòng
