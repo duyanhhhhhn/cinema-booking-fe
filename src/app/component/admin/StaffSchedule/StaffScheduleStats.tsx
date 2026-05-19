@@ -302,10 +302,6 @@ export default function StaffScheduleStats() {
             <h1 className="text-[32px] font-black tracking-[-0.04em] text-slate-900">
               Thống kê lịch làm
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              So sánh nhanh số ca đã chốt theo từng nhân viên trong chi nhánh để
-              manager nhìn ra ai đang làm nhiều hoặc ít hơn trong tuần.
-            </p>
           </div>
 
           <div className="border border-slate-200 bg-white px-4 py-4">

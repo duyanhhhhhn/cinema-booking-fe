@@ -5,7 +5,6 @@ import React from "react";
 import Image from "next/image";
 import dayjs from "dayjs";
 
-// --- Types ---
 export type PrintTicketResponse = {
   bookingCode: string;
   movieTitle: string;

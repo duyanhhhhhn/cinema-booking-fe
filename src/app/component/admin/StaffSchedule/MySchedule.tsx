@@ -5,15 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Backdrop, Modal } from "@mui/material";
-import {
-  CalendarMonthRounded,
-  Close,
-  DeleteOutline,
-  EditCalendarRounded,
-  ReportProblemOutlined,
-  ScheduleRounded,
-  SwapHorizRounded,
-} from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/hooks/useNotification";
@@ -57,9 +49,9 @@ import {
 
 type StaffSelfScheduleMode = "request" | "view";
 
-const surfaceClass = "border border-slate-200 bg-white";
+const surfaceClass = "border border-slate-200 bg-white rounded-none shadow-sm";
 const secondaryButtonClass =
-  "border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50";
+  "border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 rounded-none";
 const tableGridStyle = {
   gridTemplateColumns: "240px repeat(7, minmax(148px, 1fr))",
 } as const;
@@ -75,11 +67,11 @@ function SummaryTile({
   value: string;
 }) {
   return (
-    <div className={`${surfaceClass} px-4 py-4`}>
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+    <div className={`${surfaceClass} px-5 py-4 bg-gradient-to-br from-white to-slate-50/50`}>
+      <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
         {label}
       </div>
-      <div className="mt-2 text-3xl font-bold text-slate-900">{value}</div>
+      <div className="mt-1 text-2xl font-black text-slate-900">{value}</div>
     </div>
   );
 }
@@ -104,13 +96,10 @@ function ShiftCard({
 
   return (
     <div
-      className={`border px-3 py-2 text-left ${
-        isLive
-          ? "border-red-300 bg-red-50 shadow-[0_0_0_1px_rgba(220,38,38,0.12)]"
-          : meta.lightCardClass
-      } ${highlight ? "border-red-300 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.12)]" : ""} ${
-        isLive && highlight ? "bg-red-50" : ""
-      }`}
+      className={`border p-3 text-left rounded-none transition-all ${isLive
+        ? "border-red-300 bg-red-50/60 shadow-sm"
+        : meta.lightCardClass
+        } ${highlight ? "border-red-300 shadow-[0_0_0_1px_rgba(220,38,38,0.1)]" : ""}`}
     >
       {showStaff ? (
         <div className="mb-2 flex items-center justify-between gap-3">
@@ -118,88 +107,78 @@ function ShiftCard({
             <div className="truncate text-sm font-bold text-slate-900">
               {item.staff.fullName}
             </div>
-            <div className="mt-1 text-xs text-slate-500">
+            <div className="mt-0.5 text-xs text-slate-500">
               {getPositionLabel(item.staff.position || item.staff.roleName)}
             </div>
           </div>
           {highlight ? (
-            <span className="inline-flex items-center border border-red-600 bg-red-600 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+            <span className="inline-flex items-center bg-red-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white rounded-none">
               Tôi
             </span>
           ) : null}
         </div>
       ) : null}
 
-      <div className={`${compact ? "text-[11px]" : "text-sm"} font-bold text-slate-900`}>
+      <div className={`${compact ? "text-xs" : "text-sm"} font-bold text-slate-900`}>
         {item.shift.name}
       </div>
-      <div className="mt-1 text-xs text-slate-600">{formatShiftRange(item.shift)}</div>
-      {isLive ? (
-        <div className="mt-2 inline-flex items-center border border-red-600 bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
-          Đang trong ca
-        </div>
-      ) : null}
-      <span
-        className={`mt-2 inline-flex items-center px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${meta.lightBadgeClass}`}
-      >
-        {meta.label}
-      </span>
-      {actions ? <div className="mt-3 flex flex-wrap gap-2">{actions}</div> : null}
+      <div className="mt-0.5 text-xs text-slate-600">{formatShiftRange(item.shift)}</div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {isLive ? (
+          <span className="inline-flex items-center bg-red-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white rounded-none">
+            Đang trong ca
+          </span>
+        ) : null}
+        <span
+          className={`inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none ${meta.lightBadgeClass}`}
+        >
+          {meta.label}
+        </span>
+      </div>
+      {actions ? <div className="mt-3 flex flex-wrap gap-1.5">{actions}</div> : null}
     </div>
   );
 }
 
+// Điều hướng Tab
 function StaffTabs({ mode }: { mode: StaffSelfScheduleMode }) {
   const tabs = [
     {
       href: "/admin/staff-schedules/my/request",
       label: "Đăng ký tuần sau",
       description: "Chọn ngày và ca để gửi đăng ký làm việc.",
-      icon: <EditCalendarRounded fontSize="small" />,
       active: mode === "request",
     },
     {
       href: "/admin/staff-schedules/my",
       label: "Xem bảng lịch",
       description: "Theo dõi lịch của bạn và lịch chung trong rạp.",
-      icon: <CalendarMonthRounded fontSize="small" />,
       active: mode === "view",
     },
     {
       href: "/admin/staff-schedules/my/swaps",
       label: "Nhờ làm thay",
       description: "Gửi yêu cầu hoặc phản hồi lời nhờ đổi ca.",
-      icon: <SwapHorizRounded fontSize="small" />,
       active: false,
     },
   ];
 
   return (
-    <div className="grid gap-3 lg:grid-cols-3">
+    <div className="grid gap-4 lg:grid-cols-3">
       {tabs.map((item) => (
         <Link
           key={item.href}
           href={item.href}
-          className={`block border px-4 py-4 text-left transition ${
-            item.active
-              ? "border-red-600 bg-red-600 text-white shadow-[0_18px_38px_rgba(220,38,38,0.18)]"
-              : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
-          }`}
+          className={`block border p-5 text-left transition-all rounded-none ${item.active
+            ? "border-red-600 bg-red-600 text-white shadow-[0_12px_24px_rgba(220,38,38,0.15)]"
+            : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:shadow-sm"
+            }`}
         >
+          <div className="text-base font-black">{item.label}</div>
           <div
-            className={`flex h-10 w-10 items-center justify-center border ${
-              item.active
-                ? "border-white/30 bg-white/10 text-white"
-                : "border-red-100 bg-red-50 text-red-600"
-            }`}
-          >
-            {item.icon}
-          </div>
-          <div className="mt-4 text-base font-black">{item.label}</div>
-          <div
-            className={`mt-2 text-sm leading-6 ${
-              item.active ? "text-white/85" : "text-slate-500"
-            }`}
+            className={`mt-2 text-xs leading-5 ${item.active ? "text-white/85" : "text-slate-500"
+              }`}
           >
             {item.description}
           </div>
@@ -221,32 +200,31 @@ function UrgentRequestCard({
   return (
     <article
       id={`urgent-request-card-${item.id}`}
-      className={`border px-4 py-4 ${meta.lightCardClass} ${
-        highlight ? "ring-2 ring-red-300 shadow-[0_16px_36px_rgba(239,68,68,0.16)]" : ""
-      }`}
+      className={`border p-4 rounded-none transition-all ${meta.lightCardClass} ${highlight ? "ring-2 ring-red-500/55 shadow-md" : ""
+        }`}
     >
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             {getUrgentTypeLabel(item.type)}
           </div>
           <div className="mt-1 text-base font-black text-slate-900">
             {item.shift.name}
           </div>
-          <div className="mt-1 text-sm text-slate-600">
+          <div className="mt-0.5 text-xs text-slate-600">
             {formatDateLong(item.workDate)} • {formatShiftRange(item.shift)}
           </div>
           {item.expectedArrivalTime ? (
-            <div className="mt-2 text-sm font-semibold text-slate-700">
+            <div className="mt-1.5 text-xs font-semibold text-slate-700">
               Dự kiến có mặt: {String(item.expectedArrivalTime).slice(0, 5)}
             </div>
           ) : null}
-          <div className="mt-3 text-sm leading-6 text-slate-700">{item.reason}</div>
+          <div className="mt-2 text-sm leading-6 text-slate-700 bg-white/50 p-2.5 rounded-none border border-slate-100">{item.reason}</div>
         </div>
 
-        <div className="flex min-w-[180px] flex-col items-start gap-2 xl:items-end">
+        <div className="flex min-w-[120px] flex-col items-start gap-2 xl:items-end">
           <span
-            className={`inline-flex items-center px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${meta.lightBadgeClass}`}
+            className={`inline-flex items-center px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-none ${meta.lightBadgeClass}`}
           >
             {meta.label}
           </span>
@@ -279,17 +257,17 @@ function PersonalScheduleBoard({
 }) {
   return (
     <section className={`${surfaceClass} min-w-0 overflow-hidden`}>
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-        <div className="text-sm font-semibold text-slate-700">Bảng tuần</div>
+      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/50 px-5 py-3">
+        <div className="text-xs font-black uppercase tracking-wider text-slate-600">Bảng lịch tuần làm việc của bạn</div>
       </div>
 
-      <div className="w-full overflow-x-auto pb-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]">
-        <div className="min-w-[1280px]">
+      <div className="w-full overflow-x-auto pb-1 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]">
+        <div className="min-w-[1200px]">
           <div
-            className="grid border-b border-slate-200 bg-white"
+            className="grid border-b border-slate-200 bg-slate-50"
             style={tableGridStyle}
           >
-            <div className="border-r border-slate-200 px-4 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <div className="border-r border-slate-200 px-5 py-3 flex items-center text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Nhân viên
             </div>
             {weekDays.map((day) => {
@@ -301,26 +279,24 @@ function PersonalScheduleBoard({
                   key={day.iso}
                   type="button"
                   onClick={() => onSelectDate(day.iso)}
-                  className={`border-l border-slate-200 px-3 py-4 text-left transition ${
-                    isSelected
-                      ? "bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.18)]"
-                      : isToday
-                      ? "bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.12)]"
-                      : "bg-white hover:bg-slate-50"
-                  }`}
+                  className={`border-l border-slate-200 px-4 py-3 text-left transition-all ${isSelected
+                    ? "bg-red-50/45 shadow-[inset_0_-2px_0_#dc2626]"
+                    : isToday
+                      ? "bg-slate-100/60"
+                      : "bg-transparent hover:bg-slate-100/40"
+                    }`}
                 >
                   <div
-                    className={`text-xs font-semibold uppercase tracking-[0.12em] ${
-                      isToday || isSelected ? "text-red-600" : "text-slate-500"
-                    }`}
+                    className={`text-[10px] font-black uppercase tracking-wider ${isToday || isSelected ? "text-red-600" : "text-slate-500"
+                      }`}
                   >
                     {day.weekdayShort}
                   </div>
-                  <div className="mt-1 text-base font-semibold text-slate-900">
+                  <div className="mt-0.5 text-sm font-black text-slate-900">
                     {day.dayLabel}/{day.monthLabel}
                   </div>
                   {isToday ? (
-                    <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-red-600">
+                    <div className="mt-0.5 text-[8px] font-black uppercase tracking-wider text-red-600">
                       Hôm nay
                     </div>
                   ) : null}
@@ -329,21 +305,21 @@ function PersonalScheduleBoard({
             })}
           </div>
 
-          <div className="grid" style={tableGridStyle}>
-            <div className="flex flex-col justify-between border-r border-slate-200 bg-white px-4 py-4">
+          <div className="grid bg-white" style={tableGridStyle}>
+            <div className="flex flex-col justify-between border-r border-slate-200 bg-white p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center border border-slate-200 bg-slate-100 text-sm font-bold text-slate-700">
+                <div className="flex h-11 w-11 items-center justify-center border border-slate-200 bg-slate-100 text-sm font-black text-slate-700 rounded-none shadow-sm">
                   {getInitials(staffName)}
                 </div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">{staffName}</div>
-                  <div className="mt-1 text-xs text-slate-500">{staffPosition}</div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold text-slate-900">{staffName}</div>
+                  <div className="mt-0.5 text-xs text-slate-500 font-medium">{staffPosition}</div>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-1 text-xs text-slate-500">
-                <div>{scheduleItems.length} ca trong tuần</div>
-                <div>{cancelledCount} ca đã hủy</div>
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-1 text-xs font-semibold text-slate-500">
+                <div className="flex justify-between"><span>Tổng ca đăng ký:</span> <span className="text-slate-850 font-bold">{scheduleItems.length} ca</span></div>
+                <div className="flex justify-between text-red-500"><span>Ca đã hủy:</span> <span>{cancelledCount} ca</span></div>
               </div>
             </div>
 
@@ -357,13 +333,12 @@ function PersonalScheduleBoard({
                   key={day.iso}
                   type="button"
                   onClick={() => onSelectDate(day.iso)}
-                  className={`min-h-[250px] border-l border-slate-200 px-3 py-3 align-top text-left transition ${
-                    isSelected
-                      ? "bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.18)]"
-                      : isToday
-                      ? "bg-white shadow-[inset_0_0_0_1px_rgba(220,38,38,0.12)]"
-                      : "bg-white hover:bg-slate-50"
-                  }`}
+                  className={`min-h-[220px] border-l border-slate-200 p-3 align-top text-left transition-all ${isSelected
+                    ? "bg-red-50/10 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]"
+                    : isToday
+                      ? "bg-slate-50/50"
+                      : "bg-white hover:bg-slate-50/30"
+                    }`}
                 >
                   <div className="space-y-2">
                     {items.length ? (
@@ -371,7 +346,7 @@ function PersonalScheduleBoard({
                         <ShiftCard key={item.id} item={item} compact now={now} />
                       ))
                     ) : (
-                      <div className="flex min-h-[214px] items-center justify-center border border-dashed border-slate-200 bg-white text-xs font-medium text-slate-400">
+                      <div className="flex min-h-[160px] items-center justify-center border border-dashed border-slate-200 bg-slate-50/30 text-xs font-medium text-slate-400 rounded-none">
                         Trống
                       </div>
                     )}
@@ -653,6 +628,7 @@ export default function MySchedule({
     shifts.find((item) => Number(item.id) === effectiveSelectedShiftId) ?? null;
   const selectedDayEntries = groupedByDate.get(effectiveSelectedDate) ?? [];
   const totalHours = getTotalHours(confirmedItems, [ScheduleStatus.CONFIRMED]);
+
   const incomingPendingCount = useMemo(
     () =>
       incomingSwapRequests.filter(
@@ -669,6 +645,8 @@ export default function MySchedule({
       ).length,
     [outgoingSwapRequests],
   );
+
+  // 1. ĐÃ SỬA CÚ PHÁP RÁC (XÓA BỎ parentUrl:) ĐỂ BIÊN DỊCH CHUẨN XÁC TẠI ĐÂY
   const urgentPendingCount = useMemo(
     () =>
       urgentRequests.filter(
@@ -837,9 +815,8 @@ export default function MySchedule({
           type="button"
           disabled={deleteScheduleMutation.isPending}
           onClick={() => requestDeleteSchedule(item)}
-          className="inline-flex h-9 items-center gap-1 border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-8 items-center gap-1 border border-rose-200 bg-rose-50 px-2.5 text-[11px] font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 rounded-none"
         >
-          <DeleteOutline sx={{ fontSize: 16 }} />
           Xóa nhanh
         </button>,
       );
@@ -851,9 +828,8 @@ export default function MySchedule({
           key={`urgent-leave-${item.id}`}
           type="button"
           onClick={() => openUrgentModal(item, UrgentRequestType.EMERGENCY_LEAVE)}
-          className="inline-flex h-9 items-center gap-1 border border-red-600 bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-700"
+          className="inline-flex h-8 items-center gap-1 border border-red-600 bg-red-600 px-2.5 text-[11px] font-bold text-white transition hover:bg-red-700 rounded-none"
         >
-          <ReportProblemOutlined sx={{ fontSize: 16 }} />
           Hủy khẩn
         </button>,
       );
@@ -862,9 +838,8 @@ export default function MySchedule({
           key={`late-${item.id}`}
           type="button"
           onClick={() => openUrgentModal(item, UrgentRequestType.LATE_ARRIVAL)}
-          className="inline-flex h-9 items-center gap-1 border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-red-300 hover:bg-red-50"
+          className="inline-flex h-8 items-center gap-1 border border-slate-300 bg-white px-2.5 text-[11px] font-bold text-slate-700 transition hover:border-red-300 hover:bg-red-50 rounded-none"
         >
-          <ScheduleRounded sx={{ fontSize: 16 }} />
           Xin đi muộn
         </button>,
       );
@@ -924,28 +899,25 @@ export default function MySchedule({
     ? qRegistrationWindow.isError
       ? getErrorMessage(qRegistrationWindow.error)
       : qShifts.isError
-      ? getErrorMessage(qShifts.error)
-      : qMySchedule.isError
-      ? getErrorMessage(qMySchedule.error)
-      : qIncomingSwapRequests.isError
-      ? getErrorMessage(qIncomingSwapRequests.error)
-      : qOutgoingSwapRequests.isError
-      ? getErrorMessage(qOutgoingSwapRequests.error)
-      : qUrgentRequests.isError
-      ? getErrorMessage(qUrgentRequests.error)
-      : ""
+        ? getErrorMessage(qShifts.error)
+        : qMySchedule.isError
+          ? getErrorMessage(qMySchedule.error)
+          : qIncomingSwapRequests.isError
+            ? getErrorMessage(qIncomingSwapRequests.error)
+            : qOutgoingSwapRequests.isError
+              ? getErrorMessage(qOutgoingSwapRequests.error)
+              : qUrgentRequests.isError
+                ? getErrorMessage(qUrgentRequests.error)
+                : ""
     : qCinemaSchedule.isError
-    ? getErrorMessage(qCinemaSchedule.error)
-    : qUrgentRequests.isError
-    ? getErrorMessage(qUrgentRequests.error)
-    : "";
+      ? getErrorMessage(qCinemaSchedule.error)
+      : qUrgentRequests.isError
+        ? getErrorMessage(qUrgentRequests.error)
+        : "";
 
   if (loading) {
     return (
-      <div
-        className="border border-slate-200 bg-white px-6 py-8 text-sm font-medium text-slate-600"
-        style={{ fontFamily: "Roboto, sans-serif" }}
-      >
+      <div className="border border-slate-200 bg-white px-6 py-8 text-sm font-medium text-slate-600 rounded-none">
         Đang tải lịch làm...
       </div>
     );
@@ -953,143 +925,133 @@ export default function MySchedule({
 
   if (!isStaff) {
     return (
-      <div
-        className="border border-amber-200 bg-amber-50 px-6 py-6 text-sm text-amber-700"
-        style={{ fontFamily: "Roboto, sans-serif" }}
-      >
+      <div className="border border-amber-200 bg-amber-50 px-6 py-6 text-sm text-amber-700 rounded-none">
         Trang này chỉ dành cho tài khoản STAFF.
       </div>
     );
   }
 
   return (
-    <div
-      className="space-y-4 border border-slate-200 bg-white px-6 py-5 text-slate-900"
-      style={{ fontFamily: "Roboto, sans-serif" }}
-    >
+    <div className="space-y-5 border border-slate-200 bg-slate-50/50 px-6 py-6 text-slate-900 rounded-none shadow-sm">
       <ConfirmDialog />
 
+      {/* Header Panel */}
       <div className="space-y-4 border-b border-slate-200 pb-5">
-        <div className="overflow-hidden border border-slate-200 bg-white">
-          <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="overflow-hidden border border-slate-200 bg-white rounded-none shadow-sm">
+          <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-center xl:justify-between bg-gradient-to-r from-white to-slate-50/30">
             <div>
-              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
                 Ca làm cá nhân
               </div>
-              <h1 className="mt-2 text-3xl font-bold text-slate-900">
-                {isRequestMode ? "Đăng ký lịch" : "Lịch làm"}
+              <h1 className="mt-1 text-2xl font-black text-slate-900">
+                {isRequestMode ? "Đăng ký lịch làm việc" : "Lịch làm rạp phim"}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Chọn đúng bảng bên dưới để đăng ký tuần sau, xem lịch hiện tại
-                hoặc chuyển sang khu vực nhờ làm thay.
-              </p>
             </div>
 
-            <div className="border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">
-              {activeWeekLabel}
+            <div className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 rounded-none shadow-sm">
+              Tuần đang xem: {activeWeekLabel}
             </div>
           </div>
         </div>
 
         <StaffTabs mode={mode} />
 
-        {isRequestMode ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleRequestWeekChange(STAFF_REQUEST_MIN_WEEK_OFFSET)}
-              className={
-                requestWeekOffset === STAFF_REQUEST_MIN_WEEK_OFFSET
-                  ? "bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-                  : secondaryButtonClass
-              }
-            >
-              Tuần sau
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleViewWeekChange(viewWeekOffset - 1)}
-              className={secondaryButtonClass}
-            >
-              Tuần trước
-            </button>
-            <button
-              type="button"
-              onClick={() => handleViewWeekChange(0)}
-              className="bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-            >
-              Tuần này
-            </button>
-            <button
-              type="button"
-              onClick={() => handleViewWeekChange(viewWeekOffset + 1)}
-              className={secondaryButtonClass}
-            >
-              Tuần sau
-            </button>
-          </div>
-        )}
-
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {isRequestMode ? (
-            <>
-              <SummaryTile label="Đã chốt" value={String(confirmedItems.length)} />
-              <SummaryTile label="Chờ duyệt" value={String(pendingItems.length)} />
-              <SummaryTile label="Giờ" value={`${totalHours.toFixed(1)}h`} />
-            </>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleRequestWeekChange(STAFF_REQUEST_MIN_WEEK_OFFSET)}
+                className={
+                  requestWeekOffset === STAFF_REQUEST_MIN_WEEK_OFFSET
+                    ? "bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 rounded-none shadow-sm"
+                    : secondaryButtonClass
+                }
+              >
+                Tuần sau
+              </button>
+            </div>
           ) : (
-            <>
-              <SummaryTile label="Có ca" value={String(cinemaRows.length)} />
-              <SummaryTile label="Đã chốt" value={String(cinemaConfirmedCount)} />
-              <SummaryTile label="Chờ duyệt" value={String(cinemaPendingCount)} />
-            </>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleViewWeekChange(viewWeekOffset - 1)}
+                className={secondaryButtonClass}
+              >
+                Tuần trước
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewWeekChange(0)}
+                className="bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 rounded-none shadow-sm"
+              >
+                Tuần này
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewWeekChange(viewWeekOffset + 1)}
+                className={secondaryButtonClass}
+              >
+                Tuần sau
+              </button>
+            </div>
           )}
+
+          <div className="grid grid-cols-3 gap-3 min-w-[320px] md:min-w-[450px]">
+            {isRequestMode ? (
+              <>
+                <SummaryTile label="Đã chốt" value={String(confirmedItems.length)} />
+                <SummaryTile label="Chờ duyệt" value={String(pendingItems.length)} />
+                <SummaryTile label="Tổng Giờ" value={`${totalHours.toFixed(1)}h`} />
+              </>
+            ) : (
+              <>
+                <SummaryTile label="Nhân viên" value={String(cinemaRows.length)} />
+                <SummaryTile label="Đã chốt" value={String(cinemaConfirmedCount)} />
+                <SummaryTile label="Chờ duyệt" value={String(cinemaPendingCount)} />
+              </>
+            )}
+          </div>
         </div>
 
         {activeError ? (
-          <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 rounded-none">
             {activeError}
           </div>
         ) : null}
       </div>
 
+      {/* Main Board Layout & Forms */}
       {isRequestMode ? (
-        <>
+        <div className="space-y-6">
+          {/* 1. REGISTRATION WINDOW ALERT */}
           {!isRegistrationWindowLoading && isRegistrationForceOpen ? (
-            <div className="border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              Admin đang mở đăng ký ngay. Bạn vẫn chỉ chọn lịch của tuần sau.
+            <div className="border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 rounded-none font-medium">
+              Admin đang mở cổng đăng ký đặc biệt. Bạn có thể tự do đăng ký lịch của tuần sau.
             </div>
           ) : !isRegistrationWindowLoading && !canRegisterToday ? (
-            <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              Chỉ đăng ký vào thứ 7 hoặc chủ nhật.
+            <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 rounded-none font-semibold">
+              Hệ thống chỉ mở đăng ký vào Thứ 7 và Chủ nhật hàng tuần.
             </div>
           ) : null}
 
-          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
-            <PersonalScheduleBoard
-              weekDays={requestWeekDays}
-              staffName={staffName}
-              staffPosition={staffPosition}
-              scheduleItems={myScheduleItems}
-              groupedByDate={groupedByDate}
-              cancelledCount={cancelledItems.length}
-              selectedDate={effectiveSelectedDate}
-              onSelectDate={setSelectedDate}
-              now={now}
-            />
+          {/* 2. REGISTRATION FORM DETAILS ON TOP (3-COLUMN DASHBOARD) */}
+          <div className="border border-slate-200 bg-white p-6 rounded-none shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-3">
+              <h2 className="text-lg font-black text-slate-950">Đăng ký ca làm chi tiết</h2>
+            </div>
 
-            <aside className={`${surfaceClass} h-fit min-w-0`}>
-              <div className="border-b border-slate-200 px-4 py-4">
-                <div className="text-sm font-semibold text-slate-700">Đăng ký ca</div>
-              </div>
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Cột 1: Ngày làm */}
+              <div className="space-y-3 p-4 bg-slate-50/50 rounded-none border border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 border-b border-slate-200 pb-2 flex justify-between items-center">
+                  <span>Ngày làm việc</span>
+                  <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-none font-black">Yêu cầu</span>
+                </h3>
 
-              <div className="space-y-5 px-4 py-4">
-                <div className="space-y-2">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Ngày làm
+                <div className="space-y-3">
+                  <label className="block text-[11px] font-bold text-slate-500">
+                    Chọn một ngày trên lịch tuần sau:
                   </label>
                   <input
                     type="date"
@@ -1098,81 +1060,92 @@ export default function MySchedule({
                     disabled={!canRegisterToday}
                     value={effectiveSelectedDate}
                     onChange={(event) => setSelectedDate(event.target.value)}
-                    className="h-11 w-full border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-red-500 disabled:bg-slate-100 disabled:text-slate-400"
+                    className="h-10 w-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 rounded-none outline-none transition focus:border-red-500 disabled:bg-slate-100 disabled:text-slate-400"
                   />
-                  <div className="text-sm font-medium text-slate-700">
+                  <div className="text-sm font-black text-red-600 bg-red-50/60 p-3 rounded-none border border-red-100">
                     {formatDateLong(effectiveSelectedDate)}
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Ca làm
-                  </div>
-                  <div className="space-y-2">
-                    {qShifts.isLoading ? (
-                      <div className="border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
-                        Đang tải ca...
-                      </div>
-                    ) : shifts.length ? (
-                      shifts.map((shift) => {
-                        const active = Number(shift.id) === effectiveSelectedShiftId;
+              {/* Cột 2: Chọn khung ca */}
+              <div className="space-y-3 p-4 bg-slate-50/50 rounded-none border border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 border-b border-slate-200 pb-2">
+                  Chọn khung ca
+                </h3>
 
-                        return (
-                          <button
-                            key={shift.id}
-                            type="button"
-                            disabled={!canRegisterToday}
-                            onClick={() => setSelectedShiftId(Number(shift.id))}
-                            className={`w-full border px-3 py-3 text-left transition ${
-                              active
-                                ? "border-red-600 bg-red-600 text-white"
-                                : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50"
-                            } ${!canRegisterToday ? "cursor-not-allowed opacity-60" : ""}`}
-                          >
-                            <div className="text-sm font-semibold">{shift.name}</div>
-                            <div
-                              className={`mt-1 text-xs ${
-                                active ? "text-red-100" : "text-slate-500"
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  {qShifts.isLoading ? (
+                    <div className="border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500 rounded-none">
+                      Đang tải danh sách ca...
+                    </div>
+                  ) : shifts.length ? (
+                    shifts.map((shift) => {
+                      const active = Number(shift.id) === effectiveSelectedShiftId;
+
+                      return (
+                        <button
+                          key={shift.id}
+                          type="button"
+                          disabled={!canRegisterToday}
+                          onClick={() => setSelectedShiftId(Number(shift.id))}
+                          className={`w-full border px-3 py-2.5 text-left transition-all rounded-none ${active
+                            ? "border-red-600 bg-red-600 text-white shadow-sm"
+                            : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                            } ${!canRegisterToday ? "cursor-not-allowed opacity-65" : ""}`}
+                        >
+                          <div className="text-xs font-bold">{shift.name}</div>
+                          <div
+                            className={`mt-0.5 text-[10px] ${active ? "text-red-100" : "text-slate-500"
                               }`}
-                            >
-                              {formatShiftRange(shift)}
-                            </div>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
-                        Chưa có ca mẫu.
-                      </div>
-                    )}
+                          >
+                            {formatShiftRange(shift)}
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-500 rounded-none">
+                      Chưa có ca mẫu từ hệ thống.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Cột 3: Xác nhận & Đã đăng ký */}
+              <div className="space-y-4 p-4 bg-slate-50/50 rounded-none border border-slate-100 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 border-b border-slate-200 pb-2">
+                    Xác nhận đăng ký
+                  </h3>
+
+                  <div className="border border-slate-200 bg-white p-3 rounded-none shadow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Khung ca đang chọn
+                    </div>
+                    <div className="mt-1 text-sm font-black text-slate-900">
+                      {selectedShift?.name || "Chưa chọn ca"}
+                    </div>
+                    <div className="mt-0.5 text-xs font-semibold text-slate-600">
+                      {selectedShift ? formatShiftRange(selectedShift) : "--:-- - --:--"}
+                    </div>
                   </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="button"
+                    disabled={!canSubmit || requestMutation.isPending}
+                    onClick={() => requestMutation.mutate()}
+                    className="h-10 w-full bg-red-600 text-xs font-black uppercase tracking-wider text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-300 rounded-none shadow-sm"
+                  >
+                    {requestMutation.isPending ? "Đang gửi đăng ký..." : "Gửi Đăng Ký Lên Quản Lý"}
+                  </button>
                 </div>
 
-                <div className="border border-slate-200 bg-slate-50 px-3 py-3">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Ca đang chọn
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">
-                    {selectedShift?.name || "Chưa chọn ca"}
-                  </div>
-                  <div className="mt-1 text-xs text-slate-500">
-                    {selectedShift ? formatShiftRange(selectedShift) : "--:-- - --:--"}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={!canSubmit || requestMutation.isPending}
-                  onClick={() => requestMutation.mutate()}
-                  className="h-11 w-full bg-red-600 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                >
-                  {requestMutation.isPending ? "Đang gửi..." : "Gửi đăng ký"}
-                </button>
-
-                <div className="border-t border-slate-200 pt-5">
-                  <div className="text-sm font-semibold text-slate-700">Ngày đã chọn</div>
-                  <div className="mt-3 space-y-2">
+                {/* Danh sách ca đã lưu trong ngày đã chọn */}
+                <div className="border-t border-slate-200 pt-3">
+                  <div className="text-xs font-bold text-slate-700 mb-2">Đăng ký của bạn trong ngày này:</div>
+                  <div className="space-y-2 max-h-[140px] overflow-y-auto">
                     {selectedDayEntries.length ? (
                       selectedDayEntries.map((item) => (
                         <ShiftCard
@@ -1183,43 +1156,56 @@ export default function MySchedule({
                         />
                       ))
                     ) : (
-                      <div className="border border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-500">
-                        Chưa có ca.
+                      <div className="border border-slate-200 bg-white px-3 py-3 text-xs text-slate-400 text-center rounded-none border-dashed">
+                        Chưa có ca làm nào được đăng ký trong ngày.
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-            </aside>
+            </div>
           </div>
 
-          <section className={`${surfaceClass} overflow-hidden`}>
-            <div className="grid gap-5 bg-white px-5 py-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-center">
-              <div>
-                <div className="text-2xl font-black text-slate-900">Nhờ làm thay</div>
+          {/* 3. TABLE/BOARD BELOW (FULL WIDTH) */}
+          <PersonalScheduleBoard
+            weekDays={requestWeekDays}
+            staffName={staffName}
+            staffPosition={staffPosition}
+            scheduleItems={myScheduleItems}
+            groupedByDate={groupedByDate}
+            cancelledCount={cancelledItems.length}
+            selectedDate={effectiveSelectedDate}
+            onSelectDate={setSelectedDate}
+            now={now}
+          />
 
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <div className="border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+          {/* 4. SWAP REQUEST SECTION */}
+          <section className={`${surfaceClass} overflow-hidden`}>
+            <div className="grid gap-5 bg-white px-6 py-5 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-center">
+              <div>
+                <div className="text-xl font-black text-slate-900">Nhờ đồng nghiệp làm thay</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 rounded-none">
                     {incomingPendingCount} chờ phản hồi
                   </div>
-                  <div className="border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                    {outgoingPendingCount} đã gửi
+                  <div className="border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 rounded-none">
+                    {outgoingPendingCount} đã gửi yêu cầu
                   </div>
                 </div>
               </div>
-
-              <div className="space-y-3">
+              <div>
                 <Link
                   href="/admin/staff-schedules/my/swaps"
-                  className="inline-flex h-12 w-full items-center justify-center bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700"
+                  className="inline-flex h-11 w-full items-center justify-center bg-red-600 px-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-700 rounded-none shadow-sm"
                 >
-                  Mở nhờ làm thay
+                  Mở tab nhờ làm thay
                 </Link>
               </div>
             </div>
           </section>
-        </>
+        </div>
       ) : (
+        /* VIEW MODE LAYOUT (XEM LỊCH) */
         <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
           <StaffScheduleThisWeek
             weekDays={viewWeekDays}
@@ -1233,49 +1219,49 @@ export default function MySchedule({
             onOpenCell={() => undefined}
           />
 
-          <aside className={`${surfaceClass} h-fit min-w-0`}>
-            <div className="border-b border-slate-200 px-4 py-4">
-              <div className="text-sm font-semibold text-slate-700">Ca trong ngày</div>
+          <aside className={`${surfaceClass} h-fit min-w-0 p-5`}>
+            <div className="border-b border-slate-200 pb-3 mb-4">
+              <div className="text-sm font-black text-slate-900">Chi tiết ca trong ngày</div>
             </div>
 
-            <div className="space-y-5 px-4 py-4">
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  Chọn ngày
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Chọn ngày làm
                 </label>
                 <input
                   type="date"
                   value={effectiveSelectedDate}
                   onChange={(event) => handleViewDateChange(event.target.value)}
-                  className="h-11 w-full border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-red-500"
+                  className="h-10 w-full border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 rounded-none outline-none transition focus:border-red-500"
                 />
-                <div className="text-sm font-medium text-slate-700">
+                <div className="text-xs font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-none inline-block">
                   {formatDateLong(effectiveSelectedDate)}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="border border-slate-200 bg-slate-50 px-3 py-3">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Người làm
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-none border border-slate-100">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Tổng nhân sự
                   </div>
-                  <div className="mt-2 text-2xl font-bold text-slate-900">
+                  <div className="mt-0.5 text-xl font-black text-slate-900">
                     {selectedCinemaDayEntries.length}
                   </div>
                 </div>
-                <div className="border border-slate-200 bg-slate-50 px-3 py-3">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Ca của tôi
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Ca của bạn
                   </div>
-                  <div className="mt-2 text-2xl font-bold text-slate-900">
+                  <div className="mt-0.5 text-xl font-black text-slate-900">
                     {selectedOwnCinemaEntries.length}
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-5">
-                <div className="text-sm font-semibold text-slate-700">Danh sách ca</div>
-                <div className="mt-3 space-y-2">
+              <div className="border-t border-slate-200 pt-4 space-y-2.5">
+                <div className="text-xs font-bold text-slate-700">Danh sách ca trực tiếp:</div>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                   {selectedCinemaDayEntries.length ? (
                     selectedCinemaDayEntries.map((item) => (
                       <ShiftCard
@@ -1291,8 +1277,8 @@ export default function MySchedule({
                       />
                     ))
                   ) : (
-                    <div className="border border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-500">
-                      Chưa có ca trong ngày.
+                    <div className="border border-slate-200 bg-slate-50/50 px-3 py-4 text-xs text-slate-400 text-center rounded-none border-dashed">
+                      Chưa có ca làm nào trong ngày này.
                     </div>
                   )}
                 </div>
@@ -1302,28 +1288,26 @@ export default function MySchedule({
         </div>
       )}
 
+      {/* EMERGENCY LEAVE & LATE ARRIVAL */}
       <section className={`${surfaceClass} overflow-hidden`}>
-        <div className="grid gap-5 bg-white px-5 py-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-center">
+        <div className="grid gap-5 bg-white px-6 py-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-center border-b border-slate-100">
           <div>
-            <div className="text-2xl font-black text-slate-900">Yêu cầu khẩn và đi muộn</div>
-
-            <div className="mt-4 flex flex-wrap gap-3">
-              <div className="border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                {urgentPendingCount} chờ duyệt
+            <div className="text-xl font-black text-slate-900">Yêu cầu khẩn cấp & Xin đi muộn</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <div className="border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 rounded-none">
+                {urgentPendingCount} chờ phê duyệt
               </div>
-              <div className="border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                {urgentApprovedCount} đã duyệt
+              <div className="border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 rounded-none">
+                {urgentApprovedCount} đã xử lý
               </div>
             </div>
           </div>
-
-          <div className="border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-            Chỉ ca đã chốt của hôm nay mới hiện nút <span className="font-bold text-red-600">Hủy khẩn</span> hoặc{" "}
-            <span className="font-bold text-red-600">Xin đi muộn</span>.
+          <div className="border border-red-100 bg-red-50/50 px-4 py-3 text-xs text-red-800 rounded-none">
+            Chỉ những ca đã được <span className="font-bold">Chốt chính thức</span> trong hôm nay mới hiển thị tùy chọn gửi yêu cầu khẩn.
           </div>
         </div>
 
-        <div className="space-y-3 px-5 py-5">
+        <div className="space-y-3 px-6 py-5 bg-slate-50/30">
           {orderedUrgentRequests.length ? (
             orderedUrgentRequests.map((item) => (
               <UrgentRequestCard
@@ -1333,13 +1317,14 @@ export default function MySchedule({
               />
             ))
           ) : (
-            <div className="border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-              Chưa có yêu cầu khẩn hoặc xin đi muộn.
+            <div className="border border-dashed border-slate-200 bg-white px-4 py-6 text-xs text-slate-500 text-center rounded-none">
+              Chưa có yêu cầu khẩn nào được ghi nhận.
             </div>
           )}
         </div>
       </section>
 
+      {/* MUTATION MODAL */}
       <Modal
         open={urgentModalSchedule != null}
         onClose={() => {
@@ -1356,16 +1341,16 @@ export default function MySchedule({
         }}
       >
         <div className="flex min-h-full items-center justify-center p-4">
-          <div className="w-full max-w-2xl border border-slate-200 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.14)]">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5">
+          <div className="w-full max-w-2xl border border-slate-200 bg-white shadow-2xl rounded-none overflow-hidden">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 bg-slate-50">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                  Xử lý đột xuất
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Xử lý sự cố đột xuất
                 </div>
-                <div className="mt-2 text-2xl font-black text-slate-900">
+                <div className="mt-1 text-xl font-black text-slate-900">
                   {urgentRequestType === UrgentRequestType.LATE_ARRIVAL
-                    ? "Xin đi muộn"
-                    : "Hủy lịch khẩn"}
+                    ? "Gửi đơn xin đi muộn"
+                    : "Đăng ký hủy lịch khẩn cấp"}
                 </div>
               </div>
 
@@ -1375,122 +1360,118 @@ export default function MySchedule({
                   if (createUrgentRequestMutation.isPending) return;
                   setUrgentModalSchedule(null);
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center border border-red-600 bg-red-600 text-white transition hover:bg-red-700"
+                className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition rounded-none shadow-sm"
               >
-                <Close fontSize="small" />
+                <CloseIcon fontSize="small" />
               </button>
             </div>
 
-            <div className="space-y-5 px-5 py-5">
+            <div className="space-y-4 px-6 py-5">
               <div className="grid gap-3 md:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setUrgentRequestType(UrgentRequestType.EMERGENCY_LEAVE)}
-                  className={`border px-4 py-4 text-left transition ${
-                    urgentRequestType === UrgentRequestType.EMERGENCY_LEAVE
-                      ? "border-red-600 bg-red-600 text-white"
-                      : "border-slate-200 bg-white text-slate-900 hover:border-red-200 hover:bg-red-50"
-                  }`}
-                >
-                  <div className="text-sm font-black">Hủy lịch khẩn</div>
-                  <div
-                    className={`mt-1 text-xs ${
-                      urgentRequestType === UrgentRequestType.EMERGENCY_LEAVE
-                        ? "text-red-100"
-                        : "text-slate-500"
+                  className={`border p-4 text-left transition-all rounded-none ${urgentRequestType === UrgentRequestType.EMERGENCY_LEAVE
+                    ? "border-red-600 bg-red-600 text-white shadow-md"
+                    : "border-slate-200 bg-white text-slate-900 hover:border-red-100 hover:bg-red-50/50"
                     }`}
+                >
+                  <div className="text-sm font-black">Nghỉ khẩn cấp</div>
+                  <div
+                    className={`mt-1 text-xs leading-5 ${urgentRequestType === UrgentRequestType.EMERGENCY_LEAVE
+                      ? "text-red-100"
+                      : "text-slate-500"
+                      }`}
                   >
-                    Viết lý do để quản lý/admin duyệt hủy ca.
+                    Nộp lý do giải trình để Admin/Quản lý phê duyệt rút tên khỏi ca làm.
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setUrgentRequestType(UrgentRequestType.LATE_ARRIVAL)}
-                  className={`border px-4 py-4 text-left transition ${
-                    urgentRequestType === UrgentRequestType.LATE_ARRIVAL
-                      ? "border-red-600 bg-red-600 text-white"
-                      : "border-slate-200 bg-white text-slate-900 hover:border-red-200 hover:bg-red-50"
-                  }`}
+                  className={`border p-4 text-left transition-all rounded-none ${urgentRequestType === UrgentRequestType.LATE_ARRIVAL
+                    ? "border-red-600 bg-red-600 text-white shadow-md"
+                    : "border-slate-200 bg-white text-slate-900 hover:border-red-100 hover:bg-red-50/50"
+                    }`}
                 >
                   <div className="text-sm font-black">Xin đi muộn</div>
                   <div
-                    className={`mt-1 text-xs ${
-                      urgentRequestType === UrgentRequestType.LATE_ARRIVAL
-                        ? "text-red-100"
-                        : "text-slate-500"
-                    }`}
+                    className={`mt-1 text-xs leading-5 ${urgentRequestType === UrgentRequestType.LATE_ARRIVAL
+                      ? "text-red-100"
+                      : "text-slate-500"
+                      }`}
                   >
-                    Chọn giờ có mặt dự kiến để quản lý sắp xếp.
+                    Báo trước cho quản lý biết giờ có mặt trễ để sắp xếp người hỗ trợ rạp kịp thời.
                   </div>
                 </button>
               </div>
 
-              <div className="border border-slate-200 bg-slate-50 px-4 py-4">
-                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                  Ca đang chọn
+              <div className="border border-slate-200 bg-slate-50 p-4 rounded-none">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Ca trực bị ảnh hưởng
                 </div>
-                <div className="mt-2 text-base font-black text-slate-900">
+                <div className="mt-1 text-sm font-black text-slate-900">
                   {urgentModalSchedule?.shift.name || "-"}
                 </div>
-                <div className="mt-1 text-sm text-slate-600">
+                <div className="mt-0.5 text-xs text-slate-600">
                   {urgentModalSchedule
                     ? `${formatDateLong(urgentModalSchedule.workDate)} • ${formatShiftRange(
-                        urgentModalSchedule.shift,
-                      )}`
+                      urgentModalSchedule.shift,
+                    )}`
                     : "-"}
                 </div>
               </div>
 
               {urgentRequestType === UrgentRequestType.LATE_ARRIVAL ? (
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                    Giờ có mặt dự kiến
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Giờ có mặt dự kiến (bắt buộc)
                   </label>
                   <input
                     type="time"
                     value={expectedArrivalTime}
                     onChange={(event) => setExpectedArrivalTime(event.target.value)}
-                    className="h-11 w-full border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-red-500"
+                    className="h-10 w-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 rounded-none outline-none transition focus:border-red-500"
                   />
                 </div>
               ) : null}
 
-              <div className="space-y-2">
-                <label className="block text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                  Lý do
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Mô tả chi tiết lý do sự cố
                 </label>
                 <textarea
-                  rows={5}
+                  rows={4}
                   value={urgentReason}
                   onChange={(event) => setUrgentReason(event.target.value)}
                   placeholder={
                     urgentRequestType === UrgentRequestType.LATE_ARRIVAL
-                      ? "Ví dụ: kẹt xe, mưa lớn..."
-                      : "Mô tả tình huống khẩn cấp..."
+                      ? "Mô tả lý do (ví dụ: hỏng xe, tắc đường kẹt xe tại đường lớn...)"
+                      : "Mô tả cụ thể sự cố cần nghỉ khẩn..."
                   }
-                  className="w-full border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-red-500"
+                  className="w-full border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 rounded-none outline-none transition focus:border-red-500"
                 />
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => {
                     if (createUrgentRequestMutation.isPending) return;
                     setUrgentModalSchedule(null);
                   }}
-                  className="h-11 border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700"
+                  className="h-10 border border-slate-200 bg-white px-5 text-xs font-bold text-slate-600 rounded-none hover:bg-slate-50 transition"
                 >
-                  Đóng
+                  Hủy thao tác
                 </button>
                 <button
                   type="button"
                   disabled={!canSubmitUrgentRequest}
                   onClick={() => createUrgentRequestMutation.mutate()}
-                  className="h-11 border border-red-600 bg-red-600 px-5 text-sm font-black text-white disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
+                  className="h-10 border border-red-600 bg-red-600 px-5 text-xs font-black uppercase tracking-wider text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-400 rounded-none shadow-sm transition hover:bg-red-750"
                 >
-                  {createUrgentRequestMutation.isPending ? "Đang gửi..." : "Gửi yêu cầu"}
+                  {createUrgentRequestMutation.isPending ? "Đang gửi đi..." : "Gửi báo cáo sự cố"}
                 </button>
               </div>
             </div>

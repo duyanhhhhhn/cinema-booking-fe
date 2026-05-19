@@ -168,11 +168,10 @@ export default function AssignStaffPanel({
                     type="button"
                     disabled={shiftUnavailable}
                     onClick={() => onChange({ shiftId: shift.id })}
-                    className={`rounded-none border px-3 py-3 text-left ${
-                      active
-                        ? "border-red-600 bg-red-600 text-white"
-                        : "border-slate-200 bg-white text-slate-700"
-                    } ${shiftUnavailable ? "cursor-not-allowed opacity-50" : ""}`}
+                    className={`rounded-none border px-3 py-3 text-left ${active
+                      ? "border-red-600 bg-red-600 text-white"
+                      : "border-slate-200 bg-white text-slate-700"
+                      } ${shiftUnavailable ? "cursor-not-allowed opacity-50" : ""}`}
                   >
                     <div className="text-sm font-bold">{shift.name}</div>
                     <div className={`mt-1 text-xs ${active ? "text-white" : "text-slate-500"}`}>
@@ -198,11 +197,10 @@ export default function AssignStaffPanel({
               <button
                 type="button"
                 onClick={() => onChange({ status: ScheduleStatus.CONFIRMED })}
-                className={`flex items-center gap-3 rounded-none border px-3 py-3 text-left ${
-                  actionStatus === ScheduleStatus.CONFIRMED
-                    ? "border-red-600 bg-red-600 text-white"
-                    : "border-slate-200 bg-white text-slate-700"
-                }`}
+                className={`flex items-center gap-3 rounded-none border px-3 py-3 text-left ${actionStatus === ScheduleStatus.CONFIRMED
+                  ? "border-red-600 bg-red-600 text-white"
+                  : "border-slate-200 bg-white text-slate-700"
+                  }`}
               >
                 <EventAvailable fontSize="small" />
                 <span className="text-sm font-bold">Chốt</span>
@@ -213,11 +211,10 @@ export default function AssignStaffPanel({
                   canCancel && onChange({ status: ScheduleStatus.CANCELLED })
                 }
                 disabled={!canCancel}
-                className={`flex items-center gap-3 rounded-none border px-3 py-3 text-left ${
-                  actionStatus === ScheduleStatus.CANCELLED && canCancel
-                    ? "border-red-600 bg-red-600 text-white"
-                    : "border-slate-200 bg-white text-slate-700"
-                } ${canCancel ? "" : "cursor-not-allowed opacity-50"}`}
+                className={`flex items-center gap-3 rounded-none border px-3 py-3 text-left ${actionStatus === ScheduleStatus.CANCELLED && canCancel
+                  ? "border-red-600 bg-red-600 text-white"
+                  : "border-slate-200 bg-white text-slate-700"
+                  } ${canCancel ? "" : "cursor-not-allowed opacity-50"}`}
               >
                 <EventBusy fontSize="small" />
                 <span className="text-sm font-bold">Huỷ ca</span>

@@ -172,8 +172,8 @@ function PageHeader({
   const roleLabel = getManagementRoleLabel(role);
   const roleDescription =
     role === "ADMIN"
-      ? "Chọn chi nhánh rồi mở đúng bảng để xem lịch, phân ca hoặc kiểm soát thời gian đăng ký của staff."
-      : "Theo dõi lịch của chi nhánh, phân ca và xử lý yêu cầu làm thay trong cùng một cụm màn hình.";
+      ? ""
+      : "";
 
   return (
     <section className="overflow-hidden rounded-none border border-slate-200 bg-white">
@@ -698,9 +698,9 @@ export default function StaffScheduleManagement({
         "success",
         forceOpen ? "Đã mở đăng ký ngay" : "Đã bật lại cuối tuần",
         response.message ||
-          (forceOpen
-            ? "Staff có thể đăng ký tuần sau ngay hôm nay."
-            : "Staff chỉ đăng ký vào thứ 7, chủ nhật."),
+        (forceOpen
+          ? "Staff có thể đăng ký tuần sau ngay hôm nay."
+          : "Staff chỉ đăng ký vào thứ 7, chủ nhật."),
       );
       queryClient.invalidateQueries({
         queryKey: [Schedule.queryKeys.registrationWindow],
@@ -824,7 +824,7 @@ export default function StaffScheduleManagement({
         "warning",
         "Không thể thêm lịch vào thời gian đã qua",
         writeValidationMessage ||
-          "Ca này đã bắt đầu hoặc đã qua. Hãy chọn ca khác còn hiệu lực.",
+        "Ca này đã bắt đầu hoặc đã qua. Hãy chọn ca khác còn hiệu lực.",
       );
       return;
     }
@@ -860,7 +860,7 @@ export default function StaffScheduleManagement({
         "warning",
         "Không thể thêm lịch vào thời gian đã qua",
         writeValidationMessage ||
-          "Ca này đã bắt đầu hoặc đã qua nên không thể phân công thêm.",
+        "Ca này đã bắt đầu hoặc đã qua nên không thể phân công thêm.",
       );
       return;
     }
@@ -951,16 +951,16 @@ export default function StaffScheduleManagement({
 
   const currentLoadWarning =
     form.status === ScheduleStatus.CANCELLED ||
-    !form.staffId ||
-    !form.workDate ||
-    !form.shiftId
+      !form.staffId ||
+      !form.workDate ||
+      !form.shiftId
       ? null
       : getProjectedLoadWarning(
-          form.staffId,
-          form.workDate,
-          form.shiftId,
-          selectedSchedule?.id ?? null,
-        );
+        form.staffId,
+        form.workDate,
+        form.shiftId,
+        selectedSchedule?.id ?? null,
+      );
 
   const currentModeRoute = isAssignMode
     ? "/admin/staff-schedules/assign"
@@ -994,13 +994,13 @@ export default function StaffScheduleManagement({
         ? getErrorMessage((qShifts as any).error)
         : qUrgentReviews.isError
           ? getErrorMessage((qUrgentReviews as any).error)
-        : isAdmin && qRegistrationWindow.isError
-          ? getErrorMessage((qRegistrationWindow as any).error)
-        : qSwapReviews.isError
-          ? getErrorMessage((qSwapReviews as any).error)
-        : qCinemas.isError
-          ? getErrorMessage((qCinemas as any).error)
-          : "";
+          : isAdmin && qRegistrationWindow.isError
+            ? getErrorMessage((qRegistrationWindow as any).error)
+            : qSwapReviews.isError
+              ? getErrorMessage((qSwapReviews as any).error)
+              : qCinemas.isError
+                ? getErrorMessage((qCinemas as any).error)
+                : "";
 
   const registrationWindowPanel =
     isAdmin && (qRegistrationWindow.isLoading || registrationWindow) ? (
@@ -1008,11 +1008,10 @@ export default function StaffScheduleManagement({
         <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="text-lg font-black text-slate-900">Mở đăng ký</div>
           <div
-            className={`border px-3 py-2 text-sm font-semibold ${
-              registrationWindow?.forceOpen
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-slate-200 bg-slate-50 text-slate-700"
-            }`}
+            className={`border px-3 py-2 text-sm font-semibold ${registrationWindow?.forceOpen
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-slate-200 bg-slate-50 text-slate-700"
+              }`}
           >
             {qRegistrationWindow.isLoading
               ? "Đang tải..."
@@ -1040,11 +1039,10 @@ export default function StaffScheduleManagement({
               qRegistrationWindow.isLoading ||
               updateRegistrationWindowMutation.isPending
             }
-            className={`inline-flex h-11 items-center justify-center border px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 ${
-              registrationWindow?.forceOpen
-                ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                : "border-red-600 bg-red-600 text-white hover:bg-red-700"
-            }`}
+            className={`inline-flex h-11 items-center justify-center border px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 ${registrationWindow?.forceOpen
+              ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+              : "border-red-600 bg-red-600 text-white hover:bg-red-700"
+              }`}
           >
             {updateRegistrationWindowMutation.isPending
               ? "Đang lưu..."

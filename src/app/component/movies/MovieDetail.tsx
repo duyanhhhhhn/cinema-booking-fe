@@ -121,7 +121,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
       const next = buildReturnUrl();
       try {
         sessionStorage.setItem("RETURN_AFTER_LOGIN", next);
-      } catch {}
+      } catch { }
       router.push(`/login?next=${encodeURIComponent(next)}`);
     };
   }, [router, buildReturnUrl]);
@@ -210,7 +210,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
   const reviewsTotalPages = Math.max(
     1,
     serverTotalPages ||
-      Math.ceil(reviewsTotal / (reviewsPerPageMeta || reviewPerPage)),
+    Math.ceil(reviewsTotal / (reviewsPerPageMeta || reviewPerPage)),
   );
 
   useEffect(() => {
@@ -779,7 +779,7 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   ) : null}
 
                   {!dataMovieCinemaShowtimes.isLoading &&
-                  cinemas.length === 0 ? (
+                    cinemas.length === 0 ? (
                     <p className="mt-5 text-sm text-white/55">
                       Chưa có rạp hoặc suất chiếu cho phim này.
                     </p>
@@ -792,15 +792,15 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                     <div className="mt-6 space-y-4">
                       {(dataMovieCinemaShowtimes.isLoading
                         ? Array.from({ length: 2 }).map((_, i) => ({
-                            cinema: {
-                              cinemaId: i,
-                              cinemaName: "Đang tải...",
-                              address: "",
-                              posterUrl: null,
-                              cinemaImageUrl: null,
-                            } as any,
-                            showtimes: [] as IShowtimeItem[],
-                          }))
+                          cinema: {
+                            cinemaId: i,
+                            cinemaName: "Đang tải...",
+                            address: "",
+                            posterUrl: null,
+                            cinemaImageUrl: null,
+                          } as any,
+                          showtimes: [] as IShowtimeItem[],
+                        }))
                         : scheduleRows
                       ).map((row: any) => {
                         const c = row.cinema as IMovieShowtimeGroup;
@@ -922,11 +922,10 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                                                   onClick={() =>
                                                     setSelectedShowtimeId(st.id)
                                                   }
-                                                  className={`group inline-flex cursor-pointer items-center gap-2 rounded-[16px] border px-4 py-2.5 text-sm font-black text-white transition ${
-                                                    isSelected
-                                                      ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/45"
-                                                      : "border-white/8 bg-black/25 hover:border-red-400/20 hover:bg-red-500/10"
-                                                  }`}
+                                                  className={`group inline-flex cursor-pointer items-center gap-2 rounded-[16px] border px-4 py-2.5 text-sm font-black text-white transition ${isSelected
+                                                    ? "border-red-500 bg-red-500/20 ring-2 ring-red-400/45"
+                                                    : "border-white/8 bg-black/25 hover:border-red-400/20 hover:bg-red-500/10"
+                                                    }`}
                                                 >
                                                   <span className="tabular-nums">
                                                     {formatHM(st.startTime)}
@@ -1160,12 +1159,12 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                             })}
 
                             {pageWindow[pageWindow.length - 1] <
-                            reviewsTotalPages - 1 ? (
+                              reviewsTotalPages - 1 ? (
                               <span className="px-1 text-white/45">…</span>
                             ) : null}
 
                             {pageWindow[pageWindow.length - 1] <
-                            reviewsTotalPages ? (
+                              reviewsTotalPages ? (
                               <button
                                 type="button"
                                 onClick={() => setReviewPage(reviewsTotalPages)}
@@ -1286,8 +1285,8 @@ export default function MovieDetail({ movieId }: MovieDetailProps) {
                   </h2>
 
                   {movieGenre.isPending ||
-                  movieGenre.isLoading ||
-                  movieGenre.isRefetching ? (
+                    movieGenre.isLoading ||
+                    movieGenre.isRefetching ? (
                     <span className="text-xs font-semibold text-white/55">
                       Đang tải...
                     </span>

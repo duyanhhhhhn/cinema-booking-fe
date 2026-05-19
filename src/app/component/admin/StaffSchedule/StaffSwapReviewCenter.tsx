@@ -79,11 +79,10 @@ function SwapReviewCard({
   return (
     <article
       id={`swap-review-card-${item.id}`}
-      className={`${staffScheduleSurface} p-5 ${
-        highlight
-          ? "ring-2 ring-red-300 shadow-[0_18px_40px_rgba(244,63,94,0.16)]"
-          : ""
-      }`}
+      className={`${staffScheduleSurface} p-5 ${highlight
+        ? "ring-2 ring-red-300 shadow-[0_18px_40px_rgba(244,63,94,0.16)]"
+        : ""
+        }`}
     >
       <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
         <div className="min-w-0 flex-1">
@@ -288,15 +287,15 @@ export default function StaffSwapReviewCenter() {
     const config =
       action === "APPROVE"
         ? {
-            title: "Xác nhận",
-            message: "Duyệt yêu cầu này?",
-            confirmText: "Duyệt",
-          }
+          title: "Xác nhận",
+          message: "Duyệt yêu cầu này?",
+          confirmText: "Duyệt",
+        }
         : {
-            title: "Xác nhận",
-            message: "Từ chối yêu cầu này?",
-            confirmText: "Từ chối",
-          };
+          title: "Xác nhận",
+          message: "Từ chối yêu cầu này?",
+          confirmText: "Từ chối",
+        };
 
     n.confirm(config.message, {
       title: config.title,
@@ -339,10 +338,6 @@ export default function StaffSwapReviewCenter() {
             <h1 className="text-[32px] font-black tracking-[-0.04em] text-slate-900">
               Duyệt làm thay
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Chọn nhanh đúng bảng để quay lại xem lịch, phân ca hoặc tiếp tục
-              duyệt yêu cầu đổi ca của staff.
-            </p>
           </div>
 
           <div className="border border-slate-200 bg-white px-4 py-4">
