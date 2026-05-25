@@ -23,167 +23,91 @@ export interface RouteConfig {
 
   /** Mô tả (optional) */
   description?: string;
+  roles?: UserRole[];
 }
 
 /**
  * Cấu hình tất cả routes trong app
  */
 export const ROUTE_CONFIGS: RouteConfig[] = [
-  // Public routes - Không cần đăng nhập
-  {
-    path: "/",
-    guard: "public",
-    description: "Trang chủ",
-  },
-  {
-    path: "/not-authorized",
-    guard: "public",
-    description: "Không có quyền truy cập",
-  },
-  {
-    path: "/movies",
-    guard: "public",
-    description: "Danh sách phim",
-  },
-  {
-    path: "/movies/[id]",
-    guard: "public",
-    description: "Chi tiết phim",
-  },
-  {
-    path: "/cinemas",
-    guard: "public",
-    description: "Rạp chiếu phim",
-  },
-  {
-    path: "/news",
-    guard: "public",
-    description: "Tin tức",
-  },
-  {
-    path: "/news/[id]",
-    guard: "public",
-    description: "Chi tiết tin tức",
-  },
+ // ==========================================
+  // PUBLIC ROUTES - Không cần đăng nhập
+  // ==========================================
+  { path: "/", guard: "public", description: "Trang chủ" },
+  { path: "/not-authorized", guard: "public", description: "Không có quyền truy cập" },
+  { path: "/movies", guard: "public", description: "Danh sách phim" },
+  { path: "/movies/[id]", guard: "public", description: "Chi tiết phim" },
+  { path: "/cinemas", guard: "public", description: "Rạp chiếu phim" },
+  { path: "/news", guard: "public", description: "Tin tức" },
+  { path: "/news/[id]", guard: "public", description: "Chi tiết tin tức" },
 
-  // Guest routes - Chỉ cho người chưa đăng nhập
-  {
-    path: "/login",
-    guard: "guest",
-    description: "Đăng nhập",
-  },
-  {
-    path: "/register",
-    guard: "guest",
-    description: "Đăng ký",
-  },
+  // ==========================================
+  // GUEST ROUTES - Chỉ cho người chưa đăng nhập
+  // ==========================================
+  { path: "/login", guard: "guest", description: "Đăng nhập" },
+  { path: "/register", guard: "guest", description: "Đăng ký" },
 
-  // Client routes - Chỉ cho CLIENT role
-  {
-    path: "/profile",
-    guard: "client",
-    fallbackUrl: "/admin",
-    description: "Thông tin cá nhân",
-  },
-  {
-    path: "/my-tickets",
-    guard: "client",
-    fallbackUrl: "/admin",
-    description: "Vé của tôi",
-  },
-  {
-    path: "/booking",
-    guard: "client",
-    fallbackUrl: "/admin",
-    description: "Đặt vé",
-  },
-  {
-    path: "/booking/[movieId]",
-    guard: "client",
-    fallbackUrl: "/admin",
-    description: "Đặt vé phim",
-  },
-  {
-    path: "/booking-success",
-    guard: "client",
-    fallbackUrl: "/admin",
-    description: "Đặt vé thành công",
-  },
+  // ==========================================
+  // CLIENT ROUTES - Chỉ cho Khách hàng
+  // ==========================================
+  { path: "/profile", guard: "client", fallbackUrl: "/admin", description: "Thông tin cá nhân" },
+  { path: "/my-tickets", guard: "client", fallbackUrl: "/admin", description: "Vé của tôi" },
+  { path: "/booking", guard: "client", fallbackUrl: "/admin", description: "Đặt vé" },
+  { path: "/booking/[movieId]", guard: "client", fallbackUrl: "/admin", description: "Đặt vé phim" },
+  { path: "/booking-success", guard: "client", fallbackUrl: "/admin", description: "Đặt vé thành công" },
 
-  // Admin routes - Cho ADMIN và STAFF
-  {
-    path: "/admin",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Trang quản trị",
-  },
+  // ==========================================
+  // ADMIN ROUTES - Phân quyền chi tiết theo Menu
+  // ==========================================
+  
+  // 1. Tổng quan & Hệ thống
+  { path: "/admin", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Trang quản trị" },
+  { path: "/admin/system", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Hệ thống rạp" },
+  { path: "/admin/cinemas", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Quản lý rạp chiếu" },
+  { path: "/admin/rooms", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Quản lý phòng chiếu" },
+  { path: "/admin/rooms/[id]", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Chi tiết phòng chiếu" },
+  
+  // 2. Phim & Suất chiếu
+  { path: "/admin/movies-group", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Nhóm quản lý phim" },
+  { path: "/admin/movies", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Quản lý phim" },
+  { path: "/admin/movies/[id]", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Chi tiết & chỉnh sửa phim" },
+  { path: "/admin/showtime-scheduler", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Suất chiếu" },
+  { path: "/admin/movie-reviews", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Đánh giá phim" },
 
-  {
-    path: "/admin/cinemas",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý rạp chiếu",
-  },
-  {
-    path: "/admin/rooms",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý phòng chiếu",
-  },
-  {
-    path: "/admin/rooms/[id]",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Chi tiết phòng chiếu",
-  },
-  {
-    path: "/admin/users",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý người dùng",
-  },
-  {
-    path: "/admin/movies",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý phim",
-  },
-  {
-    path: "/admin/movies/[id]",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Chi tiết & chỉnh sửa phim",
-  },
-  {
-    path: "/admin/showtimes",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý suất chiếu",
-  },
-  {
-    path: "/admin/branches",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý chi nhánh",
-  },
-  {
-    path: "/admin/tickets",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý vé",
-  },
-  {
-    path: "/admin/invoices",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý hóa đơn",
-  },
-  {
-    path: "/admin/content",
-    guard: "admin",
-    fallbackUrl: "/",
-    description: "Quản lý nội dung",
-  },
+  // 3. Dịch vụ & Ưu đãi
+  { path: "/admin/services", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF], description: "Dịch vụ và ưu đãi" },
+  { path: "/admin/tickets", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Vé đã bán" },
+  { path: "/admin/sell-tickets", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF], description: "Bán vé tại quầy" },
+  { path: "/admin/combos", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Combo & Đồ ăn" },
+  { path: "/admin/vouchers", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Mã giảm giá" },
+  { path: "/admin/pricing", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Quản lý cấu hình giá" },
+
+  // 4. Người dùng
+  { path: "/admin/user-management", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Nhóm quản lý người dùng" },
+  { path: "/admin/users", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Quản lý người dùng" },
+  { path: "/admin/staffs", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Nhân viên và phân quyền" },
+
+  // 5. Nội dung
+  { path: "/admin/content", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Nhóm nội dung" },
+  { path: "/admin/posts", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Bài viết" },
+  { path: "/admin/banners", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Banner" },
+
+  // 6. Phân ca làm việc (Dành cho Admin & Manager)
+  { path: "/admin/staff-schedules/assign", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Phân ca nhân viên" },
+  { path: "/admin/staff-schedules", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Lịch làm nhân viên" },
+  { path: "/admin/staff-schedules/swaps", guard: "admin", fallbackUrl: "/", roles: [UserRole.MANAGER], description: "Duyệt làm thay" },
+
+  // 7. Lịch làm việc cá nhân (Dành riêng cho Staff)
+  { path: "/admin/staff-schedules/my/request", guard: "admin", fallbackUrl: "/", roles: [UserRole.STAFF], description: "Chọn lịch làm cá nhân" },
+  { path: "/admin/staff-schedules/my", guard: "admin", fallbackUrl: "/", roles: [UserRole.STAFF], description: "Xem lịch làm cá nhân" },
+  { path: "/admin/staff-schedules/my/swaps", guard: "admin", fallbackUrl: "/", roles: [UserRole.STAFF], description: "Nhờ làm thay" },
+
+  // ==========================================
+  // ROUTES CŨ (Có trong file cũ nhưng không có trong menu, tôi set default là ADMIN)
+  // ==========================================
+  { path: "/admin/showtimes", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN, UserRole.MANAGER], description: "Quản lý suất chiếu (Cũ)" },
+  { path: "/admin/branches", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Quản lý chi nhánh" },
+  { path: "/admin/invoices", guard: "admin", fallbackUrl: "/", roles: [UserRole.ADMIN], description: "Quản lý hóa đơn" },
 ];
 
 /**

@@ -48,8 +48,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -57,6 +55,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import { Html5Qrcode } from "html5-qrcode";
 import { UserRole } from "@/types/role";
+import AdminNotificationBell from "./AdminNotificationBell";
 
 const SCANNER_ELEMENT_ID = "admin-qr-scanner";
 
@@ -182,27 +181,47 @@ const menuItems = [
     ],
   },
   {
-    text: "Phân ca nhân viên",
+    text: "Phân ca làm việc",
     icon: <ArticleIcon />,
     path: "/admin/staff-schedules",
     roles: [UserRole.ADMIN, UserRole.MANAGER],
     children: [
       {
+        text: "Phân ca nhân viên",
+        path: "/admin/staff-schedules/assign",
+        roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
         text: "Lịch làm nhân viên",
         path: "/admin/staff-schedules",
         roles: [UserRole.ADMIN, UserRole.MANAGER],
+      },
+      {
+        text: "Duyệt làm thay",
+        path: "/admin/staff-schedules/swaps",
+        roles: [UserRole.MANAGER],
       },
     ],
   },
   {
     text: "Lịch làm việc của tôi",
     icon: <ArticleIcon />,
-    path: "/admin/staff-schedules",
+    path: "/admin/staff-schedules/my/request",
     roles: [UserRole.STAFF],
     children: [
       {
-        text: "Lịch làm việc ",
+        text: "Chọn lịch làm",
+        path: "/admin/staff-schedules/my/request",
+        roles: [UserRole.STAFF],
+      },
+      {
+        text: "Xem lịch làm",
         path: "/admin/staff-schedules/my",
+        roles: [UserRole.STAFF],
+      },
+      {
+        text: "Nhờ làm thay",
+        path: "/admin/staff-schedules/my/swaps",
         roles: [UserRole.STAFF],
       },
     ],
@@ -437,10 +456,12 @@ function ScanDialogContent({
           .catch(() => {});
         scannerRef.current = null;
       }
-      setMode("menu");
-      setCode("");
-      setScanError(null);
-      queueMicrotask(() => setCameraActive(false));
+      queueMicrotask(() => {
+        setMode("menu");
+        setCode("");
+        setScanError(null);
+        setCameraActive(false);
+      });
     }
   }, [open]);
 
@@ -813,7 +834,7 @@ export default function AdminLayout({
 
         return hasParentAccess && hasValidChildren;
       });
-  }, [user?.role]);
+  }, [user]);
 
   const renderDrawerContent = (collapsed: boolean) => (
     <Box
@@ -938,6 +959,7 @@ export default function AdminLayout({
             >
               <QrCodeScannerIcon />
             </IconButton>
+            <AdminNotificationBell role={user?.role} />
             <Box
               sx={{
                 display: "flex",

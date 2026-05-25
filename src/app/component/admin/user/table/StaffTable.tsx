@@ -10,8 +10,9 @@ import {
   IconButton,
   Chip,
   Box,
+  Typography,
 } from "@mui/material";
-import { Lock, LockOpen, Edit, Visibility } from "@mui/icons-material";
+import { Lock, LockOpen, Edit } from "@mui/icons-material";
 import dayjs from "dayjs";
 
 import { IStaff } from "../type";
@@ -23,6 +24,7 @@ interface StaffTableProps {
   refetch: () => void;
   onEdit: (staff: IStaff) => void;
   cinemaMap: Map<string, string>; // ✅ thêm
+  emptyMessage?: string;
 }
 
 export default function StaffTable({
@@ -30,6 +32,7 @@ export default function StaffTable({
   refetch,
   onEdit,
   cinemaMap,
+  emptyMessage = "Không có dữ liệu",
 }: StaffTableProps) {
   const lockMutation = useLockStaffMutation();
   const unlockMutation = useUnlockStaffMutation();
@@ -74,6 +77,28 @@ export default function StaffTable({
     return `${IMAGE_URL}/${avatarUrl}?t=${Date.now()}`;
   };
 
+  const getRoleCode = (staff: IStaff) =>
+    String(staff.role || staff.position || "").toUpperCase();
+
+  const getPositionLabel = (staff: IStaff) => {
+    const roleCode = getRoleCode(staff);
+    const positionCode = String(staff.position || "").toUpperCase();
+
+    if (roleCode === "MANAGER" || positionCode === "MANAGER") {
+      return "Quản lý";
+    }
+
+    const mapping: Record<string, string> = {
+      TICKET_SELLER: "Bán vé",
+      TICKET_CHECKER: "Soát vé",
+      CLEANER: "Vệ sinh",
+      SECURITY: "An ninh",
+      TECHNICIAN: "Kỹ thuật",
+    };
+
+    return mapping[positionCode] || staff.position || "Nhân viên";
+  };
+
   return (
     <>
       <TableContainer
@@ -96,51 +121,63 @@ export default function StaffTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {staffs.map((staff, idx) => (
-              <TableRow key={staff.id} hover>
-                <TableCell>{idx + 1}</TableCell>
-                <TableCell>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      backgroundImage: `url(${getAvatarUrl(staff.avatarUrl)})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  />
-                </TableCell>
-                <TableCell>{staff.fullName}</TableCell>
-                <TableCell>{staff.position}</TableCell>
-                <TableCell>{staff.email}</TableCell>
-                <TableCell>{staff.phone}</TableCell>
-                <TableCell>
-                  {cinemaMap.get(String(staff.cinemaId)) ?? "-"}
-                </TableCell>
-                <TableCell>{renderStatusChip(staff.isActive)}</TableCell>
-                <TableCell>
-                  {dayjs(staff.createdAt).format("DD/MM/YYYY")}
-                </TableCell>
-                <TableCell align="center">
-                  <Box display="flex" gap={1} justifyContent="center">
-                    <IconButton onClick={() => onEdit(staff)}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      color={staff.isActive ? "error" : "success"}
-                      onClick={() => handleClickLockUnlock(staff)}
-                    >
-                      {staff.isActive ? (
-                        <Lock fontSize="small" />
-                      ) : (
-                        <LockOpen fontSize="small" />
-                      )}
-                    </IconButton>
+            {staffs.length ? (
+              staffs.map((staff, idx) => (
+                <TableRow key={staff.id} hover>
+                  <TableCell>{idx + 1}</TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        backgroundImage: `url(${getAvatarUrl(staff.avatarUrl)})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>{staff.fullName}</TableCell>
+                  <TableCell>{getPositionLabel(staff)}</TableCell>
+                  <TableCell>{staff.email}</TableCell>
+                  <TableCell>{staff.phone}</TableCell>
+                  <TableCell>
+                    {cinemaMap.get(String(staff.cinemaId)) ?? "-"}
+                  </TableCell>
+                  <TableCell>{renderStatusChip(staff.isActive)}</TableCell>
+                  <TableCell>
+                    {dayjs(staff.createdAt).format("DD/MM/YYYY")}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box display="flex" gap={1} justifyContent="center">
+                      <IconButton onClick={() => onEdit(staff)}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        color={staff.isActive ? "error" : "success"}
+                        onClick={() => handleClickLockUnlock(staff)}
+                      >
+                        {staff.isActive ? (
+                          <Lock fontSize="small" />
+                        ) : (
+                          <LockOpen fontSize="small" />
+                        )}
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={10}>
+                  <Box sx={{ py: 4, textAlign: "center" }}>
+                    <Typography sx={{ fontWeight: 700, color: "#475569" }}>
+                      {emptyMessage}
+                    </Typography>
                   </Box>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

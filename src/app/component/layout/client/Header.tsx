@@ -37,10 +37,14 @@ export default function Header() {
     handleUserMenuClose();
     router.push("/profile");
   };
-  const handleAdmin = () => { 
+  const handleAdmin = () => {
     handleUserMenuClose();
-    router.push("/admin");
-}
+    if (user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER) {
+      router.push("/admin");
+    } else if (user?.role === UserRole.STAFF) {
+      router.push("/admin/staff-schedules/my/request");
+    }
+  };
   const handleMyTickets = () => {
     handleUserMenuClose();
     router.push("/my-tickets");
@@ -171,7 +175,7 @@ export default function Header() {
               horizontal: "right",
             }}
           >
-            {!isAdmin ? (
+            {user.role === UserRole.CLIENT ? (
               <>
                 <MenuItem
                   onClick={handleProfile}

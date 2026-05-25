@@ -236,9 +236,9 @@ export default function SchedulerBoard(props: {
     disarmDrag,
   } = props;
 
-  const TIME_COL_WIDTH = 104;
-  const ROOM_COL_WIDTH = 320;
-  const HEADER_HEIGHT = 62;
+  const TIME_COL_WIDTH = 108;
+  const ROOM_COL_WIDTH = 372;
+  const HEADER_HEIGHT = 68;
   const HOUR_LABEL_OFFSET = 18;
 
   const boardResources = resources.length
@@ -318,40 +318,40 @@ export default function SchedulerBoard(props: {
   }
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-[#e8ebf0] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-      <div className="border-b border-[#ececf2] bg-white px-5 py-4 sm:px-6">
+    <div className="overflow-hidden rounded-[22px] border border-[#e8ebf0] bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
+      <div className="border-b border-[#ececf2] bg-white px-4 py-3.5 sm:px-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
               Lưới phòng chiếu
             </div>
-            <div className="mt-1 text-[22px] font-black tracking-[-0.03em] text-slate-900">
+            <div className="mt-1 text-[20px] font-black tracking-[-0.03em] text-slate-900">
               Theo dõi suất chiếu theo từng phòng
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <div className="rounded-full border border-[#ececf2] bg-white px-3 py-1.5 text-[11px] font-black text-slate-600 shadow-sm">
+            <div className="rounded-full border border-[#ececf2] bg-white px-3 py-1 text-[10px] font-black text-slate-600 shadow-sm">
               {boardResources.length} phòng
             </div>
-            <div className="rounded-full border border-[#ececf2] bg-white px-3 py-1.5 text-[11px] font-black text-slate-600 shadow-sm">
+            <div className="rounded-full border border-[#ececf2] bg-white px-3 py-1 text-[10px] font-black text-slate-600 shadow-sm">
               {events.length} suất chiếu
             </div>
-            <div className="rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-[11px] font-black text-red-600 shadow-sm">
+            <div className="rounded-full border border-red-100 bg-red-50 px-3 py-1 text-[10px] font-black text-red-600 shadow-sm">
               Kéo để đổi phòng hoặc giờ
             </div>
           </div>
         </div>
       </div>
 
-      <div className="relative bg-white" style={{ height: "calc(100vh - 250px)" }}>
+      <div className="relative bg-white" style={{ height: "calc(100vh - 232px)" }}>
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
           <div className="relative h-full overflow-auto bg-transparent">
             <DayDropZone id="day-prev" />
             <DayDropZone id="day-next" />
 
             <div
-              className="min-w-[1250px]"
+              className="min-w-[1480px]"
               style={{
                 display: "grid",
                 gridTemplateColumns: `${TIME_COL_WIDTH}px repeat(${boardResources.length}, ${ROOM_COL_WIDTH}px)`,
@@ -363,7 +363,7 @@ export default function SchedulerBoard(props: {
               {boardResources.map((r: any) => (
                 <div
                   key={r.id}
-                  className="sticky top-0 z-30 border-b border-r border-[#e8ebf0] bg-[#fcfcfd] px-4 py-3"
+                  className="sticky top-0 z-30 border-b border-r border-[#e8ebf0] bg-[#fcfcfd] px-5 py-3.5"
                   style={{ height: HEADER_HEIGHT }}
                 >
                   <div className="flex h-full items-start justify-between gap-3">

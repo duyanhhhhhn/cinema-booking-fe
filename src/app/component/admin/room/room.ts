@@ -129,6 +129,10 @@ export function useCreateRoomMutation() {
       Room.createRoom(payload).then((res) => res.data.data),
     onSuccess: (_, payload) => {
       queryClient.invalidateQueries({
+        queryKey: ["ROOM", "LIST_ROOMS"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
         queryKey: Room.queryKeys.listRooms(payload.cinemaId),
       });
     },
@@ -147,6 +151,9 @@ export function useUpdateRoomMutation() {
         queryKey: Room.queryKeys.roomDetail(variables.id),
       });
       queryClient.invalidateQueries({
+        queryKey: Room.queryKeys.roomDetailClient(variables.id),
+      });
+      queryClient.invalidateQueries({
         queryKey: ["ROOM", "LIST_ROOMS"],
         exact: false,
       });
@@ -161,7 +168,10 @@ export function useDeleteRoomMutation() {
     mutationFn: (id: number) =>
       Room.deleteRoom(id).then((res) => res.data.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ROOM", "LIST_ROOMS"] });
+      queryClient.invalidateQueries({
+        queryKey: ["ROOM", "LIST_ROOMS"],
+        exact: false,
+      });
     },
   });
 }
@@ -184,7 +194,13 @@ export function useUpdateSeatLayoutMutation(): UseMutationResult<
       queryClient.invalidateQueries({
         queryKey: Room.queryKeys.roomDetail(payload.roomId),
       });
-      queryClient.invalidateQueries({ queryKey: Room.queryKeys.listRooms() });
+      queryClient.invalidateQueries({
+        queryKey: Room.queryKeys.roomDetailClient(payload.roomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["ROOM", "LIST_ROOMS"],
+        exact: false,
+      });
     },
   });
 }
@@ -211,6 +227,7 @@ export function useToggleRoomStatusMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["ROOM", "LIST_ROOMS"],
+        exact: false,
       });
     },
   });

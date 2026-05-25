@@ -254,13 +254,22 @@ export default function ShowtimeSchedulerScreen() {
       return;
     }
 
+    if (resources.length === 0) {
+      notify({
+        type: "warning",
+        title: "Không có phòng khả dụng",
+        desc: "Rạp này hiện không có phòng đang hoạt động. Phòng tạm ngưng đã được ẩn khỏi lịch chiếu.",
+      });
+      return;
+    }
+
     const firstRoomId = resources?.[0]?.id ?? 0;
     setForm((prev) => ({
       ...prev,
       roomId: prev.roomId || firstRoomId,
       movieId: 0,
     }));
-    setOpenMoviePicker(false);
+    setOpenMoviePicker(Boolean(firstRoomId));
     setMovieKeyword("");
     setFormError(null);
     setOpenCreate(true);
@@ -268,6 +277,7 @@ export default function ShowtimeSchedulerScreen() {
 
   function onRoomChange(nextRoomId: number) {
     setForm((p) => ({ ...p, roomId: nextRoomId, movieId: 0 }));
+    setOpenMoviePicker(nextRoomId > 0);
     setFormError(null);
     setMovieKeyword("");
   }
@@ -452,29 +462,29 @@ export default function ShowtimeSchedulerScreen() {
         }}
       />
 
-      <div className="sticky top-0 z-30 bg-transparent px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6 xl:px-8 xl:pt-8">
-        <div className="rounded-[24px] border border-[#e8ebf0] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.05)] sm:p-6">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="sticky top-0 z-30 bg-transparent px-3 pb-4 pt-4 sm:px-4 sm:pb-5 sm:pt-5 xl:px-5 xl:pt-6">
+        <div className="rounded-[22px] border border-[#e8ebf0] bg-white p-4 shadow-[0_14px_32px_rgba(15,23,42,0.05)] sm:p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-red-600">
+              <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-red-600">
                 Quản lý rạp chiếu
               </div>
-              <h1 className="mt-3 text-[30px] font-black leading-tight tracking-[-0.035em] text-slate-900 sm:text-[38px]">
+              <h1 className="mt-2.5 text-[28px] font-black leading-tight tracking-[-0.035em] text-slate-900 sm:text-[34px]">
                 Lịch Suất Chiếu
               </h1>
-              <p className="mt-2 max-w-2xl text-[14px] leading-7 text-slate-500 sm:text-[15px]">
+              <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-slate-500 sm:text-[14px]">
                 Theo dõi lịch chiếu, kiểm tra xung đột và điều phối phòng chiếu trong cùng một không gian làm việc.
               </p>
             </div>
 
             <div className="flex items-center gap-2 self-start">
-              <div className="rounded-[22px] border border-[#ececf2] bg-white px-4 py-3 text-sm font-black uppercase text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+              <div className="rounded-[18px] border border-[#ececf2] bg-white px-3.5 py-2.5 text-xs font-black uppercase text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
                 {role || "—"}
               </div>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[220px_220px_minmax(0,1fr)]">
             <MetricCard
               title="Tổng suất chiếu"
               value={`${events.length}`}
@@ -489,28 +499,28 @@ export default function ShowtimeSchedulerScreen() {
               tone={totalConflicts > 0 ? "danger" : "success"}
             />
 
-            <div className="md:col-span-2 xl:col-span-2">
-              <div className="h-full rounded-[30px] border border-[#ececf2] bg-white p-4 shadow-[0_20px_52px_rgba(15,23,42,0.06)] sm:p-5">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="md:col-span-2 xl:col-span-1">
+              <div className="h-full rounded-[22px] border border-[#ececf2] bg-white p-3.5 shadow-[0_14px_32px_rgba(15,23,42,0.05)] sm:p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
-                    <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
                       Điều hướng lịch
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[24px] font-black tracking-[-0.03em] text-slate-900 sm:text-[28px]">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-500">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[22px] font-black tracking-[-0.03em] text-slate-900 sm:text-[24px]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-[16px] border border-red-100 bg-red-50 text-red-500">
                         <CalendarMonth fontSize="small" />
                       </div>
                       <span>{date}</span>
                     </div>
-                    <div className="mt-2 text-[13px] leading-6 text-slate-500 sm:text-sm">
+                    <div className="mt-1.5 text-[12px] leading-6 text-slate-500 sm:text-[13px]">
                       Chọn ngày làm việc và rạp chiếu trước khi thêm hoặc điều chỉnh suất chiếu.
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 xl:items-end">
+                  <div className="flex flex-col gap-2.5 xl:items-end">
                     {isAdmin ? (
-                      <div className="w-full xl:w-[320px]">
-                        <div className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
+                      <div className="w-full xl:w-[300px]">
+                        <div className="mb-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
                           Cinema
                         </div>
                         <div className="relative">
@@ -521,7 +531,7 @@ export default function ShowtimeSchedulerScreen() {
                           <select
                             value={cinemaId || 0}
                             onChange={(e) => setCinemaId(Number(e.target.value))}
-                            className="w-full rounded-[22px] border border-[#ececf2] bg-white py-3.5 pl-10 pr-4 text-sm font-black text-slate-800 outline-none shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+                            className="w-full rounded-[18px] border border-[#ececf2] bg-white py-3 pl-10 pr-4 text-sm font-black text-slate-800 outline-none shadow-[0_8px_18px_rgba(15,23,42,0.04)]"
                           >
                             <option value={0}>-- Chọn rạp --</option>
                             {cinemas.map((c) => (
@@ -533,8 +543,8 @@ export default function ShowtimeSchedulerScreen() {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full rounded-[22px] border border-[#ececf2] bg-white px-4 py-3.5 xl:w-[320px] shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                        <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                      <div className="w-full rounded-[18px] border border-[#ececf2] bg-white px-4 py-3 xl:w-[300px] shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
                           Cinema
                         </div>
                         <div className="mt-1 truncate text-sm font-black tracking-[-0.02em] text-slate-900">
@@ -543,23 +553,23 @@ export default function ShowtimeSchedulerScreen() {
                       </div>
                     )}
 
-                    <div className="grid w-full grid-cols-3 gap-2 xl:w-[320px]">
+                    <div className="grid w-full grid-cols-3 gap-2 xl:w-[300px]">
                       <button
-                        className="flex h-12 items-center justify-center gap-1 rounded-[20px] border border-[#ececf2] bg-white font-black text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:bg-red-50"
+                        className="flex h-10 items-center justify-center gap-1 rounded-[16px] border border-[#ececf2] bg-white text-sm font-black text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:bg-red-50"
                         onClick={() => setDate((d) => addDays(d, -1))}
                       >
                         Trước
                       </button>
 
                       <button
-                        className="flex h-12 items-center justify-center gap-1 rounded-[20px] border border-red-500 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] font-black text-white shadow-[0_16px_32px_rgba(239,68,68,0.22)] transition hover:-translate-y-[1px]"
+                        className="flex h-10 items-center justify-center gap-1 rounded-[16px] border border-red-500 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] text-sm font-black text-white shadow-[0_14px_26px_rgba(239,68,68,0.2)] transition hover:-translate-y-[1px]"
                         onClick={() => setDate(todayYMD())}
                       >
                         Hôm nay
                       </button>
 
                       <button
-                        className="flex h-12 items-center justify-center gap-1 rounded-[20px] border border-[#ececf2] bg-white font-black text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:bg-red-50"
+                        className="flex h-10 items-center justify-center gap-1 rounded-[16px] border border-[#ececf2] bg-white text-sm font-black text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:bg-red-50"
                         onClick={() => setDate((d) => addDays(d, 1))}
                       >
                         Sau
@@ -573,7 +583,13 @@ export default function ShowtimeSchedulerScreen() {
         </div>
       </div>
 
-      <div className="px-4 py-6 sm:px-6 xl:px-8">
+      <div className="px-3 py-5 sm:px-4 xl:px-5">
+        {!qScheduler.isLoading && cinemaId > 0 && resources.length === 0 ? (
+          <div className="mb-4 rounded-[24px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm font-bold text-amber-700 shadow-sm">
+            Rạp này hiện chưa có phòng đang hoạt động. Các phòng có status 0 đã được ẩn và không thể thêm hoặc dời suất chiếu vào đó.
+          </div>
+        ) : null}
+
         <SchedulerBoard
           resources={resources}
           events={events}
@@ -606,7 +622,7 @@ export default function ShowtimeSchedulerScreen() {
 
         <button
           onClick={openCreateModal}
-          disabled={cinemaId <= 0}
+          disabled={cinemaId <= 0 || resources.length === 0}
           className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-[24px] border border-red-400 bg-[linear-gradient(135deg,#ef4444,#ff5a3d)] text-white shadow-[0_22px_52px_rgba(239,68,68,0.28)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300"
         >
           <Add />

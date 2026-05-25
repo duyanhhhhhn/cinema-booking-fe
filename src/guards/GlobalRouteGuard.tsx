@@ -29,7 +29,7 @@ export function GlobalRouteGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const { guard, fallbackUrl } = routeConfig;
+    const { guard, fallbackUrl, roles } = routeConfig;
     let shouldRedirect = false;
     let redirectUrl = "";
 
@@ -73,6 +73,9 @@ export function GlobalRouteGuard({ children }: { children: React.ReactNode }) {
           redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
         } else if (user && !isManagementRole(user.role)) {
           // Client vào trang admin -> redirect về not-authorized
+          shouldRedirect = true;
+          redirectUrl = "/not-authorized";
+        } else if (user && roles && !roles.includes(user.role)) {
           shouldRedirect = true;
           redirectUrl = "/not-authorized";
         }
