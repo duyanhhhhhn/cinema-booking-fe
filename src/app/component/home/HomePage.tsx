@@ -12,9 +12,8 @@ type MovieStatus = "NOW_SHOWING" | "COMING_SOON" | "ENDED" | string;
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
-  const data1 = useQuery(Post.getPosts());
+  const data1 = useQuery(Post.getPosts({ page: 1, perPage: 3 }));
   const posts = data1?.data?.data || [];
-  console.log("Posts data:", posts);
   const urlImage = process.env.NEXT_PUBLIC_IMAGE_URL;
   return (
     <>

@@ -11,7 +11,7 @@ import CustomPagination from "./table/CustomPagination";
 export default function PostManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [openAddPostModal, setOpenAddPostModal] = useState(false);
-    const { data, refetch: refetchPost } = useQuery(Post.getPosts());
+    const { data, refetch: refetchPost } = useQuery(Post.getPosts({ page: 1, perPage: 10 }));
     const posts: IPost[] = data?.data || [];
     console.log("Posts" + posts)
     console.log(data)

@@ -57,13 +57,14 @@ export class Post extends Model {
         getRelate: 'POSTS_FIND_RELATE'
     }
     static objects = ObjectsFactory.factory<IPost>(modelConfig, this.queryKeys)
-    static getPosts() {
+    static getPosts(query: { page: number, perPage: number }) {
         return {
             queryKey: [this.queryKeys.paginate],
             queryFn: () => {
                 return this.api
                     .get<IPaginateResponse<IPost>>({
                         url: '/public/posts',
+                        params: query
                     })
                     .then(r => r.data)
             }
